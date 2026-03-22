@@ -33,7 +33,7 @@ async def get_current_user(
     user = await user_crud.get(db, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
-    if not user.is_active:
+    if user.is_active is False:
         raise UnauthorizedException("Inactive user")
     return user
 
@@ -41,7 +41,7 @@ async def get_current_user(
 async def get_current_active_superuser(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    if not current_user.is_superuser:
+    if current_user.is_superuser is False:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges",

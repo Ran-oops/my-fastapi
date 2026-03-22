@@ -71,7 +71,7 @@ class UserService:
         user = await UserService.authenticate_user(db, username, password)
         if not user:
             raise NotFoundException("Invalid credentials")
-        if not user.is_active:
+        if user.is_active is False:
             raise NotFoundException("Inactive user")
         access_token = create_access_token(subject=str(user.id))
         return Token(access_token=access_token)
