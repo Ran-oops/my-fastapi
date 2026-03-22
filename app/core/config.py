@@ -1,8 +1,13 @@
-from typing import List, Optional, Union
+from typing import List, Union
 from pydantic import BaseSettings, validator
 
 
 class Settings(BaseSettings):
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = True
+
     APP_ENV: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -21,11 +26,6 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
 
 
 settings = Settings()
