@@ -1,17 +1,16 @@
 # FastAPI
-fastapi==0.110.0
-uvicorn[standard]==0.27.1
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
 
-# Async Database (SQLite)
-sqlalchemy[asyncio]==2.0.27
+# Async Database (SQLite) - Python 3.8 compatible
+sqlalchemy[asyncio]==1.4.50
 aiosqlite==0.19.0
 
 # Migration
-alembic==1.13.1
+alembic==1.12.1
 
-# Data validation
-pydantic==2.6.1
-pydantic-settings==2.1.0
+# Data validation - Python 3.8 compatible
+pydantic==1.10.13
 
 # Security
 python-jose[cryptography]==3.3.0
@@ -19,9 +18,9 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
 # Testing
-pytest==8.0.0
-pytest-asyncio==0.23.5
-httpx==0.26.0
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.1
 
 # Development
-python-dotenv==1.0.0
+python-dotenv==0.21.1
