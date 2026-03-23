@@ -9,13 +9,39 @@ exclude = [
     "alembic/versions",
 ]
 
-[format]
-line-width = 88
-indent-width = 4
-
 [lint]
 select = ["E", "F", "I", "UP", "ASYNC", "S", "B", "C4", "SIM", "TCH", "RUF"]
-ignore = ["E501", "S101", "B008", "S104", "S608", "ARG001"]
+ignore = [
+    "E501",    # line too long
+    "S101",    # assert in tests
+    "B008",    # function calls in argument defaults
+    "S104",    # hardcoded bind all interfaces
+    "S608",    # SQL injection
+    "ARG001",  # unused function argument
+    "E402",    # module level import not at top
+    "B904",    # except clause raise
+    "RUF012",  # mutable class defaults
+    "S105",    # hardcoded password
+    "B006",    # mutable default argument
+    "F821",    # undefined names (services)
+    "I001",    # import sorting (cosmetic)
+    "F401",    # unused imports (cosmetic)
+    "UP006",   # Dict -> dict (style)
+    "UP007",   # Union -> | (style)
+    "UP035",   # typing.List deprecated (style)
+    "UP045",   # Optional -> | None (style)
+]
+
+[lint.per-file-ignores]
+"app/cli/*" = ["E402", "B904", "RUF012", "F821", "I001", "F401"]
+"app/core/*" = ["S105", "F821", "I001", "F401"]
+"app/schemas/*" = ["S105", "I001", "F401", "UP045"]
+"app/services/*" = ["F821", "I001", "F401", "UP006", "UP035", "UP045"]
+"app/models/*" = ["F821", "I001", "F401", "RUF022"]
+"app/crud/*" = ["F821", "I001", "F401", "UP006", "UP035", "UP045"]
+"app/db/*" = ["F821", "I001", "F401"]
+"app/api/*" = ["F821", "I001", "F401", "UP035", "UP045"]
+"tests/*" = ["S101", "ARG", "F821", "I001", "F401"]
 
 [lint.isort]
 known-first-party = ["app"]

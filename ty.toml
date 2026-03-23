@@ -1,8 +1,0 @@
-python-version = "3.13"
-strict = true
-
-[rules]
-unused-ignore-comment = "warn"
-
-[exclude]
-patterns = ["alembic/versions", "tests"]

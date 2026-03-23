@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar, List
-from pydantic import BaseModel
+from typing import Generic, TypeVar
+from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
 
@@ -14,10 +14,12 @@ class DataResponse(ResponseBase, Generic[T]):
 
 
 class ListResponse(ResponseBase, Generic[T]):
-    data: List[T]
+    data: list[T]
 
 
 class PaginationParams(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     page: int = 1
     page_size: int = 10
 
@@ -28,9 +30,6 @@ class PaginationParams(BaseModel):
     @property
     def limit(self) -> int:
         return self.page_size
-
-    class Config:
-        orm_mode = True
 
 
 class PaginatedResponse(ListResponse[T]):
