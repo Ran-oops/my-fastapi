@@ -1,21 +1,20 @@
-from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import NotFoundException, ConflictException
+from app.core.exceptions import ConflictException, NotFoundException
 from app.core.security import create_access_token
 from app.crud.user import user as user_crud
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate, Token
+from app.schemas.user import Token, UserCreate, UserUpdate
 
 
 class UserService:
     @staticmethod
-    async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
+    async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
         return await user_crud.get(db, id=user_id)
 
     @staticmethod
-    async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
+    async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
         return await user_crud.get_by_email(db, email=email)
 
     @staticmethod
@@ -64,7 +63,7 @@ class UserService:
     @staticmethod
     async def authenticate_user(
         db: AsyncSession, username: str, password: str
-    ) -> Optional[User]:
+    ) -> User | None:
         return await user_crud.authenticate(db, username=username, password=password)
 
     @staticmethod

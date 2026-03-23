@@ -1,6 +1,7 @@
-import typer
 import asyncio
-from typing import Optional
+
+import typer
+
 
 app = typer.Typer(help="FTE calculation commands")
 

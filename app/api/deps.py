@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,9 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 from app.core.security import verify_token
+from app.crud.user import user as user_crud
 from app.db.session import get_user_db
 from app.models.user import User
-from app.crud.user import user as user_crud
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 

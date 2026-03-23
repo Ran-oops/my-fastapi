@@ -1,3 +1,4 @@
-from app.models.config_db.models import SystemConfig, DictType, DictData
+from app.models.config_db.models import DictData, DictType, SystemConfig
 
-__all__ = ["SystemConfig", "DictType", "DictData"]
+
+__all__ = ["DictData", "DictType", "SystemConfig"]

@@ -1,11 +1,13 @@
-import typer
 import asyncio
-from enum import Enum
+from enum import StrEnum
+
+import typer
+
 
 app = typer.Typer(help="Enterprise FastAPI Management Commands")
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -29,9 +31,7 @@ def global_options(
 
 @app.command("calculate-fte")
 def calculate_fte(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
     force: bool = typer.Option(False, "--force", "-f", help="Force recalculation"),
 ):
     """Calculate FTE - orchestrates multiple sub-commands in sequence"""

@@ -2,7 +2,9 @@ from fastapi import HTTPException, status
 
 
 class BaseAPIException(HTTPException):
-    def __init__(self, status_code: int, detail: str, headers: dict = {}):
+    def __init__(self, status_code: int, detail: str, headers: dict | None = None):
+        if headers is None:
+            headers = {}
         super().__init__(status_code=status_code, detail=detail, headers=headers)
 
 

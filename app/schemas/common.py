@@ -1,5 +1,7 @@
-from typing import Generic, TypeVar
+from typing import TypeVar
+
 from pydantic import BaseModel, ConfigDict
+
 
 T = TypeVar("T")
 
@@ -9,11 +11,11 @@ class ResponseBase(BaseModel):
     message: str = ""
 
 
-class DataResponse(ResponseBase, Generic[T]):
+class DataResponse[T](ResponseBase):
     data: T
 
 
-class ListResponse(ResponseBase, Generic[T]):
+class ListResponse[T](ResponseBase):
     data: list[T]
 
 

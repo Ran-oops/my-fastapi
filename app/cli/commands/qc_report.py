@@ -1,6 +1,8 @@
-import typer
 import asyncio
 from datetime import date, datetime
+
+import typer
+
 
 app = typer.Typer(help="QC report commands")
 

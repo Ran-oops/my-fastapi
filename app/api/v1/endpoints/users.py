@@ -2,15 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
-    get_user_db as get_db,
-    get_current_user,
     get_current_active_superuser,
+    get_current_user,
+)
+from app.api.deps import (
+    get_user_db as get_db,
 )
 from app.core.exceptions import NotFoundException
-from app.schemas.user import UserUpdate, UserResponse
-from app.schemas.common import DataResponse, PaginatedResponse, PaginationParams
-from app.services.user import user_service
 from app.models.user import User
+from app.schemas.common import DataResponse, PaginatedResponse, PaginationParams
+from app.schemas.user import UserResponse, UserUpdate
+from app.services.user import user_service
+
 
 router = APIRouter()
 
@@ -24,7 +27,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 async def get_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_user),
 ):
     user = await user_service.get_user_by_id(db, user_id)
     if not user:
@@ -36,11 +39,9 @@ async def get_user(
 async def get_users(
     pagination: PaginationParams = Depends(),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_superuser),
+    _current_user: User = Depends(get_current_active_superuser),
 ):
-    users = await user_service.get_users(
-        db, skip=pagination.skip, limit=pagination.limit
-    )
+    users = await user_service.get_users(db, skip=pagination.skip, limit=pagination.limit)
     total = await user_service.get_users_count(db)
     total_pages = (total + pagination.page_size - 1) // pagination.page_size
     return PaginatedResponse(
@@ -61,9 +62,7 @@ async def update_user(
     current_user: User = Depends(get_current_user),
 ):
     if current_user.is_superuser is False and current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     user = await user_service.update_user(db, user_id, user_in)
     return DataResponse(data=user, message="User updated successfully")
 
@@ -72,7 +71,7 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_superuser),
+    _current_user: User = Depends(get_current_active_superuser),
 ):
     await user_service.delete_user(db, user_id)
     return None

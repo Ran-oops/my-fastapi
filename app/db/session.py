@@ -1,11 +1,12 @@
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
+    create_async_engine,
 )
 
 from app.core.config import settings
+
 
 # User Database (PostgreSQL) - Read/Write
 user_engine: AsyncEngine = create_async_engine(

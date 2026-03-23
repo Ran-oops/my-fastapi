@@ -1,13 +1,12 @@
 from datetime import UTC, datetime
+from typing import Any
 
 
 class DataImportService:
     """Data import service - supports both CLI and API calls"""
 
     @staticmethod
-    async def import_all(
-        source: str, dry_run: bool = False, force: bool = False
-    ) -> dict[str, Any]:
+    async def import_all(source: str, dry_run: bool = False, force: bool = False) -> dict[str, Any]:
         result = {
             "action": "import_all",
             "source": source,

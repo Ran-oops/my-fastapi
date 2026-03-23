@@ -1,9 +1,10 @@
 from app.models.user_db.models import (
-    User,
-    Role,
     Permission,
-    user_roles,
+    Role,
+    User,
     role_permissions,
+    user_roles,
 )
 
-__all__ = ["User", "Role", "Permission", "user_roles", "role_permissions"]
+
+__all__ = ["Permission", "Role", "User", "role_permissions", "user_roles"]

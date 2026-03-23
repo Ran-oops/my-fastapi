@@ -1,14 +1,15 @@
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
 from app.api.v1 import api_router
+from app.core.config import settings
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     yield
 
 

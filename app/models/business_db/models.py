@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, Boolean, Integer, Numeric, DateTime, Text
+from sqlalchemy import Boolean, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.base import BusinessDBBase
 
 

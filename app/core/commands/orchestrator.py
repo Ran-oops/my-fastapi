@@ -1,9 +1,10 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
-import asyncio
+from enum import StrEnum
+from typing import ClassVar
 
 
-class CommandStatus(str, Enum):
+class CommandStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -14,15 +15,15 @@ class CommandStatus(str, Enum):
 class CommandResult:
     command_name: str
     status: CommandStatus
-    result: dict[str, Any] | None = None
+    result: dict | None = None
     error: str | None = None
 
 
 class CommandRegistry:
     """Registry for managing CLI commands"""
 
-    _commands: dict[str, Callable] = {}
-    _orchestrations: dict[str, list[str]] = {}
+    _commands: ClassVar[dict[str, Callable]] = {}
+    _orchestrations: ClassVar[dict[str, list[str]]] = {}
 
     @classmethod
     def register(cls, name: str, func: Callable) -> None:
@@ -100,7 +101,7 @@ class CommandOrchestrator:
         orchestration_name: str,
         db=None,
         **kwargs,
-    ) -> List[CommandResult]:
+    ) -> list[CommandResult]:
         steps = CommandRegistry.get_orchestration(orchestration_name)
         if steps is None:
             raise ValueError(f"Orchestration '{orchestration_name}' not found")
@@ -115,14 +116,10 @@ def register_fte_commands():
     from app.services.fte import FTEService
 
     CommandRegistry.register("import_task_listing", FTEService.import_task_listing)
-    CommandRegistry.register(
-        "import_geographic_ssu_data", FTEService.import_geographic_ssu_data
-    )
+    CommandRegistry.register("import_geographic_ssu_data", FTEService.import_geographic_ssu_data)
     CommandRegistry.register("calculate_country_fte", FTEService.calculate_country_fte)
     CommandRegistry.register("calculate_site_fte", FTEService.calculate_site_fte)
-    CommandRegistry.register(
-        "calculate_subregion_fte", FTEService.calculate_subregion_fte
-    )
+    CommandRegistry.register("calculate_subregion_fte", FTEService.calculate_subregion_fte)
     CommandRegistry.register("final_forecast", FTEService.final_forecast)
 
     CommandRegistry.register_orchestration(

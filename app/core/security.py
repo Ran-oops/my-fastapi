@@ -1,16 +1,16 @@
 from datetime import UTC, datetime, timedelta
-from typing import Optional, Union
 
 import bcrypt
 from jose import JWTError, jwt
 
 from app.core.config import settings
 
+
 ALGORITHM = "HS256"
 
 
 def create_access_token(
-    subject: Union[str, int], expires_delta: Optional[timedelta] = None
+    subject: str | int, expires_delta: timedelta | None = None
 ) -> str:
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
@@ -23,7 +23,7 @@ def create_access_token(
     return encoded_jwt
 
 
-def verify_token(token: str) -> Optional[str]:
+def verify_token(token: str) -> str | None:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         return payload.get("sub")
