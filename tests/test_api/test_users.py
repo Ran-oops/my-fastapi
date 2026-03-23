@@ -192,7 +192,7 @@ class TestGetUserById:
 @pytest.mark.asyncio
 class TestUpdateUser:
     async def test_update_own_user_success(self, client):
-        await client.post(
+        register_response = await client.post(
             "/api/v1/auth/register",
             json={
                 "email": "update@example.com",
@@ -200,22 +200,13 @@ class TestUpdateUser:
                 "password": "testpassword123",
             },
         )
+        user_id = register_response.json()["data"]["id"]
+
         login_response = await client.post(
             "/api/v1/auth/login",
             json={"username": "updateuser", "password": "testpassword123"},
         )
         token = login_response.json()["data"]["access_token"]
-        user_id = login_response.json().get("data", {}).get("user_id")
-
-        register_response = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "update2@example.com",
-                "username": "updateuser2",
-                "password": "testpassword123",
-            },
-        )
-        user_id = register_response.json()["data"]["id"]
 
         response = await client.put(
             f"/api/v1/users/{user_id}",
