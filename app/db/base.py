@@ -11,9 +11,7 @@ class UserBase:
 
     @declared_attr
     def updated_at(cls):
-        return Column(
-            DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
-        )
+        return Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class BusinessBase:
@@ -25,9 +23,7 @@ class BusinessBase:
 
     @declared_attr
     def updated_at(cls):
-        return Column(
-            DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
-        )
+        return Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class ConfigBase:

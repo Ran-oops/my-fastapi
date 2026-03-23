@@ -1,4 +1,3 @@
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictException, NotFoundException
@@ -18,9 +17,7 @@ class UserService:
         return await user_crud.get_by_email(db, email=email)
 
     @staticmethod
-    async def get_users(
-        db: AsyncSession, skip: int = 0, limit: int = 100
-    ) -> list[User]:
+    async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[User]:
         users = await user_crud.get_multi(db, skip=skip, limit=limit)
         return list(users)
 
@@ -61,9 +58,7 @@ class UserService:
         return await user_crud.delete(db, id=user_id)
 
     @staticmethod
-    async def authenticate_user(
-        db: AsyncSession, username: str, password: str
-    ) -> User | None:
+    async def authenticate_user(db: AsyncSession, username: str, password: str) -> User | None:
         return await user_crud.authenticate(db, username=username, password=password)
 
     @staticmethod

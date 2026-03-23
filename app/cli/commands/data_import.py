@@ -9,9 +9,7 @@ app = typer.Typer(help="Data import commands")
 @app.command("all-data")
 def import_all_data(
     source: str = typer.Option(..., "--source", "-s", help="Data source identifier"),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
     force: bool = typer.Option(False, "--force", "-f", help="Force reimport"),
 ):
     """Import all data from specified source"""

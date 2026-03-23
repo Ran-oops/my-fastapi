@@ -13,9 +13,7 @@ from app.models.user import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 
-async def get_current_user(
-    db: AsyncSession = Depends(get_user_db), token: str = Depends(oauth2_scheme)
-) -> User:
+async def get_current_user(db: AsyncSession = Depends(get_user_db), token: str = Depends(oauth2_scheme)) -> User:
     user_id = verify_token(token)
     if user_id is None:
         raise UnauthorizedException("Could not validate credentials")

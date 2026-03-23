@@ -1,4 +1,3 @@
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,9 +29,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def authenticate(
-        self, db: AsyncSession, username: str, password: str
-    ) -> User | None:
+    async def authenticate(self, db: AsyncSession, username: str, password: str) -> User | None:
         user = await self.get_by_username(db, username=username)
         if not user:
             return None

@@ -8,9 +8,7 @@ class SystemConfig(ConfigDBBase):
     __tablename__ = "system_configs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    key: Mapped[str] = mapped_column(
-        String(100), unique=True, index=True, nullable=False
-    )
+    key: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
@@ -19,9 +17,7 @@ class DictType(ConfigDBBase):
     __tablename__ = "dict_types"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    code: Mapped[str] = mapped_column(
-        String(50), unique=True, index=True, nullable=False
-    )
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

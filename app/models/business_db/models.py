@@ -8,9 +8,7 @@ class Order(BusinessDBBase):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    order_no: Mapped[str] = mapped_column(
-        String(50), unique=True, index=True, nullable=False
-    )
+    order_no: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
@@ -33,9 +31,7 @@ class Product(BusinessDBBase):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    sku: Mapped[str] = mapped_column(
-        String(50), unique=True, index=True, nullable=False
-    )
+    sku: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     stock: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

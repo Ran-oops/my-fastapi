@@ -10,13 +10,9 @@ app = typer.Typer(help="QC report commands")
 @app.command("generate")
 def generate_report(
     report_type: str = typer.Option(..., "--type", "-t", help="Report type"),
-    start_date: str = typer.Option(
-        ..., "--start", "-s", help="Start date (YYYY-MM-DD)"
-    ),
+    start_date: str = typer.Option(..., "--start", "-s", help="Start date (YYYY-MM-DD)"),
     end_date: str = typer.Option(..., "--end", "-e", help="End date (YYYY-MM-DD)"),
-    output: str = typer.Option(
-        "pdf", "--output", "-o", help="Output format: pdf, excel, json"
-    ),
+    output: str = typer.Option("pdf", "--output", "-o", help="Output format: pdf, excel, json"),
 ):
     """Generate QC report"""
     start = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -27,9 +23,7 @@ def generate_report(
 
 @app.command("list")
 def list_reports(
-    report_type: str | None = typer.Option(
-        None, "--type", "-t", help="Filter by report type"
-    ),
+    report_type: str | None = typer.Option(None, "--type", "-t", help="Filter by report type"),
     limit: int = typer.Option(10, "--limit", "-l", help="Number of reports to show"),
 ):
     """List generated QC reports"""
@@ -38,9 +32,7 @@ def list_reports(
         typer.echo(f"  - {report['id']}: {report['type']} ({report['created_at']})")
 
 
-async def _generate_report(
-    report_type: str, start_date: date, end_date: date, output: str
-):
+async def _generate_report(report_type: str, start_date: date, end_date: date, output: str):
     from app.services.qc_report import QCReportService
 
     service = QCReportService()

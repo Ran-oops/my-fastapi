@@ -6,9 +6,7 @@ class FTEService:
     """FTE calculation service - supports both CLI and API calls"""
 
     @staticmethod
-    async def import_task_listing_standalone(
-        dry_run: bool = False, force: bool = False
-    ) -> dict[str, Any]:
+    async def import_task_listing_standalone(dry_run: bool = False, force: bool = False) -> dict[str, Any]:
         result = {
             "action": "import_task_listing",
             "dry_run": dry_run,
@@ -20,9 +18,7 @@ class FTEService:
         return result
 
     @staticmethod
-    async def import_geographic_ssu_data_standalone(
-        dry_run: bool = False, force: bool = False
-    ) -> dict[str, Any]:
+    async def import_geographic_ssu_data_standalone(dry_run: bool = False, force: bool = False) -> dict[str, Any]:
         result = {
             "action": "import_geographic_ssu_data",
             "dry_run": dry_run,
@@ -80,20 +76,12 @@ class FTEService:
         return result
 
     @staticmethod
-    async def import_task_listing(
-        db, dry_run: bool = False, force: bool = False
-    ) -> dict[str, Any]:
-        return await FTEService.import_task_listing_standalone(
-            dry_run=dry_run, force=force
-        )
+    async def import_task_listing(db, dry_run: bool = False, force: bool = False) -> dict[str, Any]:
+        return await FTEService.import_task_listing_standalone(dry_run=dry_run, force=force)
 
     @staticmethod
-    async def import_geographic_ssu_data(
-        db, dry_run: bool = False, force: bool = False
-    ) -> dict[str, Any]:
-        return await FTEService.import_geographic_ssu_data_standalone(
-            dry_run=dry_run, force=force
-        )
+    async def import_geographic_ssu_data(db, dry_run: bool = False, force: bool = False) -> dict[str, Any]:
+        return await FTEService.import_geographic_ssu_data_standalone(dry_run=dry_run, force=force)
 
     @staticmethod
     async def calculate_country_fte(db, dry_run: bool = False) -> dict[str, Any]:
@@ -112,9 +100,7 @@ class FTEService:
         return await FTEService.final_forecast_standalone(dry_run=dry_run)
 
     @staticmethod
-    async def calculate_fte_full(
-        db, dry_run: bool = False, force: bool = False
-    ) -> dict[str, Any]:
+    async def calculate_fte_full(db, dry_run: bool = False, force: bool = False) -> dict[str, Any]:
         """Orchestrator: runs all FTE calculation steps in sequence"""
         steps = [
             ("import_task_listing", FTEService.import_task_listing),

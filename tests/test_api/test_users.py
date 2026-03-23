@@ -120,9 +120,7 @@ class TestGetCurrentUser:
         )
         token = login_response.json()["data"]["access_token"]
 
-        response = await client.get(
-            "/api/v1/users/me", headers={"Authorization": f"Bearer {token}"}
-        )
+        response = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["success"] is True
@@ -134,9 +132,7 @@ class TestGetCurrentUser:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     async def test_get_me_invalid_token(self, client):
-        response = await client.get(
-            "/api/v1/users/me", headers={"Authorization": "Bearer invalid_token"}
-        )
+        response = await client.get("/api/v1/users/me", headers={"Authorization": "Bearer invalid_token"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 

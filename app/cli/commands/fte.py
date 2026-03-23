@@ -8,9 +8,7 @@ app = typer.Typer(help="FTE calculation commands")
 
 @app.command("calculate")
 def calculate_fte(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
     force: bool = typer.Option(False, "--force", "-f", help="Force recalculation"),
 ):
     """Calculate FTE - orchestrates multiple sub-commands in sequence"""
@@ -39,9 +37,7 @@ def calculate_fte(
 
 @app.command("import-task-listing")
 def import_task_listing_cmd(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
     force: bool = typer.Option(False, "--force", "-f", help="Force reimport"),
 ):
     """Import task listing data"""
@@ -51,9 +47,7 @@ def import_task_listing_cmd(
 
 @app.command("import-geographic-ssu")
 def import_geographic_ssu_cmd(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
     force: bool = typer.Option(False, "--force", "-f", help="Force reimport"),
 ):
     """Import geographic SSU data"""
@@ -63,9 +57,7 @@ def import_geographic_ssu_cmd(
 
 @app.command("calculate-country")
 def calculate_country_cmd(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
 ):
     """Calculate country-level FTE"""
     asyncio.run(calculate_country_fte(dry_run=dry_run))
@@ -74,9 +66,7 @@ def calculate_country_cmd(
 
 @app.command("calculate-site")
 def calculate_site_cmd(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
 ):
     """Calculate site-level FTE"""
     asyncio.run(calculate_site_fte(dry_run=dry_run))
@@ -85,9 +75,7 @@ def calculate_site_cmd(
 
 @app.command("calculate-subregion")
 def calculate_subregion_cmd(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
 ):
     """Calculate subregion-level FTE"""
     asyncio.run(calculate_subregion_fte(dry_run=dry_run))
@@ -96,9 +84,7 @@ def calculate_subregion_cmd(
 
 @app.command("final-forecast")
 def final_forecast_cmd(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Simulate without making changes"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without making changes"),
 ):
     """Generate final forecast"""
     asyncio.run(final_forecast(dry_run=dry_run))

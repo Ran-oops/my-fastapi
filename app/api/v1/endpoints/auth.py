@@ -22,7 +22,5 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=DataResponse[Token])
 async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    token = await user_service.login_user(
-        db, username=credentials.username, password=credentials.password
-    )
+    token = await user_service.login_user(db, username=credentials.username, password=credentials.password)
     return DataResponse(data=token, message="Login successful")
