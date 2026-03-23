@@ -1,0 +1,21 @@
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "*.egg-info",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "alembic/versions",
+]
+
+[format]
+line-width = 88
+indent-width = 4
+
+[lint]
+select = ["E", "F", "I", "UP", "ASYNC", "S", "B", "C4", "SIM", "TCH", "RUF"]
+ignore = ["E501", "S101", "B008", "S104", "S608", "ARG001"]
+
+[lint.isort]
+known-first-party = ["app"]

@@ -1,0 +1,60 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: uvx ruff check --fix
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [app, tests]
+
+      - id: ruff-format
+        name: ruff-format
+        entry: uvx ruff format
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [app, tests]
+
+      - id: ty
+        name: ty
+        entry: uvx ty check
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [app]
+
+      - id: rumdl
+        name: rumdl
+        entry: uvx rumdl
+        language: system
+        types: [markdown]
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: debug-statements
+
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+      - id: gitlint
+
+ci:
+  autofix_prs: true
+  autofix_commit_msg: "style: auto-fix pre-commit issues"
+  autoupdate_branch: "main"
+  autoupdate_commit_msg: "chore: pre-commit autoupdate"
+  autoupdate_schedule: "weekly"

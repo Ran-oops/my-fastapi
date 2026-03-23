@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.pool import NullPool
 
 from app.main import app
-from app.db.base import Base
-from app.api.deps import get_db
+from app.db.base import UserDBBase as Base
+from app.db.session import get_user_db as get_db
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool, future=True)
@@ -48,6 +48,6 @@ async def client(db_session):
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()

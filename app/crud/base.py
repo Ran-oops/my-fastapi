@@ -1,11 +1,18 @@
-from typing import Generic, TypeVar, Optional, List, Dict, Any, Sequence, Union, Type
+from typing import (
+    Generic,
+    TypeVar,
+    Optional,
+    Dict,
+    Any,
+    Sequence,
+    Union,
+    Type,
+)
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
-from app.db.base import Base
-
-ModelType = TypeVar("ModelType", bound=Base)
+ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
@@ -15,7 +22,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     async def get(self, db: AsyncSession, id: Any) -> Optional[ModelType]:
-        result = await db.execute(select(self.model).where(self.model.id == id))
+        result = await db.execute(select(self.model).where(self.model.id == id))  # type: ignore[attr-defined]
         return result.scalar_one_or_none()
 
     async def get_multi(
@@ -26,7 +33,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def count(self, db: AsyncSession) -> int:
         result = await db.execute(select(func.count()).select_from(self.model))
-        return result.scalar()
+        scalar_result = result.scalar()
+        return scalar_result if scalar_result is not None else 0
 
     async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = obj_in.dict()

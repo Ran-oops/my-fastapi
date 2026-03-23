@@ -21,6 +21,14 @@ class PaginationParams(BaseModel):
     page: int = 1
     page_size: int = 10
 
+    @property
+    def skip(self) -> int:
+        return (self.page - 1) * self.page_size
+
+    @property
+    def limit(self) -> int:
+        return self.page_size
+
     class Config:
         orm_mode = True
 

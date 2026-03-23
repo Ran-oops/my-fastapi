@@ -6,26 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 from app.core.security import verify_token
-from app.db.session import AsyncSessionLocal
+from app.db.session import get_user_db
 from app.models.user import User
 from app.crud.user import user as user_crud
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
-
-
 async def get_current_user(
-    db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)
+    db: AsyncSession = Depends(get_user_db), token: str = Depends(oauth2_scheme)
 ) -> User:
     user_id = verify_token(token)
     if user_id is None:

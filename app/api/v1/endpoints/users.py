@@ -2,32 +2,18 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_current_user, get_current_active_superuser
+from app.api.deps import (
+    get_user_db as get_db,
+    get_current_user,
+    get_current_active_superuser,
+)
 from app.core.exceptions import NotFoundException
-from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserLogin, Token
+from app.schemas.user import UserUpdate, UserResponse
 from app.schemas.common import DataResponse, PaginatedResponse, PaginationParams
 from app.services.user import user_service
 from app.models.user import User
 
 router = APIRouter()
-
-
-@router.post(
-    "/register",
-    response_model=DataResponse[UserResponse],
-    status_code=status.HTTP_201_CREATED,
-)
-async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    user = await user_service.create_user(db, user_in)
-    return DataResponse(data=user, message="User created successfully")
-
-
-@router.post("/login", response_model=DataResponse[Token])
-async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    token = await user_service.login_user(
-        db, username=credentials.username, password=credentials.password
-    )
-    return DataResponse(data=token, message="Login successful")
 
 
 @router.get("/me", response_model=DataResponse[UserResponse])
@@ -75,7 +61,7 @@ async def update_user(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if not current_user.is_superuser and current_user.id != user_id:
+    if current_user.is_superuser is False and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
         )

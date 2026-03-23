@@ -32,8 +32,14 @@ def verify_token(token: str) -> Optional[str]:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    # bcrypt has a 72-byte limit, truncate if necessary
+    if isinstance(plain_password, str):
+        plain_password = plain_password[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
+    # bcrypt has a 72-byte limit, truncate if necessary
+    if isinstance(password, str):
+        password = password[:72]
     return pwd_context.hash(password)
