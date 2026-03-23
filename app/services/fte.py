@@ -1,5 +1,5 @@
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Any
 
 
 class FTEService:
@@ -8,81 +8,81 @@ class FTEService:
     @staticmethod
     async def import_task_listing_standalone(
         dry_run: bool = False, force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         result = {
             "action": "import_task_listing",
             "dry_run": dry_run,
             "force": force,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
     async def import_geographic_ssu_data_standalone(
         dry_run: bool = False, force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         result = {
             "action": "import_geographic_ssu_data",
             "dry_run": dry_run,
             "force": force,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
-    async def calculate_country_fte_standalone(dry_run: bool = False) -> Dict[str, Any]:
+    async def calculate_country_fte_standalone(dry_run: bool = False) -> dict[str, Any]:
         result = {
             "action": "calculate_country_fte",
             "dry_run": dry_run,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
-    async def calculate_site_fte_standalone(dry_run: bool = False) -> Dict[str, Any]:
+    async def calculate_site_fte_standalone(dry_run: bool = False) -> dict[str, Any]:
         result = {
             "action": "calculate_site_fte",
             "dry_run": dry_run,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
     async def calculate_subregion_fte_standalone(
         dry_run: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         result = {
             "action": "calculate_subregion_fte",
             "dry_run": dry_run,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
-    async def final_forecast_standalone(dry_run: bool = False) -> Dict[str, Any]:
+    async def final_forecast_standalone(dry_run: bool = False) -> dict[str, Any]:
         result = {
             "action": "final_forecast",
             "dry_run": dry_run,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
     async def import_task_listing(
         db, dry_run: bool = False, force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return await FTEService.import_task_listing_standalone(
             dry_run=dry_run, force=force
         )
@@ -90,31 +90,31 @@ class FTEService:
     @staticmethod
     async def import_geographic_ssu_data(
         db, dry_run: bool = False, force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return await FTEService.import_geographic_ssu_data_standalone(
             dry_run=dry_run, force=force
         )
 
     @staticmethod
-    async def calculate_country_fte(db, dry_run: bool = False) -> Dict[str, Any]:
+    async def calculate_country_fte(db, dry_run: bool = False) -> dict[str, Any]:
         return await FTEService.calculate_country_fte_standalone(dry_run=dry_run)
 
     @staticmethod
-    async def calculate_site_fte(db, dry_run: bool = False) -> Dict[str, Any]:
+    async def calculate_site_fte(db, dry_run: bool = False) -> dict[str, Any]:
         return await FTEService.calculate_site_fte_standalone(dry_run=dry_run)
 
     @staticmethod
-    async def calculate_subregion_fte(db, dry_run: bool = False) -> Dict[str, Any]:
+    async def calculate_subregion_fte(db, dry_run: bool = False) -> dict[str, Any]:
         return await FTEService.calculate_subregion_fte_standalone(dry_run=dry_run)
 
     @staticmethod
-    async def final_forecast(db, dry_run: bool = False) -> Dict[str, Any]:
+    async def final_forecast(db, dry_run: bool = False) -> dict[str, Any]:
         return await FTEService.final_forecast_standalone(dry_run=dry_run)
 
     @staticmethod
     async def calculate_fte_full(
         db, dry_run: bool = False, force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Orchestrator: runs all FTE calculation steps in sequence"""
         steps = [
             ("import_task_listing", FTEService.import_task_listing),
@@ -127,9 +127,10 @@ class FTEService:
 
         results = []
         for step_name, step_func in steps:
-            result = await step_func(
-                db, dry_run=dry_run, force=force if "import" in step_name else False
-            )
+            if "import" in step_name:
+                result = await step_func(db, dry_run=dry_run, force=force)
+            else:
+                result = await step_func(db, dry_run=dry_run)
             results.append(result)
 
         return {
@@ -138,7 +139,7 @@ class FTEService:
             "status": "completed",
             "steps_completed": len(results),
             "results": results,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
 

@@ -1,13 +1,5 @@
-from typing import (
-    Generic,
-    TypeVar,
-    Optional,
-    Dict,
-    Any,
-    Sequence,
-    Union,
-    Type,
-)
+from typing import Generic, TypeVar, Optional, Any, Sequence, Union, Type
+
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -48,7 +40,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self,
         db: AsyncSession,
         db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]],
+        obj_in: Union[UpdateSchemaType, dict[str, Any]],
     ) -> ModelType:
         if isinstance(obj_in, dict):
             update_data = obj_in

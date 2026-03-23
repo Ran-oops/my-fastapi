@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -42,4 +43,16 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "version": "1.0.0",
+    }
+
+
+@app.get("/health/ready")
+async def readiness_check():
+    return {
+        "status": "ready",
+        "timestamp": datetime.now(UTC).isoformat(),
+    }

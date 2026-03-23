@@ -1,5 +1,4 @@
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class DataImportService:
@@ -8,7 +7,7 @@ class DataImportService:
     @staticmethod
     async def import_all(
         source: str, dry_run: bool = False, force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         result = {
             "action": "import_all",
             "source": source,
@@ -16,18 +15,18 @@ class DataImportService:
             "force": force,
             "status": "completed",
             "records_processed": 0,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 
     @staticmethod
-    async def validate(source: str) -> Dict[str, Any]:
+    async def validate(source: str) -> dict[str, Any]:
         result = {
             "valid": True,
             "source": source,
             "message": "Data validation passed",
             "errors": [],
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         return result
 

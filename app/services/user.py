@@ -1,4 +1,5 @@
-from typing import Optional, List
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException, ConflictException
@@ -20,7 +21,7 @@ class UserService:
     @staticmethod
     async def get_users(
         db: AsyncSession, skip: int = 0, limit: int = 100
-    ) -> List[User]:
+    ) -> list[User]:
         users = await user_crud.get_multi(db, skip=skip, limit=limit)
         return list(users)
 

@@ -1,6 +1,5 @@
 import typer
 import asyncio
-from typing import Optional
 
 app = typer.Typer(help="Data import commands")
 

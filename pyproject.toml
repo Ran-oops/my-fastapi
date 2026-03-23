@@ -47,8 +47,8 @@ dev = [
 ]
 
 [project.scripts]
-manage = "app.cli:app"
-enterprise-fastapi = "app.cli:app"
+manage = "app.cli:cli"
+enterprise-fastapi = "app.cli:cli"
 
 [project.urls]
 Homepage = "https://github.com/example/enterprise-fastapi"

@@ -1,4 +1,3 @@
-from typing import Callable, List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
 import asyncio
@@ -15,38 +14,38 @@ class CommandStatus(str, Enum):
 class CommandResult:
     command_name: str
     status: CommandStatus
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
 
 
 class CommandRegistry:
     """Registry for managing CLI commands"""
 
-    _commands: Dict[str, Callable] = {}
-    _orchestrations: Dict[str, List[str]] = {}
+    _commands: dict[str, Callable] = {}
+    _orchestrations: dict[str, list[str]] = {}
 
     @classmethod
     def register(cls, name: str, func: Callable) -> None:
         cls._commands[name] = func
 
     @classmethod
-    def register_orchestration(cls, name: str, steps: List[str]) -> None:
+    def register_orchestration(cls, name: str, steps: list[str]) -> None:
         cls._orchestrations[name] = steps
 
     @classmethod
-    def get(cls, name: str) -> Optional[Callable]:
+    def get(cls, name: str) -> Callable | None:
         return cls._commands.get(name)
 
     @classmethod
-    def get_orchestration(cls, name: str) -> Optional[List[str]]:
+    def get_orchestration(cls, name: str) -> list[str] | None:
         return cls._orchestrations.get(name)
 
     @classmethod
-    def list_commands(cls) -> List[str]:
+    def list_commands(cls) -> list[str]:
         return list(cls._commands.keys())
 
     @classmethod
-    def list_orchestrations(cls) -> List[str]:
+    def list_orchestrations(cls) -> list[str]:
         return list(cls._orchestrations.keys())
 
 
@@ -55,10 +54,10 @@ class CommandOrchestrator:
 
     @staticmethod
     async def run_sequence(
-        commands: List[str],
+        commands: list[str],
         db=None,
         **kwargs,
-    ) -> List[CommandResult]:
+    ) -> list[CommandResult]:
         results = []
         for command_name in commands:
             func = CommandRegistry.get(command_name)
