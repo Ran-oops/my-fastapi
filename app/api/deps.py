@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 from app.core.security import verify_token
-from app.db.session import get_user_db
+from app.modules.shared.db import get_user_db
 from app.modules.users.models import User
 from app.modules.users.repository import user_repository
 

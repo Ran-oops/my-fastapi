@@ -3,8 +3,8 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.security import create_access_token, get_password_hash
-from app.db.base import UserDBBase as Base
-from app.db.session import get_user_db as get_db
+from app.modules.shared.db import UserDBBase as Base
+from app.modules.shared.db import get_user_db as get_db
 from app.main import app
 from app.modules.users.models import User
 

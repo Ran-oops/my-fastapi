@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import UserDBBase
+from app.modules.shared.db import UserDBBase
 
 
 class Role(UserDBBase):

@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.shared.base import CRUDBase
+from app.modules.shared.db import CRUDBase
 from app.modules.roles.models import Permission, Role, role_permissions, user_roles
 from app.modules.roles.schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate
 

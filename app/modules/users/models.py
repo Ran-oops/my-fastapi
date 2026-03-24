@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import UserDBBase
+from app.modules.shared.db import UserDBBase
 
 
 class User(UserDBBase):
