@@ -3,6 +3,8 @@ from enum import StrEnum
 
 import typer
 
+from app.cli.commands import permissions, roles
+
 
 app = typer.Typer(help="Enterprise FastAPI Management Commands")
 
@@ -27,6 +29,10 @@ def global_options(
     import logging
 
     logging.basicConfig(level=log_level.value)
+
+
+app.add_typer(roles.app, name="roles", help="Role management commands")
+app.add_typer(permissions.app, name="permissions", help="Permission management commands")
 
 
 @app.command("calculate-fte")

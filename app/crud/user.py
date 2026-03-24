@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
@@ -14,6 +15,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     async def get_by_username(self, db: AsyncSession, username: str) -> User | None:
         result = await db.execute(select(User).where(User.username == username))
+        return result.scalar_one_or_none()
+
+    async def get_with_roles(self, db: AsyncSession, user_id: int) -> User | None:
+        result = await db.execute(select(User).where(User.id == user_id).options(selectinload(User.roles)))
         return result.scalar_one_or_none()
 
     async def create(self, db: AsyncSession, obj_in: UserCreate) -> User:

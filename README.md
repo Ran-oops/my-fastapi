@@ -150,8 +150,8 @@ alembic upgrade head
 ### 4. 启动应用
 
 ```bash
-# 使用Makefile
-make run
+# 使用just
+just run
 
 # 或手动执行
 uv run python run.py
@@ -207,41 +207,42 @@ uv run python manage.py qc --help
 
 ```bash
 # 运行所有检查 (lint + test)
-make check
+just lint
+just test
 
 # 仅运行linting
-make lint
+just lint
 
 # 格式化代码
-make format
+just fmt
 
 # 运行测试
-make test
+just test
 ```
 
 ### Pre-commit Hooks
 
 ```bash
 # 安装pre-commit hooks
-uvx prek install
+just init
 
 # 手动运行所有hooks
-uvx prek run --all-files
+just pre-commit
 ```
 
-### 使用Makefile
+### 使用Just
 
 ```bash
-make help       # 显示所有可用命令
-make install    # 安装生产依赖
-make dev        # 安装开发依赖
-make test       # 运行测试
-make lint       # 运行linting
-make format     # 格式化代码
-make check      # 运行所有检查
-make clean      # 清理缓存文件
-make run        # 启动应用
-make cli        # 显示CLI帮助
+just                  # 显示所有可用命令
+just sync             # 同步依赖
+just dev              # 安装开发依赖
+just test             # 运行测试
+just lint             # 运行linting
+just fmt              # 格式化代码
+just ruff             # 运行所有检查
+just clean            # 清理缓存文件
+just run              # 启动应用
+just cli              # 显示CLI帮助
 ```
 
 ### UV常用命令
@@ -290,8 +291,8 @@ uvx rumdl --fix README.md
 ## 运行测试
 
 ```bash
-# 使用Makefile
-make test
+# 使用just
+just test
 
 # 或手动执行
 uv run pytest tests -v --cov=app --cov-report=term-missing
