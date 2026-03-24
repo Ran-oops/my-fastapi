@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictException, NotFoundException
+from app.core.exceptions import ConflictException, NotFoundException, UnauthorizedException
 from app.core.security import create_access_token
 from app.crud.user import user as user_crud
 from app.models.user import User
@@ -65,9 +65,9 @@ class UserService:
     async def login_user(db: AsyncSession, username: str, password: str) -> Token:
         user = await UserService.authenticate_user(db, username, password)
         if not user:
-            raise NotFoundException("Invalid credentials")
+            raise UnauthorizedException("Invalid credentials")
         if user.is_active is False:
-            raise NotFoundException("Inactive user")
+            raise UnauthorizedException("Inactive user")
         access_token = create_access_token(subject=str(user.id))
         return Token(access_token=access_token)
 

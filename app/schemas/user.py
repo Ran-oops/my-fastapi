@@ -4,6 +4,19 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
+def validate_password_strength(v: str) -> str:
+    """验证密码强度."""
+    if len(v) < 8:
+        raise ValueError("Password must be at least 8 characters long")
+    if len(v) > 72:
+        v = v[:72]
+    if not re.search(r"[A-Za-z]", v):
+        raise ValueError("Password must contain at least one letter")
+    if not re.search(r"\d", v):
+        raise ValueError("Password must contain at least one digit")
+    return v
+
+
 class UserBase(BaseModel):
     email: EmailStr
     username: str
@@ -17,15 +30,7 @@ class UserCreate(UserBase):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if len(v) > 72:
-            v = v[:72]
-        if not re.search(r"[A-Za-z]", v):
-            raise ValueError("Password must contain at least one letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one digit")
-        return v
+        return validate_password_strength(v)
 
 
 class UserUpdate(BaseModel):
@@ -38,17 +43,7 @@ class UserUpdate(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str | None) -> str | None:
-        if v is None:
-            return v
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if len(v) > 72:
-            v = v[:72]
-        if not re.search(r"[A-Za-z]", v):
-            raise ValueError("Password must contain at least one letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one digit")
-        return v
+        return validate_password_strength(v) if v else v
 
 
 class UserInDB(UserBase):

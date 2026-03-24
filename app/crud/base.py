@@ -1,14 +1,14 @@
 from collections.abc import Sequence
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-ModelType = TypeVar("ModelType")
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+ModelType = type["ModelType"]
+CreateSchemaType = type["CreateSchemaType"]
+UpdateSchemaType = type["UpdateSchemaType"]
 
 
 class CRUDBase[ModelType, CreateSchemaType: BaseModel, UpdateSchemaType: BaseModel]:
@@ -20,7 +20,12 @@ class CRUDBase[ModelType, CreateSchemaType: BaseModel, UpdateSchemaType: BaseMod
         return result.scalar_one_or_none()
 
     async def get_multi(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> Sequence[ModelType]:
-        result = await db.execute(select(self.model).offset(skip).limit(limit))
+        result = await db.execute(
+            select(self.model)
+            .order_by(self.model.id.desc())  # type: ignore[attr-defined]
+            .offset(skip)
+            .limit(limit)
+        )
         return result.scalars().all()
 
     async def count(self, db: AsyncSession) -> int:

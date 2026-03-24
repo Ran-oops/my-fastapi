@@ -1,3 +1,6 @@
+import secrets
+import warnings
+
 from pydantic import ConfigDict, field_validator
 from pydantic_settings import BaseSettings
 
@@ -11,7 +14,7 @@ class Settings(BaseSettings):
 
     APP_ENV: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str = "change-this-secret-key-in-production"
+    SECRET_KEY: str = ""
     BACKEND_CORS_ORIGINS: list[str] = ["*"]
     LOG_LEVEL: str = "INFO"
     API_V1_STR: str = "/api/v1"
@@ -27,12 +30,36 @@ class Settings(BaseSettings):
 
     CONFIG_DATABASE_URL: str = "mysql+aiomysql://root:password@localhost:3306/config_db"
 
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
+        if not v:
+            if cls.model_config.get("APP_ENV") == "production":
+                raise ValueError("SECRET_KEY must be set in production!")
+            v = secrets.token_urlsafe(32)
+            warnings.warn(
+                "SECRET_KEY not set, using auto-generated key. Set SECRET_KEY environment variable for production!",
+                UserWarning,
+                stacklevel=2,
+            )
+        elif len(v) < 32:
+            warnings.warn(
+                "SECRET_KEY should be at least 32 characters for security!",
+                UserWarning,
+                stacklevel=2,
+            )
+        return v
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> str | list[str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
+            if isinstance(v, list) and "*" in v:
+                env = cls.model_config.get("APP_ENV", "development")
+                if env == "production":
+                    raise ValueError("CORS wildcard '*' not allowed in production")
             return v
         raise ValueError(v)
 
