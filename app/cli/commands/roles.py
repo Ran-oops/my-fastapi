@@ -46,7 +46,7 @@ def remove_role(
 
 async def _list_roles():
     from app.db.session import UserSessionLocal
-    from app.services.role import role_service
+    from app.modules.roles.service import role_service
 
     async with UserSessionLocal() as db:
         roles = await role_service.get_roles(db)
@@ -55,8 +55,8 @@ async def _list_roles():
 
 async def _create_role(name: str, description: str | None):
     from app.db.session import UserSessionLocal
-    from app.schemas.role import RoleCreate
-    from app.services.role import role_service
+    from app.modules.roles.schemas import RoleCreate
+    from app.modules.roles.service import role_service
 
     async with UserSessionLocal() as db:
         role_in = RoleCreate(name=name, description=description)
@@ -66,7 +66,7 @@ async def _create_role(name: str, description: str | None):
 
 async def _assign_role(user_id: int, role_id: int):
     from app.db.session import UserSessionLocal
-    from app.services.role import role_service
+    from app.modules.roles.service import role_service
 
     async with UserSessionLocal() as db:
         await role_service.assign_role_to_user(db, user_id, role_id)
@@ -74,7 +74,7 @@ async def _assign_role(user_id: int, role_id: int):
 
 async def _remove_role(user_id: int, role_id: int):
     from app.db.session import UserSessionLocal
-    from app.services.role import role_service
+    from app.modules.roles.service import role_service
 
     async with UserSessionLocal() as db:
         await role_service.remove_role_from_user(db, user_id, role_id)

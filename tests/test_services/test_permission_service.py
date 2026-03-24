@@ -1,8 +1,8 @@
 import pytest
 
 from app.core.exceptions import ConflictException, NotFoundException
-from app.schemas.permission import PermissionCreate, PermissionUpdate
-from app.services.permission import permission_service
+from app.modules.roles.schemas import PermissionCreate, PermissionUpdate
+from app.modules.roles.service import permission_service
 
 
 @pytest.mark.asyncio
@@ -83,8 +83,8 @@ class TestPermissionService:
     async def test_get_role_permissions(self, db_session):
         import uuid
 
-        from app.schemas.role import RoleCreate
-        from app.services.role import role_service
+        from app.modules.roles.schemas import RoleCreate
+        from app.modules.roles.service import role_service
 
         unique_id = str(uuid.uuid4())[:8]
         perm_in = PermissionCreate(name=f"Role Permission {unique_id}", code=f"role:permission_{unique_id}")

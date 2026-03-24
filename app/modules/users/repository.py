@@ -3,12 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.security import get_password_hash, verify_password
-from app.crud.base import CRUDBase
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.modules.shared.base import CRUDBase
+from app.modules.users.models import User
+from app.modules.users.schemas import UserCreate, UserUpdate
 
 
-class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
+class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
     async def get_by_email(self, db: AsyncSession, email: str) -> User | None:
         result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
@@ -43,4 +43,4 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
 
-user = CRUDUser(User)
+user_repository = UserRepository(User)

@@ -4,16 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import (
     get_current_active_superuser,
     get_current_user,
-)
-from app.api.deps import (
     get_user_db as get_db,
 )
 from app.core.exceptions import NotFoundException
-from app.models.user import User
-from app.schemas.common import DataResponse, PaginatedResponse, PaginationParams
-from app.schemas.user import UserResponse, UserUpdate
-from app.services.user import user_service
-
+from app.modules.users.models import User
+from app.modules.users.schemas import UserResponse, UserUpdate
+from app.modules.users.service import user_service
+from app.modules.shared.schemas import DataResponse, PaginatedResponse, PaginationParams
 
 router = APIRouter()
 

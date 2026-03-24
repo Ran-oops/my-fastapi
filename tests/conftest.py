@@ -6,7 +6,7 @@ from app.core.security import create_access_token, get_password_hash
 from app.db.base import UserDBBase as Base
 from app.db.session import get_user_db as get_db
 from app.main import app
-from app.models.user import User
+from app.modules.users.models import User
 
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

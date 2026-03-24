@@ -1,6 +1,7 @@
 from app.models.business import Order, OrderItem, Product
 from app.models.config import DictData, DictType, SystemConfig
-from app.models.user import Permission, Role, User, role_permissions, user_roles
+from app.modules.roles.models import Permission, Role, role_permissions
+from app.modules.users.models import User, user_roles
 
 
 __all__ = [

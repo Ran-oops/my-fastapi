@@ -2,12 +2,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.crud.base import CRUDBase
-from app.models.user import Permission, Role, user_roles
-from app.schemas.role import RoleCreate, RoleUpdate
+from app.modules.shared.base import CRUDBase
+from app.modules.roles.models import Permission, Role, role_permissions, user_roles
+from app.modules.roles.schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate
 
 
-class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
+class RoleRepository(CRUDBase[Role, RoleCreate, RoleUpdate]):
     async def get_by_name(self, db: AsyncSession, name: str) -> Role | None:
         result = await db.execute(select(Role).where(Role.name == name))
         return result.scalar_one_or_none()
@@ -55,4 +55,26 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
         return [row[0] for row in result.fetchall()]
 
 
-role = CRUDRole(Role)
+class PermissionRepository(CRUDBase[Permission, PermissionCreate, PermissionUpdate]):
+    async def get_by_code(self, db: AsyncSession, code: str) -> Permission | None:
+        result = await db.execute(select(Permission).where(Permission.code == code))
+        return result.scalar_one_or_none()
+
+    async def get_by_role(self, db: AsyncSession, role_id: int) -> list[Permission]:
+        result = await db.execute(
+            select(Permission)
+            .join(role_permissions)
+            .where(role_permissions.c.role_id == role_id)
+            .order_by(Permission.id)
+        )
+        return list(result.scalars().all())
+
+    async def get_roles(self, db: AsyncSession, permission_id: int) -> list[int]:
+        result = await db.execute(
+            select(role_permissions.c.role_id).where(role_permissions.c.permission_id == permission_id)
+        )
+        return [row[0] for row in result.fetchall()]
+
+
+role_repository = RoleRepository(Role)
+permission_repository = PermissionRepository(Permission)

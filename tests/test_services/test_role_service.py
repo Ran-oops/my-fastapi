@@ -1,8 +1,8 @@
 import pytest
 
 from app.core.exceptions import ConflictException, NotFoundException
-from app.schemas.role import RoleCreate, RoleUpdate
-from app.services.role import role_service
+from app.modules.roles.schemas import RoleCreate, RoleUpdate
+from app.modules.roles.service import role_service
 
 
 @pytest.mark.asyncio
@@ -109,8 +109,8 @@ class TestRoleService:
     async def test_check_user_permission(self, db_session, test_user):
         import uuid
 
-        from app.schemas.permission import PermissionCreate
-        from app.services.permission import permission_service
+        from app.modules.roles.schemas import PermissionCreate
+        from app.modules.roles.service import permission_service
 
         unique_id = str(uuid.uuid4())[:8]
         perm_in = PermissionCreate(name=f"Test Permission {unique_id}", code=f"test:permission_{unique_id}")
@@ -118,9 +118,9 @@ class TestRoleService:
         role_in = RoleCreate(name=f"permission_role_{unique_id}", description="Permission role")
         role = await role_service.create_role(db_session, role_in)
         # Add permission to role
-        from app.crud.role import role as role_crud
+        from app.modules.roles.repository import role_repository
 
-        await role_crud.add_permission(db_session, role.id, permission.id)
+        await role_repository.add_permission(db_session, role.id, permission.id)
         await role_service.assign_role_to_user(db_session, test_user.id, role.id)
         has_permission = await role_service.check_user_permission(
             db_session, test_user.id, f"test:permission_{unique_id}"
