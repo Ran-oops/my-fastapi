@@ -189,8 +189,8 @@ make db-upgrade
 ### 6. 启动应用
 
 ```bash
-# 使用 Makefile
-make run
+# 使用 just
+just run
 
 # 或直接运行
 uv run python run.py

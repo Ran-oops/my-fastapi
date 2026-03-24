@@ -68,29 +68,29 @@ curl http://localhost:8000/api/v1/users/me \
 
 ```bash
 # 启动开发服务器
-make run
+just run
 # 或
 uv run python run.py
 # 或
 uv run uvicorn app.main:app --reload
 
 # 运行测试
-make test
+just test
 uv run pytest tests -v
 
 # 代码检查
-make lint
+just lint
 uv run ruff check app tests
 
 # 格式化
-make format
+just fmt
 uv run ruff format app tests
 
 # 类型检查
 uv run ty check app
 
 # 全部检查
-make check
+just ruff
 ```
 
 ### 数据库命令
@@ -187,58 +187,58 @@ async def create_item(
 ### 新 Service
 
 ```python
-# app/services/new_module.py
+# app/modules/new_module/service.py
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException
-from app.crud.new_module import new_crud
-from app.schemas.new_module import NewCreate
+from app.modules.new_module.repository import new_repository
+from app.modules.new_module.schemas import NewCreate
 
 
 class NewService:
     @staticmethod
     async def get_all(db: AsyncSession):
-        return await new_crud.get_multi(db)
+        return await new_repository.get_multi(db)
     
     @staticmethod
     async def get_by_id(db: AsyncSession, item_id: int):
-        item = await new_crud.get(db, id=item_id)
+        item = await new_repository.get(db, id=item_id)
         if not item:
             raise NotFoundException(f"Item {item_id} not found")
         return item
     
     @staticmethod
     async def create(db: AsyncSession, obj_in: NewCreate):
-        return await new_crud.create(db, obj_in=obj_in)
+        return await new_repository.create(db, obj_in=obj_in)
 
 
 new_service = NewService()
 ```
 
-### 新 CRUD
+### 新 Repository
 
 ```python
-# app/crud/new_module.py
-from app.crud.base import CRUDBase
-from app.models.new_module import NewModel
-from app.schemas.new_module import NewCreate, NewUpdate
+# app/modules/new_module/repository.py
+from app.modules.shared.db import CRUDBase
+from app.modules.new_module.models import NewModel
+from app.modules.new_module.schemas import NewCreate, NewUpdate
 
 
-class CRUDNew(CRUDBase[NewModel, NewCreate, NewUpdate]):
+class NewRepository(CRUDBase[NewModel, NewCreate, NewUpdate]):
     pass
 
 
-new_crud = CRUDNew(NewModel)
+new_repository = NewRepository(NewModel)
 ```
 
 ### 新 Model
 
 ```python
-# app/models/user_db/new_module.py
+# app/modules/new_module/models.py
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import UserDBBase
+from app.modules.shared.db import UserDBBase
 
 
 class NewModel(UserDBBase):
@@ -251,7 +251,7 @@ class NewModel(UserDBBase):
 ### 新 Schema
 
 ```python
-# app/schemas/new_module.py
+# app/modules/new_module/schemas.py
 from pydantic import BaseModel
 
 

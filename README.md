@@ -1,59 +1,39 @@
 # Enterprise FastAPI Project
 
-企业级FastAPI项目模板，使用异步操作、多数据库架构和分层架构。
+企业级FastAPI项目模板，使用异步操作、多数据库架构和领域驱动设计（DDD）。
 
 ## 项目结构
 
 ```text
-.
-├── .github/                    # GitHub配置
-│   └── workflows/              # CI/CD工作流
-├── alembic/                    # 数据库迁移
-│   ├── user_db/                # 用户数据库迁移
-│   ├── business_db/            # 业务数据库迁移
-│   └── env.py                  # 主迁移配置
-├── app/                        # 主应用目录
-│   ├── api/                    # API路由层
-│   │   ├── deps.py             # 依赖注入
-│   │   └── v1/
-│   │       ├── endpoints/      # API端点
-│   │       │   ├── auth.py     # 认证端点
-│   │       │   └── users.py    # 用户端点
-│   │       └── __init__.py     # 路由注册
-│   ├── cli/                    # CLI管理命令
-│   │   └── commands/           # 命令实现
-│   │       ├── fte.py          # FTE计算命令
-│   │       ├── data_import.py  # 数据导入命令
-│   │       └── qc_report.py    # QC报告命令
-│   ├── core/                   # 核心配置
-│   │   ├── commands/           # 命令编排器
-│   │   ├── config.py           # 应用配置
-│   │   ├── exceptions.py       # 自定义异常
-│   │   └── security.py         # 安全工具
-│   ├── crud/                   # CRUD操作层
-│   ├── db/                     # 数据库配置
-│   │   ├── base.py             # 多数据库基类
-│   │   └── session.py          # 数据库会话
-│   ├── models/                 # 数据库模型
-│   │   ├── user_db/            # 用户数据库模型
-│   │   ├── business_db/        # 业务数据库模型
-│   │   └── config_db/          # 配置数据库模型
-│   ├── schemas/                # Pydantic模型
-│   ├── services/               # 业务逻辑层
-│   │   ├── fte.py              # FTE计算服务
-│   │   ├── data_import.py      # 数据导入服务
-│   │   └── qc_report.py        # QC报告服务
-│   └── main.py                 # 应用入口
-├── tests/                      # 测试目录
-├── manage.py                   # CLI管理入口
-├── run.py                      # 应用启动脚本
-├── pyproject.toml              # 项目配置 (PEP 621)
-├── ruff.toml                   # Ruff配置
-├── ty.json                     # Ty类型检查配置
-├── .rumdlrc                    # Markdown lint配置
-├── .pre-commit-config.yaml     # Pre-commit hooks
-├── Makefile                    # 常用命令
-└── README.md                   # 项目文档
+app/
+├── modules/                    # 业务领域模块
+│   ├── users/                  # 用户领域
+│   │   ├── models.py           # SQLAlchemy 模型
+│   │   ├── schemas.py          # Pydantic schemas
+│   │   ├── repository.py       # 数据访问层
+│   │   ├── service.py          # 业务逻辑层
+│   │   └── router.py           # API 路由
+│   ├── roles/                  # 角色权限领域
+│   │   ├── models.py           # Role, Permission 模型
+│   │   ├── schemas.py          # 数据验证
+│   │   ├── repository.py       # 数据访问
+│   │   ├── service.py          # 业务逻辑
+│   │   └── router.py           # API 路由
+│   └── shared/                 # 共享基础设施
+│       ├── db.py               # SQLAlchemy Base, CRUDBase, Sessions
+│       └── schemas.py          # 通用响应模型
+├── api/                        # API 基础设施
+│   ├── deps.py                 # 依赖注入
+│   └── v1/                     # API v1 路由注册
+├── cli/                        # CLI 命令
+│   └── commands/               # 命令实现
+│       ├── roles.py            # 角色管理命令
+│       └── permissions.py      # 权限管理命令
+├── core/                       # 核心配置
+│   ├── config.py               # 应用配置
+│   ├── security.py             # 安全工具 (JWT, 密码)
+│   └── exceptions.py           # 自定义异常
+└── main.py                     # 应用入口
 ```
 
 ## 技术栈
@@ -69,6 +49,7 @@
 ### 开发工具
 
 - **uv**: 极速Python包管理器
+- **just**: 命令运行器（替代 Makefile）
 - **ruff**: 极速Python linter和formatter
 - **ty**: Astral出品的类型检查器
 - **rumdl**: Markdown linter
@@ -96,26 +77,22 @@
 
 - Python 3.13+
 - uv (推荐) 或 pip
+- just (命令运行器)
 
 ### 1. 安装依赖
-
-使用 uv (推荐):
 
 ```bash
 # 安装uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 安装just
+cargo install just
 
 # 安装依赖
 uv sync
 
 # 安装开发依赖
 uv sync --dev
-```
-
-使用 pip:
-
-```bash
-pip install -r requirements.txt
 ```
 
 ### 2. 配置环境变量
@@ -140,8 +117,8 @@ CONFIG_DATABASE_URL=mysql+aiomysql://root:password@localhost:3306/config_db
 ### 3. 运行数据库迁移
 
 ```bash
-# 使用Makefile
-make db-upgrade
+# 使用just
+just db-upgrade
 
 # 或手动执行
 alembic upgrade head
@@ -164,44 +141,61 @@ uv run python run.py
 
 ## CLI管理命令
 
-### FTE计算命令
+### 角色管理
 
 ```bash
-# 执行完整FTE计算流程（编排命令）
-uv run python manage.py fte calculate --force
+# 列出所有角色
+just cli roles list
 
-# 单独执行子命令
-uv run python manage.py fte import-task-listing --dry-run
-uv run python manage.py fte import-geographic-ssu
-uv run python manage.py fte calculate-country
-uv run python manage.py fte calculate-site
-uv run python manage.py fte calculate-subregion
-uv run python manage.py fte final-forecast
+# 创建角色
+just cli roles create --name admin --description "Administrator"
+
+# 为用户分配角色
+just cli roles assign --user-id 1 --role-id 1
 ```
 
-### 数据导入命令
+### 权限管理
 
 ```bash
-uv run python manage.py import all-data --source <source_id>
-uv run python manage.py import validate --source <source_id>
+# 列出所有权限
+just cli permissions list
+
+# 创建权限
+just cli permissions create --name "Read Users" --code users:read
+
+# 检查用户权限
+just cli permissions check --user-id 1 --code users:read
 ```
 
-### QC报告命令
+### 其他命令
 
 ```bash
-uv run python manage.py qc generate --type daily --start 2024-01-01 --end 2024-01-31
-uv run python manage.py qc list --type daily --limit 10
-```
+# FTE计算（占位）
+just cli calculate-fte
 
-### 查看帮助
+# 数据导入（占位）
+just cli import-data --source <source>
 
-```bash
-uv run python manage.py --help
-uv run python manage.py fte --help
-uv run python manage.py qc --help
+# QC报告（占位）
+just cli qc-report --type daily
 ```
 
 ## 开发工具
+
+### 使用 Just
+
+```bash
+just                  # 显示所有可用命令
+just sync             # 同步依赖
+just dev              # 安装开发依赖
+just test             # 运行测试
+just lint             # 运行linting
+just fmt              # 格式化代码
+just ruff             # 运行所有检查
+just clean            # 清理缓存文件
+just run              # 启动应用
+just cli              # 显示CLI帮助
+```
 
 ### 代码质量检查
 
@@ -228,21 +222,6 @@ just init
 
 # 手动运行所有hooks
 just pre-commit
-```
-
-### 使用Just
-
-```bash
-just                  # 显示所有可用命令
-just sync             # 同步依赖
-just dev              # 安装开发依赖
-just test             # 运行测试
-just lint             # 运行linting
-just fmt              # 格式化代码
-just ruff             # 运行所有检查
-just clean            # 清理缓存文件
-just run              # 启动应用
-just cli              # 显示CLI帮助
 ```
 
 ### UV常用命令
@@ -316,17 +295,16 @@ uv run pytest tests -v --cov=app --cov-report=term-missing
 
 ## 开发说明
 
-### 添加新的CLI命令
+### 添加新的领域模块
 
-1. 在 `app/services/` 创建服务方法
-2. 在 `app/cli/commands/` 创建命令文件
-3. 在 `app/cli/__init__.py` 注册命令
-
-### 添加新的数据库模型
-
-1. 在 `app/models/<db_name>/` 创建模型
-2. 在 `app/db/session.py` 添加会话工厂
-3. 创建对应的Alembic迁移
+1. 在 `app/modules/` 创建新目录（如 `orders/`）
+2. 创建以下文件：
+   - `models.py` - SQLAlchemy 模型
+   - `schemas.py` - Pydantic schemas
+   - `repository.py` - 数据访问层
+   - `service.py` - 业务逻辑层
+   - `router.py` - API 路由
+3. 在 `app/api/v1/__init__.py` 注册路由
 
 ### 添加新的依赖
 
@@ -347,7 +325,7 @@ uv add --dev <package>
 | `ty.toml` | Ty类型检查器配置 |
 | `.rumdl.toml` | Markdown lint配置 |
 | `.pre-commit-config.yaml` | Pre-commit hooks配置 |
-| `Makefile` | 常用命令快捷方式 |
+| `justfile` | 常用命令快捷方式 |
 | `uv.toml` | UV包管理器配置 |
 
 ## License

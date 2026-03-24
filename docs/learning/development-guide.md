@@ -23,6 +23,7 @@
 |------|----------|------|
 | Python | 3.13+ | 运行环境 |
 | UV | 最新版 | 包管理 |
+| just | 最新版 | 命令运行器 |
 | Git | 2.x | 版本控制 |
 | Docker | 24+ | 数据库服务 |
 
@@ -43,13 +44,13 @@ cp .env.example .env
 docker-compose up -d postgres mssql mysql
 
 # 5. 运行数据库迁移
-alembic upgrade head
+just db-upgrade
 
 # 6. 启动开发服务器
-make run
+just run
 
 # 7. 运行测试验证
-make test
+just test
 ```
 
 ### 开发工具配置
@@ -91,7 +92,8 @@ from typing import TypeVar
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.crud.base import CRUDBase
+from app.modules.shared.db import CRUDBase
+from app.modules.users.models import User
 
 ModelType = TypeVar("ModelType")
 
@@ -140,8 +142,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # 3. 本地应用
 from app.core.config import settings
-from app.crud.base import CRUDBase
-from app.models.user import User
+from app.modules.shared.db import CRUDBase
+from app.modules.users.models import User
 ```
 
 ### 异步函数
@@ -161,227 +163,197 @@ async def bad_example():
 
 ## 项目结构约定
 
-### 添加新功能模块
+### 添加新领域模块
 
-创建一个新的业务模块需要以下文件：
+在 `app/modules/` 下创建新模块目录：
 
 ```
-app/
-├── api/v1/endpoints/
-│   └── new_module.py          # API 端点
-├── crud/
-│   └── new_module.py          # CRUD 操作
-├── models/
-│   ├── user_db/
-│   │   └── new_module.py      # 用户库模型
-│   └── business_db/
-│       └── new_module.py      # 业务库模型
-├── schemas/
-│   └── new_module.py          # Pydantic 模型
-└── services/
-    └── new_module.py          # 业务逻辑
+app/modules/
+├── users/                  # 用户领域
+│   ├── __init__.py
+│   ├── models.py          # SQLAlchemy 模型
+│   ├── schemas.py         # Pydantic schemas
+│   ├── repository.py      # 数据访问层
+│   ├── service.py         # 业务逻辑层
+│   └── router.py          # API 路由
+├── roles/                  # 角色权限领域
+│   └── ...
+└── orders/                 # 新模块示例
+    ├── __init__.py
+    ├── models.py
+    ├── schemas.py
+    ├── repository.py
+    ├── service.py
+    └── router.py
 ```
 
 ### Model 定义规范
 
 ```python
-# app/models/<database>/models.py
+# app/modules/users/models.py
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import UserDBBase  # 或 BusinessDBBase
+from app.modules.shared.db import UserDBBase
 
 
-class NewModel(UserDBBase):
-    """模型文档说明."""
+class User(UserDBBase):
+    """用户模型."""
     
-    __tablename__ = "new_table"
+    __tablename__ = "users"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    
-    # 关系定义
-    # items: Mapped[list["Item"]] = relationship("Item", back_populates="new_model")
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
 ```
 
 ### Schema 定义规范
 
 ```python
-# app/schemas/new_module.py
-from datetime import datetime
-
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+# app/modules/users/schemas.py
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-class NewModelBase(BaseModel):
-    """基础 Schema."""
-    name: str
-    description: str | None = None
+class UserBase(BaseModel):
+    email: EmailStr
+    username: str
 
 
-class NewModelCreate(NewModelBase):
-    """创建用 Schema."""
-    
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        if len(v) < 2:
-            raise ValueError("Name must be at least 2 characters")
-        return v
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=8)
 
 
-class NewModelUpdate(BaseModel):
-    """更新用 Schema - 所有字段可选."""
-    name: str | None = None
-    description: str | None = None
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    username: str | None = None
 
 
-class NewModelResponse(NewModelBase):
-    """响应 Schema."""
+class UserResponse(UserBase):
     id: int
-    created_at: datetime
-    updated_at: datetime
-    
+    is_active: bool
     model_config = ConfigDict(from_attributes=True)
+```
+
+### Repository 定义规范
+
+```python
+# app/modules/users/repository.py
+from app.modules.shared.db import CRUDBase
+from app.modules.users.models import User
+from app.modules.users.schemas import UserCreate, UserUpdate
+
+
+class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
+    async def get_by_email(self, db: AsyncSession, email: str) -> User | None:
+        result = await db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
+
+
+user_repository = UserRepository(User)
 ```
 
 ### Service 定义规范
 
 ```python
-# app/services/new_module.py
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import NotFoundException
-from app.crud.new_module import new_model_crud
-from app.models.new_module import NewModel
-from app.schemas.new_module import NewModelCreate, NewModelUpdate
+# app/modules/users/service.py
+from app.core.exceptions import ConflictException
+from app.modules.users.repository import user_repository
+from app.modules.users.schemas import UserCreate
 
 
-class NewModelService:
-    """新模块服务类."""
-    
+class UserService:
     @staticmethod
-    async def get_by_id(db: AsyncSession, model_id: int) -> NewModel:
-        """获取单个资源."""
-        model = await new_model_crud.get(db, id=model_id)
-        if not model:
-            raise NotFoundException(f"Model {model_id} not found")
-        return model
-    
-    @staticmethod
-    async def create(db: AsyncSession, obj_in: NewModelCreate) -> NewModel:
-        """创建资源."""
-        return await new_model_crud.create(db, obj_in=obj_in)
+    async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
+        existing = await user_repository.get_by_email(db, email=user_in.email)
+        if existing:
+            raise ConflictException(f"Email {user_in.email} already registered")
+        return await user_repository.create(db, obj_in=user_in)
 
 
-new_model_service = NewModelService()
+user_service = UserService()
 ```
 
-### API 端点定义规范
+### Router 定义规范
 
 ```python
-# app/api/v1/endpoints/new_module.py
+# app/modules/users/router.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_user_db
-from app.schemas.new_module import NewModelCreate, NewModelResponse
-from app.services.new_module import new_model_service
+from app.api.deps import get_user_db as get_db
+from app.modules.users.schemas import UserCreate, UserResponse
+from app.modules.users.service import user_service
 
 router = APIRouter()
 
 
-@router.get("/{model_id}", response_model=NewModelResponse)
-async def get_model(
-    model_id: int,
-    db: AsyncSession = Depends(get_user_db),
-    _current_user = Depends(get_current_user),
+@router.post("/", response_model=UserResponse)
+async def create_user(
+    user_in: UserCreate,
+    db: AsyncSession = Depends(get_db),
 ):
-    """获取单个资源."""
-    return await new_model_service.get_by_id(db, model_id)
-
-
-@router.post("/", response_model=NewModelResponse, status_code=201)
-async def create_model(
-    obj_in: NewModelCreate,
-    db: AsyncSession = Depends(get_user_db),
-    _current_user = Depends(get_current_user),
-):
-    """创建资源."""
-    return await new_model_service.create(db, obj_in)
+    return await user_service.create_user(db, user_in)
 ```
 
 ### 注册路由
 
+在 `app/api/v1/__init__.py` 中注册新模块的路由：
+
 ```python
-# app/api/v1/__init__.py
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users, new_module
+from app.modules.users.router import router as users_router
+from app.modules.roles.router import router as roles_router
+from app.modules.orders.router import router as orders_router  # 新模块
 
 api_router = APIRouter()
-api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
-api_router.include_router(users.router, prefix="/users", tags=["users"])
-api_router.include_router(new_module.router, prefix="/new-module", tags=["new-module"])
+api_router.include_router(users_router, prefix="/users", tags=["users"])
+api_router.include_router(roles_router, prefix="/roles", tags=["roles"])
+api_router.include_router(orders_router, prefix="/orders", tags=["orders"])  # 新模块
 ```
 
 ---
 
 ## 开发工作流
 
-### Git 分支规范
+### 分支策略
 
 ```
-main          # 生产分支
-├── develop   # 开发分支
-    ├── feature/xxx    # 功能分支
-    ├── fix/xxx        # 修复分支
-    └── refactor/xxx   # 重构分支
+main (生产)
+  │
+  ├── develop (开发)
+  │     │
+  │     ├── feature/xxx (功能分支)
+  │     ├── bugfix/xxx (修复分支)
+  │     └── refactor/xxx (重构分支)
 ```
 
 ### 提交规范
 
+使用 Conventional Commits：
+
 ```
-<type>(<scope>): <subject>
+<type>(<scope>): <description>
 
-类型 (type):
-- feat: 新功能
-- fix: 修复 bug
-- docs: 文档更新
-- style: 代码格式 (不影响功能)
-- refactor: 重构
-- test: 测试相关
-- chore: 构建/工具相关
+[optional body]
 
-示例:
-feat(user): add user profile API
-fix(auth): resolve token expiration issue
-docs(api): update API documentation
+[optional footer]
 ```
 
-### 开发流程
+**类型**:
+- `feat`: 新功能
+- `fix`: Bug 修复
+- `docs`: 文档更新
+- `style`: 代码格式
+- `refactor`: 重构
+- `test`: 测试
+- `chore`: 构建/工具
 
+**示例**:
 ```bash
-# 1. 从 develop 创建功能分支
-git checkout develop
-git pull origin develop
-git checkout -b feature/add-user-profile
-
-# 2. 开发功能
-# ... 编写代码 ...
-
-# 3. 运行测试和检查
-make check
-
-# 4. 提交代码
-git add .
-git commit -m "feat(user): add user profile API"
-
-# 5. 推送到远程
-git push origin feature/add-user-profile
-
-# 6. 创建 Pull Request
-# 在 GitHub 上创建 PR 到 develop 分支
+git commit -m "feat(users): add user registration endpoint"
+git commit -m "fix(auth): handle expired tokens correctly"
+git commit -m "docs: update API documentation"
 ```
 
 ---
@@ -392,294 +364,136 @@ git push origin feature/add-user-profile
 
 ```
 tests/
-├── __init__.py
-├── conftest.py              # 共享 fixtures
-├── test_api/                # API 测试
-│   ├── __init__.py
-│   ├── test_auth.py
-│   └── test_users.py
-└── test_services/           # 服务层测试
-    ├── __init__.py
-    └── test_user_service.py
-```
-
-### 编写测试
-
-```python
-# tests/conftest.py
-import asyncio
-from typing import AsyncGenerator
-
-import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.main import app
-from app.db.session import get_user_db
-
-
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
-
-engine = create_async_engine(TEST_DATABASE_URL, echo=True)
-TestSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """创建事件循环."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    """创建测试数据库会话."""
-    async with TestSessionLocal() as session:
-        yield session
-
-
-@pytest.fixture
-async def client() -> AsyncGenerator[AsyncClient, None]:
-    """创建测试客户端."""
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
-```
-
-```python
-# tests/test_api/test_users.py
-import pytest
-from httpx import AsyncClient
-
-
-@pytest.mark.asyncio
-async def test_get_current_user(client: AsyncClient):
-    """测试获取当前用户."""
-    # 先登录获取 token
-    login_response = await client.post("/api/v1/auth/login", json={
-        "username": "testuser",
-        "password": "Test1234"
-    })
-    token = login_response.json()["data"]["access_token"]
-    
-    # 获取当前用户
-    response = await client.get(
-        "/api/v1/users/me",
-        headers={"Authorization": f"Bearer {token}"}
-    )
-    
-    assert response.status_code == 200
-    assert response.json()["success"] is True
-
-
-@pytest.mark.asyncio
-async def test_register_user(client: AsyncClient):
-    """测试用户注册."""
-    response = await client.post("/api/v1/auth/register", json={
-        "email": "newuser@example.com",
-        "username": "newuser",
-        "password": "NewUser123"
-    })
-    
-    assert response.status_code == 201
-    assert response.json()["data"]["email"] == "newuser@example.com"
+├── test_api/           # API 端点测试
+│   ├── test_users.py
+│   └── test_roles.py
+├── test_services/      # Service 层测试
+│   ├── test_user_service.py
+│   └── test_role_service.py
+└── conftest.py         # 测试 fixtures
 ```
 
 ### 运行测试
 
 ```bash
 # 运行所有测试
-make test
-# 或
-uv run pytest tests -v
+just test
 
 # 运行特定测试文件
 uv run pytest tests/test_api/test_users.py -v
 
-# 运行特定测试
-uv run pytest tests/test_api/test_users.py::test_get_current_user -v
+# 运行带有覆盖率
+just test-cov
+```
 
-# 运行并生成覆盖率报告
-uv run pytest tests -v --cov=app --cov-report=html
+### 编写测试
+
+```python
+# tests/test_services/test_user_service.py
+import pytest
+
+from app.modules.users.schemas import UserCreate
+from app.modules.users.service import user_service
+
+
+@pytest.mark.asyncio
+class TestUserService:
+    async def test_create_user_success(self, db_session):
+        user_in = UserCreate(
+            email="test@example.com",
+            username="testuser",
+            password="testpassword123"
+        )
+        user = await user_service.create_user(db_session, user_in)
+        assert user.email == "test@example.com"
+        assert user.username == "testuser"
 ```
 
 ---
 
 ## 文档编写
 
-### 代码文档
+### 文档结构
 
-```python
-async def get_users(
-    db: AsyncSession,
-    skip: int = 0,
-    limit: int = 100
-) -> list[User]:
-    """获取用户列表.
-    
-    Args:
-        db: 数据库会话
-        skip: 跳过数量
-        limit: 返回数量限制
-        
-    Returns:
-        用户列表
-        
-    Raises:
-        UnauthorizedException: 未认证时抛出
-        
-    Example:
-        >>> users = await get_users(db, skip=0, limit=10)
-        >>> len(users)
-        10
-    """
-    result = await db.execute(select(User).offset(skip).limit(limit))
-    return list(result.scalars().all())
+```
+docs/
+├── learning/           # 学习文档
+│   ├── architecture.md
+│   ├── development-guide.md
+│   ├── api-reference.md
+│   └── ...
+└── plans/              # 计划文档
+    └── ...
 ```
 
-### API 文档
+### 更新文档
 
-使用 FastAPI 自动生成的 OpenAPI 文档：
+当代码结构发生变化时，需要更新以下文档：
 
-```python
-@router.get(
-    "/users/{user_id}",
-    response_model=UserResponse,
-    summary="获取指定用户",
-    description="根据用户ID获取用户详细信息",
-    responses={
-        200: {"description": "成功获取用户"},
-        404: {"description": "用户不存在"},
-    }
-)
-async def get_user(user_id: int):
-    ...
-```
+1. `README.md` - 项目概览
+2. `docs/learning/architecture.md` - 架构设计
+3. `docs/learning/development-guide.md` - 开发指南
 
 ---
 
 ## 常见问题
 
-### Q: 如何添加新的数据库表?
+### Q: 如何调试？
 
-A:
-1. 在 `app/models/<database>/` 创建模型文件
-2. 在 `alembic/` 生成迁移脚本
-3. 运行 `alembic upgrade head`
+使用 VS Code 的调试配置：
 
-### Q: 如何添加新的 API 端点?
-
-A:
-1. 创建 Schema (`app/schemas/`)
-2. 创建 Model (`app/models/`)
-3. 创建 CRUD (`app/crud/`)
-4. 创建 Service (`app/services/`)
-5. 创建 Endpoint (`app/api/v1/endpoints/`)
-6. 注册路由 (`app/api/v1/__init__.py`)
-
-### Q: 为什么使用静态方法模式?
-
-A: Service 层是纯业务逻辑，不依赖外部状态。使用静态方法模式：
-- 简化调用，无需依赖注入
-- 业务逻辑可复用（CLI 和 API 都可调用）
-- 保持函数式风格
-
-### Q: 如何处理跨数据库事务?
-
-A: 目前不支持自动跨数据库事务。需要手动实现补偿机制：
-```python
-try:
-    await db1.commit()
-    await db2.commit()
-except Exception:
-    await db1.rollback()
-    await db2.rollback()
-    raise
+```json
+// .vscode/launch.json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": ["app.main:app", "--reload"],
+            "jinja": true
+        }
+    ]
+}
 ```
 
-### Q: 如何优化查询性能?
+### Q: 如何处理数据库迁移？
 
-A:
-1. 使用索引 (`index=True`)
-2. 使用 `selectinload` 预加载关系
-3. 分页查询
-4. 避免 N+1 查询
+```bash
+# 创建迁移
+just db-migrate "描述变更"
+
+# 应用迁移
+just db-upgrade
+
+# 回滚迁移
+just db-downgrade
+```
 
 ---
 
 ## 贡献指南
 
-### 提交 Issue
+### 提交 PR 前
 
-1. 搜索现有 Issue，避免重复
-2. 选择合适的模板
-3. 提供详细的描述和复现步骤
-4. 添加相关标签
-
-### 提交 PR
-
-1. Fork 仓库
-2. 创建功能分支
-3. 编写测试
-4. 保持代码规范
-5. 更新文档
-6. 提交 PR 并关联 Issue
+1. 确保所有测试通过：`just test`
+2. 确保代码风格检查通过：`just lint`
+3. 更新相关文档
+4. 编写清晰的 PR 描述
 
 ### Code Review
 
-- 至少需要一个批准
-- 通过所有 CI 检查
-- 解决所有 review comments
-
-### 代码质量检查
-
-```bash
-# 运行所有检查
-make check
-
-# 单独运行
-make lint      # 代码检查
-make format    # 格式化代码
-make test      # 运行测试
-```
+- 所有 PR 需要至少 1 人审核
+- 关键变更需要 2 人审核
+- 审核关注点：
+  - 代码质量
+  - 测试覆盖
+  - 文档完整性
+  - 安全性
 
 ---
 
-## 工具参考
-
-### Makefile 命令
-
-| 命令 | 说明 |
-|------|------|
-| `make run` | 启动开发服务器 |
-| `make test` | 运行测试 |
-| `make lint` | 运行代码检查 |
-| `make format` | 格式化代码 |
-| `make check` | 运行所有检查 |
-| `make clean` | 清理缓存 |
-| `make db-upgrade` | 运行数据库迁移 |
-
-### UV 命令
-
-| 命令 | 说明 |
-|------|------|
-| `uv sync` | 安装/更新依赖 |
-| `uv add <pkg>` | 添加依赖 |
-| `uv add --dev <pkg>` | 添加开发依赖 |
-| `uv remove <pkg>` | 移除依赖 |
-| `uv run <cmd>` | 在虚拟环境运行命令 |
-| `uv lock` | 更新锁文件 |
-
-### Ruff 命令
-
-| 命令 | 说明 |
-|------|------|
-| `ruff check .` | 检查代码 |
-| `ruff check --fix .` | 自动修复 |
-| `ruff format .` | 格式化代码 |
-
----
-
-> 文档版本: 1.0.0
-> 更新时间: 2026-03-24
+> 文档版本: 2.0.0
+> 更新时间: 2026-03-25

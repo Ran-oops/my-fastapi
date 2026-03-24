@@ -199,7 +199,7 @@ mock_beige_fastapi_project/
 
 ### 数据库会话管理
 
-位置: `app/db/session.py`
+位置: `app/modules/shared/db.py`
 
 ```python
 # 三个独立的数据库引擎和会话工厂
@@ -221,7 +221,7 @@ ConfigSessionLocal = async_sessionmaker(...)
 
 ```python
 # 在 API 端点中通过依赖注入选择数据库
-from app.db.session import get_user_db, get_business_db, get_config_db
+from app.modules.shared.db import get_user_db, get_business_db, get_config_db
 
 async def get_users(db: AsyncSession = Depends(get_user_db)):
     """使用用户数据库"""
@@ -238,64 +238,73 @@ async def get_config(db: AsyncSession = Depends(get_config_db)):
 
 ---
 
-## 分层架构设计
+## 领域驱动设计架构
 
-### 1. API 层 (app/api/)
+### 模块结构
+
+每个领域模块包含完整的垂直切片：
+
+```
+app/modules/users/
+├── models.py      # SQLAlchemy 模型
+├── schemas.py     # Pydantic schemas
+├── repository.py  # 数据访问层
+├── service.py     # 业务逻辑层
+└── router.py      # API 路由
+```
+
+### 依赖关系
+
+```
+router.py → service.py → repository.py → models.py
+                ↓
+            schemas.py
+```
+
+### 1. Router 层 (接口层)
 
 **职责**: 处理 HTTP 请求/响应，路由分发，依赖注入
 
-文件: `app/api/v1/endpoints/users.py`
+文件: `app/modules/users/router.py`
 
 ```python
 @router.get("/", response_model=PaginatedResponse[UserResponse])
 async def get_users(
-    pagination: PaginationParams = Depends(),      # 请求参数
-    db: AsyncSession = Depends(get_user_db),       # 数据库会话
-    _current_user: User = Depends(get_current_active_superuser),  # 认证
+    pagination: PaginationParams = Depends(),
+    db: AsyncSession = Depends(get_user_db),
+    _current_user: User = Depends(get_current_active_superuser),
 ):
     users = await user_service.get_users(db, skip=pagination.skip, limit=pagination.limit)
     return PaginatedResponse(...)
 ```
 
-**特点**:
-- 使用 `Depends()` 实现依赖注入
-- 定义路由和请求模型
-- 调用 Service 层完成业务逻辑
-- 返回 Pydantic 响应模型
-
-### 2. Service 层 (app/services/)
+### 2. Service 层 (业务层)
 
 **职责**: 业务逻辑处理，事务协调，异常抛出
 
-文件: `app/services/user.py`
+文件: `app/modules/users/service.py`
 
 ```python
 class UserService:
     @staticmethod
     async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         # 业务逻辑：检查重复
-        existing = await user_crud.get_by_email(db, email=user_in.email)
+        existing = await user_repository.get_by_email(db, email=user_in.email)
         if existing:
             raise ConflictException(f"Email {user_in.email} already registered")
         
-        # 调用 CRUD 层
-        return await user_crud.create(db, obj_in=user_in)
+        # 调用 Repository 层
+        return await user_repository.create(db, obj_in=user_in)
 ```
 
-**特点**:
-- 包含核心业务规则
-- 处理跨表事务
-- 抛出业务异常 (ConflictException, NotFoundException)
-- 不直接访问数据库，通过 CRUD 层
-
-### 3. CRUD 层 (app/crud/)
+### 3. Repository 层 (数据访问层)
 
 **职责**: 数据库操作封装，通用查询方法
 
-文件: `app/crud/user.py`
+文件: `app/modules/users/repository.py`
 
 ```python
-class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
+class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
     async def get_by_username(self, db: AsyncSession, username: str) -> User | None:
         result = await db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
@@ -310,17 +319,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 ```
 
-**特点**:
-- 基于 `CRUDBase` 泛型类实现通用 CRUD
-- 包含特定模型的自定义查询
-- 直接操作 AsyncSession
-- 不包含业务逻辑
-
-### 4. Model 层 (app/models/)
+### 4. Model 层 (数据模型层)
 
 **职责**: 数据库表结构定义，关系映射
 
-文件: `app/models/user_db/models.py`
+文件: `app/modules/users/models.py`
 
 ```python
 class User(UserDBBase):
@@ -337,17 +340,11 @@ class User(UserDBBase):
     roles: Mapped[list["Role"]] = relationship("Role", secondary="user_roles", ...)
 ```
 
-**特点**:
-- 使用 SQLAlchemy 2.0 新语法 (Mapped, mapped_column)
-- 继承对应数据库的基类 (UserDBBase, BusinessDBBase)
-- 定义表关系 (One-to-Many, Many-to-Many)
-- 自动注入 created_at, updated_at 字段
-
-### 5. Schema 层 (app/schemas/)
+### 5. Schema 层 (数据验证层)
 
 **职责**: 数据验证，序列化，请求/响应模型
 
-文件: `app/schemas/user.py`
+文件: `app/modules/users/schemas.py`
 
 ```python
 class UserCreate(UserBase):
@@ -364,6 +361,33 @@ class UserCreate(UserBase):
         if not re.search(r"[A-Za-z]", v):
             raise ValueError("Password must contain at least one letter")
         return v
+```
+
+### 6. 共享基础设施 (app/modules/shared/)
+
+**职责**: 提供通用的数据库基类和响应模型
+
+文件: `app/modules/shared/db.py`
+
+```python
+class CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]:
+    async def get(self, db: AsyncSession, id: Any) -> ModelType | None: ...
+    async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType: ...
+    async def update(self, db: AsyncSession, db_obj: ModelType, obj_in: UpdateSchemaType) -> ModelType: ...
+    async def delete(self, db: AsyncSession, id: int) -> ModelType | None: ...
+```
+
+文件: `app/modules/shared/schemas.py`
+
+```python
+class DataResponse[T](ResponseBase):
+    data: T
+
+class PaginatedResponse[T](ListResponse[T]):
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 ```
 
 ---
@@ -445,7 +469,7 @@ async def get_current_user(
     user_id = verify_token(token)
     if user_id is None:
         raise UnauthorizedException("Could not validate credentials")
-    user = await user_crud.get(db, id=int(user_id))
+    user = await user_repository.get(db, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
     if user.is_active is False:
@@ -453,7 +477,7 @@ async def get_current_user(
     return user
 ```
 
-### 5. 通用响应模型 (app/schemas/common.py)
+### 5. 通用响应模型 (app/modules/shared/schemas.py)
 
 ```python
 class DataResponse[T](ResponseBase):
@@ -593,12 +617,14 @@ python manage.py fte --help
 
 ```
 新增功能时的文件放置:
-├── API 端点     → app/api/v1/endpoints/
-├── 业务逻辑     → app/services/
-├── 数据库操作   → app/crud/
-├── 数据模型     → app/models/<database>/
-├── 数据验证     → app/schemas/
-└── CLI 命令     → app/cli/commands/
+├── 领域模块     → app/modules/<domain>/
+│   ├── models.py      # 数据模型
+│   ├── schemas.py     # 数据验证
+│   ├── repository.py  # 数据库操作
+│   ├── service.py     # 业务逻辑
+│   └── router.py      # API 端点
+├── CLI 命令     → app/cli/commands/
+└── 共享代码     → app/modules/shared/
 ```
 
 ### 2. 错误处理
@@ -608,10 +634,10 @@ python manage.py fte --help
 class UserService:
     @staticmethod
     async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
-        existing = await user_crud.get_by_email(db, email=user_in.email)
+        existing = await user_repository.get_by_email(db, email=user_in.email)
         if existing:
             raise ConflictException("Email already registered")  # 业务异常
-        return await user_crud.create(db, obj_in=user_in)
+        return await user_repository.create(db, obj_in=user_in)
 ```
 
 ### 3. 数据库会话管理
@@ -671,18 +697,18 @@ SECRET_KEY=<随机生成的安全密钥>
 
 ```bash
 # 启动应用
-make run
+just run
 # 或
 uv run python run.py
 
 # 运行测试
-make test
+just test
 
 # 代码检查
-make lint
+just lint
 
 # 格式化代码
-make format
+just fmt
 
 # 查看 API 文档
 # http://localhost:8000/api/v1/docs
@@ -692,17 +718,16 @@ make format
 
 | 目录 | 职责 |
 |------|------|
-| `app/api/` | HTTP 请求处理 |
-| `app/services/` | 业务逻辑 |
-| `app/crud/` | 数据库操作 |
-| `app/models/` | 数据模型 |
-| `app/schemas/` | 数据验证 |
-| `app/core/` | 核心配置 |
-| `app/db/` | 数据库连接 |
+| `app/modules/` | 业务领域模块 |
+| `app/modules/users/` | 用户领域 (models, schemas, repository, service, router) |
+| `app/modules/roles/` | 角色权限领域 |
+| `app/modules/shared/` | 共享基础设施 (db, schemas) |
+| `app/api/` | 路由注册、依赖注入 |
 | `app/cli/` | 命令行工具 |
+| `app/core/` | 核心配置 (config, security, exceptions) |
 
 ---
 
-> 文档版本: 1.0.0
-> 更新时间: 2026-03-24
+> 文档版本: 2.0.0
+> 更新时间: 2026-03-25
 > 项目地址: https://github.com/example/enterprise-fastapi

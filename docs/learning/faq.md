@@ -358,7 +358,7 @@ await redis.setex(f"blacklist:{token}", expire_time, "1")
 
 ```bash
 # 运行所有测试
-make test
+just test
 
 # 运行特定文件
 uv run pytest tests/test_api/test_users.py -v
