@@ -9,7 +9,6 @@ from app.db.session import get_user_session
 from app.modules.users.models import User
 from app.modules.users.repository import user_repo
 
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 
@@ -22,15 +21,13 @@ async def get_current_user(
     user = await user_repo.get(session, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
-    if user.is_active is False:
+    if not user.is_active:
         raise UnauthorizedException("Inactive user")
     return user
 
 
-async def get_current_active_superuser(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    if current_user.is_superuser is False:
+async def get_current_active_superuser(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges",
