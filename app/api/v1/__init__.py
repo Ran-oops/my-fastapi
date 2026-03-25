@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.modules.config.router import router as config_router
 from app.modules.orders.router import router as orders_router
 from app.modules.products.router import router as products_router
 from app.modules.roles.router import router as roles_router
@@ -13,3 +14,4 @@ api_router.include_router(users_router, prefix="/users", tags=["users"])
 api_router.include_router(roles_router, tags=["roles", "permissions"])
 api_router.include_router(products_router, prefix="/products", tags=["products"])
 api_router.include_router(orders_router, prefix="/orders", tags=["orders"])
+api_router.include_router(config_router, prefix="/config", tags=["config"])
