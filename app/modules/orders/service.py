@@ -2,10 +2,13 @@ from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.exceptions import NotFoundException, ValidationException
 from app.modules.orders.models import Order, OrderItem, OrderStatus
 from app.modules.orders.repository import order_repo
 from app.modules.orders.schemas import OrderCreate, OrderUpdate
+from app.modules.orders.tasks import cancel_timeout
+from app.tasks.dispatcher import dispatch
 
 
 async def get_order_by_id(session: AsyncSession, order_id: int) -> Order | None:
@@ -54,6 +57,7 @@ async def create_order(session: AsyncSession, data: OrderCreate) -> Order:
     order.total_amount = total_amount
     await session.commit()
     await session.refresh(order)
+    dispatch(cancel_timeout, order.id, countdown=settings.ORDER_CANCEL_TIMEOUT)
     return order
 
 
