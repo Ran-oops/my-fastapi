@@ -24,7 +24,9 @@ celery_app.conf.update(
     task_soft_time_limit=240,
 )
 
-celery_app.autodiscover_tasks(["app.modules.orders", "app.modules.notifications", "app.modules.audit"])
+celery_app.autodiscover_tasks(
+    ["app.modules.orders", "app.modules.notifications", "app.modules.exports", "app.modules.audit"]
+)
 
 # Import signals to register them
 import app.tasks.signals  # noqa: F401, E402
