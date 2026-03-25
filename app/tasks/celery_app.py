@@ -1,5 +1,7 @@
 from celery import Celery
+
 from app.core.config import settings
+
 
 celery_app = Celery(
     "enterprise_fastapi",
@@ -21,6 +23,8 @@ celery_app.conf.update(
     task_time_limit=300,
     task_soft_time_limit=240,
 )
+
+celery_app.autodiscover_tasks(["app.modules.orders", "app.modules.notifications", "app.modules.audit"])
 
 # Import signals to register them
 import app.tasks.signals  # noqa: F401, E402
