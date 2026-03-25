@@ -1,10 +1,10 @@
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.modules.shared.db import UserDBBase
+from app.db.base import UserBase
 
 
-class User(UserDBBase):
+class User(UserBase):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -15,8 +15,9 @@ class User(UserDBBase):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    roles: Mapped[list["Role"]] = relationship("Role", secondary="user_roles", back_populates="users", lazy="selectin")
-
-
-# 避免循环导入
-from app.modules.roles.models import Role  # noqa: E402
+    roles: Mapped[list["Role"]] = relationship(
+        "Role",
+        secondary="user_roles",
+        back_populates="users",
+        lazy="selectin",
+    )
