@@ -79,3 +79,11 @@ pre-commit:
 # Type check
 typecheck:
     uvx ty check app
+
+# Start Celery worker
+worker:
+    uv run celery -A app.tasks.celery_app worker --loglevel=info
+
+# Start Celery beat scheduler
+beat:
+    uv run celery -A app.tasks.celery_app beat --loglevel=info
