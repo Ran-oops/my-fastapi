@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 def validate_password_strength(v: str) -> str:
-    """验证密码强度."""
     if len(v) < 8:
         raise ValueError("Password must be at least 8 characters long")
     if len(v) > 72:
@@ -17,15 +16,12 @@ def validate_password_strength(v: str) -> str:
     return v
 
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
     email: EmailStr
     username: str
     full_name: str | None = None
-    is_active: bool = True
-
-
-class UserCreate(UserBase):
     password: str
+    is_active: bool = True
 
     @field_validator("password")
     @classmethod
@@ -46,20 +42,30 @@ class UserUpdate(BaseModel):
         return validate_password_strength(v) if v else v
 
 
-class UserInDB(UserBase):
+class UserRead(BaseModel):
     id: int
-    hashed_password: str
+    email: EmailStr
+    username: str
+    full_name: str | None
+    is_active: bool
     is_superuser: bool
     created_at: datetime
     updated_at: datetime
+
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserResponse(UserBase):
+class UserDB(BaseModel):
     id: int
+    email: EmailStr
+    username: str
+    full_name: str | None
+    hashed_password: str
+    is_active: bool
     is_superuser: bool
     created_at: datetime
     updated_at: datetime
+
     model_config = ConfigDict(from_attributes=True)
 
 
