@@ -19,14 +19,18 @@ def update_celery_task_id(session: Session, record_id: int, celery_task_id: str)
         session.flush()
 
 
+def _apply_status_update(record: TaskRecord, status: str, error: str | None = None) -> None:
+    record.status = status
+    if error:
+        record.error = error
+    if status in (TaskStatus.SUCCESS.value, TaskStatus.FAILED.value, TaskStatus.DEAD.value):
+        record.completed_at = datetime.now(timezone.utc)
+
+
 def update_task_status(session: Session, record_id: int, status: str, error: str | None = None) -> None:
     record = session.get(TaskRecord, record_id)
     if record:
-        record.status = status
-        if error:
-            record.error = error
-        if status in (TaskStatus.SUCCESS.value, TaskStatus.FAILED.value, TaskStatus.DEAD.value):
-            record.completed_at = datetime.now(timezone.utc)
+        _apply_status_update(record, status, error)
         session.flush()
 
 
@@ -35,11 +39,7 @@ def update_task_status_by_celery_id(
 ) -> None:
     record = session.query(TaskRecord).filter(TaskRecord.celery_task_id == celery_task_id).first()
     if record:
-        record.status = status
-        if error:
-            record.error = error
-        if status in (TaskStatus.SUCCESS.value, TaskStatus.FAILED.value, TaskStatus.DEAD.value):
-            record.completed_at = datetime.now(timezone.utc)
+        _apply_status_update(record, status, error)
         session.flush()
 
 

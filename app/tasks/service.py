@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import NotFoundException, ValidationException
 from app.tasks.repository import get_task_by_id, get_tasks, update_task_status
 from app.tasks.models import TaskStatus
 
@@ -20,9 +21,9 @@ def retry_task(session: Session, task_id: int):
 
     task_record = get_task_by_id(session, task_id)
     if not task_record:
-        raise ValueError("Task not found")
+        raise NotFoundException("Task not found")
     if task_record.status not in (TaskStatus.FAILED.value, TaskStatus.DEAD.value):
-        raise ValueError(f"Cannot retry task with status {task_record.status}")
+        raise ValidationException(f"Cannot retry task with status {task_record.status}")
 
     update_task_status(session, task_id, TaskStatus.PENDING.value)
     session.commit()
@@ -35,9 +36,9 @@ def cancel_task(session: Session, task_id: int):
 
     task_record = get_task_by_id(session, task_id)
     if not task_record:
-        raise ValueError("Task not found")
+        raise NotFoundException("Task not found")
     if task_record.status != TaskStatus.PENDING.value:
-        raise ValueError(f"Cannot cancel task with status {task_record.status}")
+        raise ValidationException(f"Cannot cancel task with status {task_record.status}")
 
     if task_record.celery_task_id:
         celery_app.control.revoke(task_record.celery_task_id, terminate=True)
