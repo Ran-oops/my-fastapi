@@ -3,13 +3,9 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class RoleBase(BaseModel):
+class RoleCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Role name")
     description: str | None = Field(None, max_length=255, description="Role description")
-
-
-class RoleCreate(RoleBase):
-    pass
 
 
 class RoleUpdate(BaseModel):
@@ -17,14 +13,16 @@ class RoleUpdate(BaseModel):
     description: str | None = Field(None, max_length=255, description="Role description")
 
 
-class RoleResponse(RoleBase):
+class RoleRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    name: str
+    description: str | None
 
 
-class RoleWithPermissions(RoleResponse):
-    permissions: list[PermissionResponse] = []
+class RoleWithPermissions(RoleRead):
+    permissions: list[PermissionRead] = []
 
 
 class UserRoleAssign(BaseModel):
@@ -38,14 +36,10 @@ class UserRoleResponse(BaseModel):
     role_name: str
 
 
-class PermissionBase(BaseModel):
+class PermissionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Permission name")
     code: str = Field(..., min_length=1, max_length=100, description="Permission code")
     description: str | None = Field(None, max_length=255, description="Permission description")
-
-
-class PermissionCreate(PermissionBase):
-    pass
 
 
 class PermissionUpdate(BaseModel):
@@ -53,11 +47,13 @@ class PermissionUpdate(BaseModel):
     description: str | None = Field(None, max_length=255, description="Permission description")
 
 
-class PermissionResponse(PermissionBase):
+class PermissionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    name: str
+    code: str
+    description: str | None
 
 
-# 重建模型以支持前向引用
 RoleWithPermissions.model_rebuild()
