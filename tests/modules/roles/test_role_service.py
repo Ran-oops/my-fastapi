@@ -121,7 +121,5 @@ class TestRoleService:
 
         await role_repo.add_permission(session, role.id, permission.id)
         await role_service.assign_role_to_user(session, test_user.id, role.id)
-        has_permission = await role_service.check_user_permission(
-            session, test_user.id, f"test:permission_{unique_id}"
-        )
+        has_permission = await role_service.check_user_permission(session, test_user.id, f"test:permission_{unique_id}")
         assert has_permission is True

@@ -5,9 +5,10 @@ from app.api.deps import get_current_active_superuser, get_current_user, get_use
 from app.common.pagination import PaginatedResponse, PaginationParams
 from app.common.schemas import DataResponse
 from app.core.exceptions import NotFoundException
-from app.modules.products.schemas import ProductCreate, ProductRead, ProductUpdate
 from app.modules.products import service as product_service
+from app.modules.products.schemas import ProductCreate, ProductRead, ProductUpdate
 from app.modules.users.models import User
+
 
 router = APIRouter()
 

@@ -66,10 +66,7 @@ class TestUserRegistration:
 
 @pytest.mark.asyncio
 class TestPasswordValidation:
-    """密码验证测试 - 转化自代码审查发现的问题."""
-
     async def test_register_password_too_short(self, client):
-        """密码必须至少8个字符."""
         response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -81,7 +78,6 @@ class TestPasswordValidation:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_register_password_no_letter(self, client):
-        """密码必须包含字母."""
         response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -93,7 +89,6 @@ class TestPasswordValidation:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_register_password_no_digit(self, client):
-        """密码必须包含数字."""
         response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -105,7 +100,6 @@ class TestPasswordValidation:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_register_invalid_email(self, client):
-        """邮箱格式必须正确."""
         response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -138,7 +132,6 @@ class TestUserLogin:
         assert "access_token" in data["data"]
 
     async def test_login_wrong_password(self, client):
-        """登录失败应返回 401 而非 404."""
         await client.post(
             "/api/v1/auth/register",
             json={
@@ -156,7 +149,6 @@ class TestUserLogin:
         assert "Invalid credentials" in data["detail"]
 
     async def test_login_nonexistent_user(self, client):
-        """不存在的用户应返回 401."""
         response = await client.post(
             "/api/v1/auth/login",
             json={"username": "nonexistent", "password": "anypassword"},
@@ -166,10 +158,7 @@ class TestUserLogin:
 
 @pytest.mark.asyncio
 class TestTokenValidation:
-    """Token 验证测试 - 转化自代码审查发现的问题."""
-
     async def test_token_format(self, client):
-        """验证返回的 token 格式正确."""
         await client.post(
             "/api/v1/auth/register",
             json={
@@ -187,10 +176,9 @@ class TestTokenValidation:
         token_type = data["data"]["token_type"]
 
         assert token_type == "bearer"
-        assert len(token.split(".")) == 3  # JWT 格式: header.payload.signature
+        assert len(token.split(".")) == 3
 
     async def test_token_payload_structure(self, client):
-        """验证 token 包含必要的字段 (sub, exp, iat)."""
         import base64
         import json
 
@@ -208,15 +196,14 @@ class TestTokenValidation:
         )
         token = response.json()["data"]["access_token"]
 
-        # 解码 payload
         payload_b64 = token.split(".")[1]
         payload_json = base64.urlsafe_b64decode(payload_b64 + "==")
         payload = json.loads(payload_json)
 
-        assert "sub" in payload  # 用户 ID
-        assert "exp" in payload  # 过期时间
-        assert "iat" in payload  # 签发时间
-        assert "type" in payload  # token 类型
+        assert "sub" in payload
+        assert "exp" in payload
+        assert "iat" in payload
+        assert "type" in payload
         assert payload["type"] == "access"
 
 
@@ -367,7 +354,6 @@ class TestUpdateUser:
         assert "permissions" in data["detail"].lower()
 
     async def test_update_duplicate_email(self, client):
-        """更新邮箱时检测重复."""
         await client.post(
             "/api/v1/auth/register",
             json={
@@ -436,17 +422,13 @@ class TestDeleteUser:
 
 @pytest.mark.asyncio
 class TestErrorResponse:
-    """错误响应格式测试."""
-
     async def test_unauthorized_response_format(self, client):
-        """401 错误应返回统一格式."""
         response = await client.get("/api/v1/users/me")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         data = response.json()
         assert "detail" in data
 
     async def test_not_found_response_format(self, client):
-        """404 错误应返回统一格式."""
         await client.post(
             "/api/v1/auth/register",
             json={
@@ -481,7 +463,6 @@ class TestHealthCheck:
         assert "version" in data
 
     async def test_readiness_check(self, client):
-        """健康检查应验证数据库连接."""
         response = await client.get("/health/ready")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -492,7 +473,6 @@ class TestHealthCheck:
         assert "config_db" in data["databases"]
 
     async def test_root_endpoint(self, client):
-        """测试根端点返回正确信息."""
         response = await client.get("/")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
