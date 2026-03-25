@@ -8,16 +8,14 @@ sync_url = settings.USER_DATABASE_URL.replace("+asyncpg", "").replace("+aiomysql
 
 sync_engine = create_engine(sync_url, pool_pre_ping=True)
 
-SyncSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
+SyncSessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=sync_engine)
 
 
 def get_sync_session():
     """Yield a sync session for Celery worker tasks."""
-    session = SyncSessionLocal()
-    try:
-        yield session
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    with SyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
