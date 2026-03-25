@@ -5,6 +5,7 @@ from app.tasks.repository import create_task_record, update_celery_task_id, upda
 def dispatch(task, *args, **kwargs):
     """Create TaskRecord + dispatch Celery task atomically."""
     session = next(get_sync_session())
+    record = None
     try:
         # Extract Celery-specific kwargs
         countdown = kwargs.pop("countdown", None)
@@ -32,12 +33,13 @@ def dispatch(task, *args, **kwargs):
         return record
     except Exception as e:
         session.rollback()
-        # Update original record as FAILED instead of creating a new one
-        try:
-            update_task_status(session, record.id, "FAILED", error=f"Dispatch failed: {e}")
-            session.commit()
-        except Exception:
-            session.rollback()
+        # Update original record as FAILED if it was created
+        if record is not None:
+            try:
+                update_task_status(session, record.id, "FAILED", error=f"Dispatch failed: {e}")
+                session.commit()
+            except Exception:
+                session.rollback()
         raise
     finally:
         session.close()
