@@ -1,4 +1,5 @@
 from app.db.base import UserBase, BusinessBase, ConfigBase
+from app.db.repository import BaseRepository
 from app.db.session import (
     business_engine,
     config_engine,
@@ -15,6 +16,7 @@ __all__ = [
     "UserBase",
     "BusinessBase",
     "ConfigBase",
+    "BaseRepository",
     "user_engine",
     "business_engine",
     "config_engine",
