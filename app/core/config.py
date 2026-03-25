@@ -30,6 +30,10 @@ class Settings(BaseSettings):
 
     CONFIG_DATABASE_URL: str = "mysql+aiomysql://root:password@localhost:3306/config_db"
 
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    ORDER_CANCEL_TIMEOUT: int = 1800
+
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:
