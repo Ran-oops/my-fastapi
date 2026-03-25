@@ -7,6 +7,7 @@ from app.modules.products.router import router as products_router
 from app.modules.roles.router import router as roles_router
 from app.modules.users.auth_router import router as auth_router
 from app.modules.users.user_router import router as users_router
+from app.tasks.router import router as tasks_router
 
 
 api_router = APIRouter()
@@ -17,3 +18,4 @@ api_router.include_router(products_router, prefix="/products", tags=["products"]
 api_router.include_router(orders_router, prefix="/orders", tags=["orders"])
 api_router.include_router(config_router, prefix="/config", tags=["config"])
 api_router.include_router(audit_router, prefix="/audit", tags=["audit"])
+api_router.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
