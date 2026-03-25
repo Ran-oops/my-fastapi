@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import api_router
 from app.core.config import settings
-from app.modules.shared.db import business_engine, config_engine, user_engine
+from app.db.session import business_engine, config_engine, user_engine
 
 
 logger = logging.getLogger(__name__)

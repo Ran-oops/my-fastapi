@@ -5,19 +5,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 from app.core.security import verify_token
-from app.modules.shared.db import get_user_db
+from app.db.session import get_user_session
 from app.modules.users.models import User
-from app.modules.users.repository import user_repository
+from app.modules.users.repository import user_repo
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 
-async def get_current_user(db: AsyncSession = Depends(get_user_db), token: str = Depends(oauth2_scheme)) -> User:
+async def get_current_user(
+    session: AsyncSession = Depends(get_user_session), token: str = Depends(oauth2_scheme)
+) -> User:
     user_id = verify_token(token)
     if user_id is None:
         raise UnauthorizedException("Could not validate credentials")
-    user = await user_repository.get(db, id=int(user_id))
+    user = await user_repo.get(session, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
     if user.is_active is False:

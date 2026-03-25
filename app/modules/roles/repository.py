@@ -2,12 +2,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.shared.db import CRUDBase
-from app.modules.roles.models import Permission, Role, role_permissions, user_roles
+from app.db.repository import BaseRepository
+from app.modules.roles.models import Permission, Role
+from app.modules.roles.associations import role_permissions
+from app.modules.users.associations import user_roles
 from app.modules.roles.schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate
 
 
-class RoleRepository(CRUDBase[Role, RoleCreate, RoleUpdate]):
+class RoleRepository(BaseRepository[Role, RoleCreate, RoleUpdate]):
     async def get_by_name(self, db: AsyncSession, name: str) -> Role | None:
         result = await db.execute(select(Role).where(Role.name == name))
         return result.scalar_one_or_none()
@@ -55,7 +57,7 @@ class RoleRepository(CRUDBase[Role, RoleCreate, RoleUpdate]):
         return [row[0] for row in result.fetchall()]
 
 
-class PermissionRepository(CRUDBase[Permission, PermissionCreate, PermissionUpdate]):
+class PermissionRepository(BaseRepository[Permission, PermissionCreate, PermissionUpdate]):
     async def get_by_code(self, db: AsyncSession, code: str) -> Permission | None:
         result = await db.execute(select(Permission).where(Permission.code == code))
         return result.scalar_one_or_none()

@@ -4,7 +4,7 @@ from app.core.exceptions import ConflictException, NotFoundException
 from app.modules.roles.models import Permission, Role
 from app.modules.roles.repository import permission_repository, role_repository
 from app.modules.roles.schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate
-from app.modules.users.repository import user_repository
+from app.modules.users.repository import user_repo
 
 
 class RoleService:
@@ -46,7 +46,7 @@ class RoleService:
 
     @staticmethod
     async def assign_role_to_user(db: AsyncSession, user_id: int, role_id: int):
-        user = await user_repository.get_with_roles(db, user_id=user_id)
+        user = await user_repo.get_with_roles(db, user_id=user_id)
         if not user:
             raise NotFoundException(f"User with id {user_id} not found")
         role = await role_repository.get(db, id=role_id)
@@ -60,7 +60,7 @@ class RoleService:
 
     @staticmethod
     async def remove_role_from_user(db: AsyncSession, user_id: int, role_id: int):
-        user = await user_repository.get_with_roles(db, user_id=user_id)
+        user = await user_repo.get_with_roles(db, user_id=user_id)
         if not user:
             raise NotFoundException(f"User with id {user_id} not found")
         role = await role_repository.get(db, id=role_id)
@@ -74,14 +74,14 @@ class RoleService:
 
     @staticmethod
     async def get_user_roles(db: AsyncSession, user_id: int) -> list[Role]:
-        user = await user_repository.get_with_roles(db, user_id=user_id)
+        user = await user_repo.get_with_roles(db, user_id=user_id)
         if not user:
             raise NotFoundException(f"User with id {user_id} not found")
         return list(user.roles)
 
     @staticmethod
     async def check_user_permission(db: AsyncSession, user_id: int, permission_code: str) -> bool:
-        user = await user_repository.get_with_roles(db, user_id=user_id)
+        user = await user_repo.get_with_roles(db, user_id=user_id)
         if not user:
             return False
         for role in user.roles:
