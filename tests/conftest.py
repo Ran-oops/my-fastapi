@@ -8,6 +8,7 @@ from app.db.session import get_user_session
 from app.main import app
 from app.modules.users.models import User
 
+
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DATABASE_URL, future=True)
 TestingSessionFactory = async_sessionmaker(

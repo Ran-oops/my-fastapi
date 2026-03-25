@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, Table
 
 from app.db.base import UserBase
 
+
 role_permissions = Table(
     "role_permissions",
     UserBase.metadata,

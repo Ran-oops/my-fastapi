@@ -9,6 +9,7 @@ from app.db.session import get_user_session
 from app.modules.users.models import User
 from app.modules.users.repository import user_repo
 
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 

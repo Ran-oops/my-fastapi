@@ -2,26 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user, get_user_session
-from app.core.exceptions import NotFoundException
-from app.common.schemas import DataResponse
 from app.common.pagination import PaginatedResponse, PaginationParams
-from app.modules.users.models import User
-from app.modules.users.schemas import UserRead, UserUpdate, UserCreate, Token, UserLogin
+from app.common.schemas import DataResponse
+from app.core.exceptions import NotFoundException
 from app.modules.users import service as user_service
+from app.modules.users.models import User
+from app.modules.users.schemas import UserRead, UserUpdate
+
 
 router = APIRouter()
-
-
-@router.post("/auth/register", response_model=DataResponse[UserRead], status_code=status.HTTP_201_CREATED)
-async def register(data: UserCreate, session: AsyncSession = Depends(get_user_session)):
-    user = await user_service.create_user(session, data)
-    return DataResponse(data=user, message="User created successfully")
-
-
-@router.post("/auth/login", response_model=DataResponse[Token])
-async def login(credentials: UserLogin, session: AsyncSession = Depends(get_user_session)):
-    token = await user_service.login_user(session, username=credentials.username, password=credentials.password)
-    return DataResponse(data=token, message="Login successful")
 
 
 @router.get("/me", response_model=DataResponse[UserRead])

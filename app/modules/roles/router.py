@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user, get_user_session
-from app.core.exceptions import NotFoundException
-from app.common.schemas import DataResponse
 from app.common.pagination import PaginatedResponse, PaginationParams
-from app.modules.users.models import User
+from app.common.schemas import DataResponse
+from app.core.exceptions import NotFoundException
+from app.modules.roles import service as role_service
 from app.modules.roles.schemas import (
     PermissionCreate,
     PermissionRead,
@@ -16,7 +16,8 @@ from app.modules.roles.schemas import (
     RoleWithPermissions,
     UserRoleAssign,
 )
-from app.modules.roles import service as role_service
+from app.modules.users.models import User
+
 
 router = APIRouter()
 

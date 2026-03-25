@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.repository import BaseRepository
+from app.modules.roles.associations import role_permissions
 from app.modules.roles.models import Permission, Role
 from app.modules.roles.schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate
 from app.modules.users.associations import user_roles
-from app.modules.roles.associations import role_permissions
 
 
 class RoleRepository(BaseRepository[Role, RoleCreate, RoleUpdate]):

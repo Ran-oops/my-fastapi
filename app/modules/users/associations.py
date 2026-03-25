@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, Table
 
 from app.db.base import UserBase
 
+
 user_roles = Table(
     "user_roles",
     UserBase.metadata,

@@ -39,8 +39,8 @@ def check_permission(
 
 
 async def _list_permissions():
-    from app.modules.shared.db import UserSessionLocal
     from app.modules.roles.service import permission_service
+    from app.modules.shared.db import UserSessionLocal
 
     async with UserSessionLocal() as db:
         permissions = await permission_service.get_permissions(db)
@@ -48,9 +48,9 @@ async def _list_permissions():
 
 
 async def _create_permission(name: str, code: str, description: str | None):
-    from app.modules.shared.db import UserSessionLocal
     from app.modules.roles.schemas import PermissionCreate
     from app.modules.roles.service import permission_service
+    from app.modules.shared.db import UserSessionLocal
 
     async with UserSessionLocal() as db:
         permission_in = PermissionCreate(name=name, code=code, description=description)
@@ -59,8 +59,8 @@ async def _create_permission(name: str, code: str, description: str | None):
 
 
 async def _check_permission(user_id: int, code: str):
-    from app.modules.shared.db import UserSessionLocal
     from app.modules.roles.service import role_service
+    from app.modules.shared.db import UserSessionLocal
 
     async with UserSessionLocal() as db:
         return await role_service.check_user_permission(db, user_id, code)
