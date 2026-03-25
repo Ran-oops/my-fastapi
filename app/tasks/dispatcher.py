@@ -1,5 +1,5 @@
 from app.tasks.db import get_sync_session
-from app.tasks.repository import create_task_record, update_celery_task_id, update_task_status, find_pending_task
+from app.tasks.repository import create_task_record, find_pending_task, update_celery_task_id, update_task_status
 
 
 def dispatch(task, *args, **kwargs):

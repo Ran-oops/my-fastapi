@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 
+
 # Convert async URL to sync URL
 sync_url = settings.USER_DATABASE_URL.replace("+asyncpg", "").replace("+aiomysql", "").replace("+aioodbc", "")
 

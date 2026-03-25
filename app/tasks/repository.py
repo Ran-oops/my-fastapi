@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
@@ -24,7 +24,7 @@ def _apply_status_update(record: TaskRecord, status: str, error: str | None = No
     if error:
         record.error = error
     if status in (TaskStatus.SUCCESS.value, TaskStatus.FAILED.value, TaskStatus.DEAD.value):
-        record.completed_at = datetime.now(timezone.utc)
+        record.completed_at = datetime.now(UTC)
 
 
 def update_task_status(session: Session, record_id: int, status: str, error: str | None = None) -> None:

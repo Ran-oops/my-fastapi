@@ -1,6 +1,6 @@
+from app.modules.orders.models import Order, OrderStatus
 from app.tasks.celery_app import celery_app
 from app.tasks.db import get_sync_session
-from app.modules.orders.models import Order, OrderStatus
 
 
 @celery_app.task(bind=True, max_retries=3, retry_backoff=True)

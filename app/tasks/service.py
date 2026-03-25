@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundException, ValidationException
-from app.tasks.repository import get_task_by_id, get_tasks, update_task_status
 from app.tasks.models import TaskStatus
+from app.tasks.repository import get_task_by_id, get_tasks, update_task_status
 
 
 def get_task(session: Session, task_id: int):

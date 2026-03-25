@@ -1,6 +1,6 @@
+from app.modules.audit.models import AuditLog
 from app.tasks.celery_app import celery_app
 from app.tasks.db import get_sync_session
-from app.modules.audit.models import AuditLog
 
 
 @celery_app.task
