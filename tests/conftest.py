@@ -3,15 +3,14 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.security import create_access_token, get_password_hash
-from app.modules.shared.db import UserDBBase as Base
-from app.modules.shared.db import get_user_db as get_db
+from app.db.base import UserBase
+from app.db.session import get_user_session
 from app.main import app
 from app.modules.users.models import User
 
-
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DATABASE_URL, future=True)
-TestingSessionLocal = async_sessionmaker(
+TestingSessionFactory = async_sessionmaker(
     test_engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -22,28 +21,27 @@ TestingSessionLocal = async_sessionmaker(
 
 @pytest_asyncio.fixture(scope="session")
 async def setup_test_db():
-    """在测试会话开始时创建表."""
     async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(UserBase.metadata.create_all)
     yield
     async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(UserBase.metadata.drop_all)
     await test_engine.dispose()
 
 
 @pytest_asyncio.fixture(scope="function")
-async def db_session(setup_test_db):
-    async with TestingSessionLocal() as session:
+async def session(setup_test_db):
+    async with TestingSessionFactory() as session:
         yield session
-        await session.rollback()
+    await session.rollback()
 
 
 @pytest_asyncio.fixture(scope="function")
-async def client(db_session):
-    async def override_get_db():
-        yield db_session
+async def client(session):
+    async def override_get_session():
+        yield session
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_user_session] = override_get_session
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
@@ -51,8 +49,7 @@ async def client(db_session):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def test_user(db_session):
-    """创建测试用户."""
+async def test_user(session):
     import uuid
 
     unique_id = str(uuid.uuid4())[:8]
@@ -64,26 +61,23 @@ async def test_user(db_session):
         is_active=True,
         is_superuser=False,
     )
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
 @pytest_asyncio.fixture(scope="function")
 async def superuser_token(test_user):
-    """创建超级用户token."""
     test_user.is_superuser = True
     return create_access_token(subject=str(test_user.id))
 
 
 @pytest_asyncio.fixture(scope="function")
 async def user_token(test_user):
-    """创建普通用户token."""
     return create_access_token(subject=str(test_user.id))
 
 
 @pytest_asyncio.fixture(scope="function")
 async def user_id(test_user):
-    """返回测试用户ID."""
     return test_user.id
