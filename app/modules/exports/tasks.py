@@ -1,13 +1,13 @@
-import tempfile
 import csv
+import tempfile
 
+from app.modules.orders.models import Order
 from app.tasks.celery_app import celery_app
 from app.tasks.db import get_sync_session
-from app.modules.orders.models import Order
 
 
 @celery_app.task(bind=True, max_retries=2, retry_backoff=True)
-def export_order_data(self, filters: dict, format: str = "csv"):
+def export_order_data(self, _filters: dict, format: str = "csv"):
     """Export order data to CSV/Excel file."""
     session = next(get_sync_session())
     try:

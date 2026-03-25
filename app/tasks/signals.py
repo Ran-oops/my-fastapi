@@ -1,11 +1,11 @@
-from celery.signals import task_prerun, task_postrun, task_failure
+from celery.signals import task_failure, task_postrun, task_prerun
 
 from app.tasks.db import get_sync_session
 from app.tasks.repository import update_task_status_by_celery_id
 
 
 @task_prerun.connect
-def task_started(sender, task_id, **kwargs):
+def task_started(_sender, task_id, **_kwargs):
     session = next(get_sync_session())
     try:
         update_task_status_by_celery_id(session, task_id, "RUNNING")
@@ -17,7 +17,7 @@ def task_started(sender, task_id, **kwargs):
 
 
 @task_postrun.connect
-def task_completed(sender, task_id, retval, state, **kwargs):
+def task_completed(_sender, task_id, _retval, state, **_kwargs):
     session = next(get_sync_session())
     try:
         status = "SUCCESS" if state == "SUCCESS" else "FAILED"
@@ -30,7 +30,7 @@ def task_completed(sender, task_id, retval, state, **kwargs):
 
 
 @task_failure.connect
-def task_failed(sender, task_id, exception, **kwargs):
+def task_failed(_sender, task_id, exception, **_kwargs):
     session = next(get_sync_session())
     try:
         update_task_status_by_celery_id(session, task_id, "FAILED", error=str(exception))
