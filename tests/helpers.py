@@ -1,9 +1,9 @@
 import uuid
 from decimal import Decimal
 
+from app.modules.audit.schemas import AuditLogCreate
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate
 from app.modules.products.schemas import ProductCreate
-from app.modules.audit.schemas import AuditLogCreate
 
 
 def make_product_data(**overrides):
