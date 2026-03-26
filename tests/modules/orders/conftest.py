@@ -1,8 +1,7 @@
 import uuid
 from decimal import Decimal
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import pytest
 import pytest_asyncio
 
 from app.modules.orders import service as order_service
@@ -41,12 +40,23 @@ async def test_order(session, test_user, test_product_for_order):
 
 
 @pytest_asyncio.fixture
-async def superuser_headers(superuser_token):
-    """Headers for admin API calls."""
-    return {"Authorization": f"Bearer {superuser_token}"}
+def patch_dispatch():
+    """Mock the Celery dispatch to avoid real task execution."""
+    with patch("app.modules.orders.service.dispatch"):
+        yield
 
 
 @pytest_asyncio.fixture
-async def user_headers(user_token):
-    """Headers for regular user API calls."""
-    return {"Authorization": f"Bearer {user_token}"}
+async def fresh_order(session, test_user, test_product_for_order, patch_dispatch):
+    """Create a fresh PENDING order for each test that needs one."""
+    order_in = OrderCreate(
+        user_id=test_user.id,
+        items=[
+            OrderItemCreate(
+                product_id=test_product_for_order.id,
+                quantity=1,
+                unit_price=Decimal("10.00"),
+            )
+        ],
+    )
+    return await order_service.create_order(session, order_in)
