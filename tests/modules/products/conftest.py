@@ -1,7 +1,6 @@
 import uuid
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 
 from app.modules.products import service as product_service
@@ -32,16 +31,5 @@ async def multiple_products(session):
             price=Decimal(f"{(i + 1) * 10}.00"),
             category=categories[i],
         )
-        product = await product_service.create_product(session, product_in)
-        products.append(product)
+        products.append(await product_service.create_product(session, product_in))
     return products
-
-
-@pytest_asyncio.fixture
-async def superuser_headers(superuser_token):
-    return {"Authorization": f"Bearer {superuser_token}"}
-
-
-@pytest_asyncio.fixture
-async def user_headers(user_token):
-    return {"Authorization": f"Bearer {user_token}"}
