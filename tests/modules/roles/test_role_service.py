@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from app.core.exceptions import ConflictException, NotFoundException
@@ -8,8 +10,6 @@ from app.modules.roles.schemas import RoleCreate, RoleUpdate
 @pytest.mark.asyncio
 class TestRoleService:
     async def test_create_role_success(self, session):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"test_role_{unique_id}", description="Test role")
         role = await role_service.create_role(session, role_in)
@@ -17,8 +17,6 @@ class TestRoleService:
         assert role.description == "Test role"
 
     async def test_create_role_duplicate_name(self, session):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"duplicate_role_{unique_id}", description="First role")
         await role_service.create_role(session, role_in)
@@ -27,8 +25,6 @@ class TestRoleService:
         assert "already exists" in str(exc_info.value)
 
     async def test_update_role_success(self, session):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"update_role_{unique_id}", description="Original description")
         role = await role_service.create_role(session, role_in)
@@ -43,8 +39,6 @@ class TestRoleService:
         assert "not found" in str(exc_info.value)
 
     async def test_delete_role_success(self, session):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"delete_role_{unique_id}", description="Role to delete")
         role = await role_service.create_role(session, role_in)
@@ -57,8 +51,6 @@ class TestRoleService:
         assert "not found" in str(exc_info.value)
 
     async def test_get_role_by_id(self, session):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"get_role_{unique_id}", description="Get role")
         created_role = await role_service.create_role(session, role_in)
@@ -67,8 +59,6 @@ class TestRoleService:
         assert role.name == f"get_role_{unique_id}"
 
     async def test_get_roles(self, session):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"list_role_{unique_id}", description="List role")
         await role_service.create_role(session, role_in)
@@ -76,8 +66,6 @@ class TestRoleService:
         assert len(roles) > 0
 
     async def test_assign_role_to_user(self, session, test_user):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"assign_role_{unique_id}", description="Assign role")
         role = await role_service.create_role(session, role_in)
@@ -86,8 +74,6 @@ class TestRoleService:
         assert any(r.id == role.id for r in roles)
 
     async def test_remove_role_from_user(self, session, test_user):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"remove_role_{unique_id}", description="Remove role")
         role = await role_service.create_role(session, role_in)
@@ -97,8 +83,6 @@ class TestRoleService:
         assert not any(r.id == role.id for r in roles)
 
     async def test_get_user_roles(self, session, test_user):
-        import uuid
-
         unique_id = str(uuid.uuid4())[:8]
         role_in = RoleCreate(name=f"user_role_{unique_id}", description="User role")
         role = await role_service.create_role(session, role_in)
@@ -107,8 +91,6 @@ class TestRoleService:
         assert len(roles) > 0
 
     async def test_check_user_permission(self, session, test_user):
-        import uuid
-
         from app.modules.roles import service as permission_service
         from app.modules.roles.schemas import PermissionCreate
 
