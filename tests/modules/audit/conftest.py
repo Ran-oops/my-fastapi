@@ -1,4 +1,3 @@
-import pytest
 import pytest_asyncio
 
 from app.modules.audit import service as audit_service
@@ -33,16 +32,5 @@ async def multiple_audit_logs(session):
             new_value=f'{{"new": "value{i}"}}',
             ip_address=f"192.168.1.{i}",
         )
-        log = await audit_service.create_audit_log(session, audit_in)
-        logs.append(log)
+        logs.append(await audit_service.create_audit_log(session, audit_in))
     return logs
-
-
-@pytest_asyncio.fixture
-async def superuser_headers(superuser_token):
-    return {"Authorization": f"Bearer {superuser_token}"}
-
-
-@pytest_asyncio.fixture
-async def user_headers(user_token):
-    return {"Authorization": f"Bearer {user_token}"}
