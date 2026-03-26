@@ -82,3 +82,15 @@ async def user_token(test_user):
 @pytest_asyncio.fixture(scope="function")
 async def user_id(test_user):
     return test_user.id
+
+
+@pytest_asyncio.fixture
+async def superuser_headers(superuser_token):
+    """Headers for admin API calls."""
+    return {"Authorization": f"Bearer {superuser_token}"}
+
+
+@pytest_asyncio.fixture
+async def user_headers(user_token):
+    """Headers for regular user API calls."""
+    return {"Authorization": f"Bearer {user_token}"}
