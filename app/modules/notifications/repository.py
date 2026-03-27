@@ -6,9 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.repository import BaseRepository
 from app.modules.notifications.models import Notification, NotificationTemplate
+from app.modules.notifications.schemas import NotificationTemplateCreate, NotificationTemplateUpdate
 
 
-class NotificationRepository(BaseRepository[Notification]):
+class NotificationRepository(BaseRepository[Notification, NotificationTemplateCreate, NotificationTemplateUpdate]):
     """通知仓库"""
 
     def __init__(self):
@@ -82,7 +83,9 @@ class NotificationRepository(BaseRepository[Notification]):
         return count
 
 
-class NotificationTemplateRepository(BaseRepository[NotificationTemplate]):
+class NotificationTemplateRepository(
+    BaseRepository[NotificationTemplate, NotificationTemplateCreate, NotificationTemplateUpdate]
+):
     """通知模板仓库"""
 
     def __init__(self):
