@@ -3,6 +3,8 @@ from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.eventbus import eventbus, Event
+from app.core.events import ORDER_CONFIRMED, ORDER_SHIPPED, ORDER_CANCELLED
 from app.core.exceptions import NotFoundException, ValidationException
 from app.modules.orders.models import Order, OrderItem, OrderStatus
 from app.modules.orders.repository import order_repo
@@ -85,6 +87,17 @@ async def update_order_status(session: AsyncSession, order_id: int, data: OrderU
         order.status = data.status.value
         await session.commit()
         await session.refresh(order)
+
+        event_type = None
+        if data.status == OrderStatus.CONFIRMED:
+            event_type = ORDER_CONFIRMED
+        elif data.status == OrderStatus.SHIPPED:
+            event_type = ORDER_SHIPPED
+        elif data.status == OrderStatus.CANCELLED:
+            event_type = ORDER_CANCELLED
+
+        if event_type:
+            eventbus.publish(Event(event_type=event_type, data={"order_id": order_id, "user_id": order.user_id}))
 
     return order
 
