@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -8,7 +9,18 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import api_router
 from app.core.config import settings
-from app.db.session import business_engine, config_engine, user_engine
+from app.core.eventbus import eventbus
+from app.core.events import (
+    ORDER_CONFIRMED,
+    ORDER_SHIPPED,
+    ORDER_CANCELLED,
+    USER_REGISTERED,
+    USER_PASSWORD_RESET,
+    TASK_COMPLETED,
+    TASK_FAILED,
+)
+from app.db.session import business_engine, config_engine, user_engine, UserSessionFactory
+from app.modules.notifications.handlers import notification_handler
 
 
 logger = logging.getLogger(__name__)
@@ -17,6 +29,22 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     logger.info("Application starting up...")
+
+    async def handle_notification_event(event):
+        async with UserSessionFactory() as session:
+            await notification_handler.handle_event(session, event)
+
+    for event_type in [
+        ORDER_CONFIRMED,
+        ORDER_SHIPPED,
+        ORDER_CANCELLED,
+        USER_REGISTERED,
+        USER_PASSWORD_RESET,
+        TASK_COMPLETED,
+        TASK_FAILED,
+    ]:
+        eventbus.subscribe(event_type, lambda e, et=event_type: asyncio.create_task(handle_notification_event(e)))
+
     yield
     logger.info("Application shutting down...")
     await user_engine.dispose()
