@@ -4,7 +4,6 @@ import pytest_asyncio
 
 from app.core.eventbus import eventbus
 from app.modules.notifications.models import NotificationTemplate
-from app.modules.notifications.schemas import NotificationTemplateCreate
 
 
 @pytest_asyncio.fixture

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -9,7 +8,7 @@ class NotificationTemplateCreate(BaseModel):
 
     name: str = Field(..., max_length=100)
     channel: str = Field(..., max_length=20)
-    subject: Optional[str] = Field(None, max_length=200)
+    subject: str | None = Field(None, max_length=200)
     body: str
     is_active: bool = True
 
@@ -17,11 +16,11 @@ class NotificationTemplateCreate(BaseModel):
 class NotificationTemplateUpdate(BaseModel):
     """更新通知模板"""
 
-    name: Optional[str] = Field(None, max_length=100)
-    channel: Optional[str] = Field(None, max_length=20)
-    subject: Optional[str] = Field(None, max_length=200)
-    body: Optional[str] = None
-    is_active: Optional[bool] = None
+    name: str | None = Field(None, max_length=100)
+    channel: str | None = Field(None, max_length=20)
+    subject: str | None = Field(None, max_length=200)
+    body: str | None = None
+    is_active: bool | None = None
 
 
 class NotificationTemplateResponse(BaseModel):
@@ -30,11 +29,11 @@ class NotificationTemplateResponse(BaseModel):
     id: int
     name: str
     channel: str
-    subject: Optional[str]
+    subject: str | None
     body: str
     is_active: bool
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
 
     class Config:
         from_attributes = True
@@ -48,10 +47,10 @@ class NotificationResponse(BaseModel):
     template_name: str
     channel: str
     status: str
-    subject: Optional[str]
+    subject: str | None
     body: str
     is_read: bool
-    sent_at: Optional[datetime]
+    sent_at: datetime | None
     created_at: datetime
 
     class Config:

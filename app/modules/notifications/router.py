@@ -1,11 +1,9 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_current_active_superuser
-from app.db.session import get_user_session as get_session
+from app.api.deps import get_current_active_superuser, get_current_user
 from app.common.schemas import DataResponse
+from app.db.session import get_user_session as get_session
 from app.modules.notifications import service as notification_service
 from app.modules.notifications.schemas import (
     NotificationListResponse,
@@ -13,9 +11,9 @@ from app.modules.notifications.schemas import (
     NotificationTemplateCreate,
     NotificationTemplateResponse,
     NotificationTemplateUpdate,
-    NotificationMarkRead,
 )
 from app.modules.users.models import User
+
 
 router = APIRouter()
 
@@ -24,8 +22,8 @@ router = APIRouter()
 async def list_notifications(
     page: int = 1,
     page_size: int = 20,
-    is_read: Optional[bool] = None,
-    status: Optional[str] = None,
+    is_read: bool | None = None,
+    status: str | None = None,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):

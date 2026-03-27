@@ -1,15 +1,11 @@
-from typing import Optional
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.eventbus import eventbus, Event
-from app.modules.notifications.handlers import notification_handler
+from app.core.eventbus import Event, eventbus
 from app.modules.notifications.models import Notification, NotificationTemplate
 from app.modules.notifications.repository import notification_repo, template_repo
 from app.modules.notifications.schemas import (
     NotificationTemplateCreate,
     NotificationTemplateUpdate,
-    NotificationMarkRead,
 )
 
 
@@ -18,8 +14,8 @@ async def get_notifications(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    is_read: Optional[bool] = None,
-    status: Optional[str] = None,
+    is_read: bool | None = None,
+    status: str | None = None,
 ) -> list[Notification]:
     """获取用户通知列表"""
     return await notification_repo.get_by_user(session, user_id, skip, limit, is_read, status)
@@ -28,19 +24,19 @@ async def get_notifications(
 async def get_notification_count(
     session: AsyncSession,
     user_id: int,
-    is_read: Optional[bool] = None,
-    status: Optional[str] = None,
+    is_read: bool | None = None,
+    status: str | None = None,
 ) -> int:
     """获取用户通知数量"""
     return await notification_repo.count_by_user(session, user_id, is_read, status)
 
 
-async def get_notification_by_id(session: AsyncSession, notification_id: int, user_id: int) -> Optional[Notification]:
+async def get_notification_by_id(session: AsyncSession, notification_id: int, user_id: int) -> Notification | None:
     """获取单条通知"""
     return await notification_repo.get(session, id=notification_id)
 
 
-async def mark_notification_read(session: AsyncSession, notification_id: int, user_id: int) -> Optional[Notification]:
+async def mark_notification_read(session: AsyncSession, notification_id: int, user_id: int) -> Notification | None:
     """标记单条已读"""
     return await notification_repo.mark_read(session, notification_id, user_id)
 

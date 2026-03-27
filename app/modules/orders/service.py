@@ -3,8 +3,8 @@ from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.eventbus import eventbus, Event
-from app.core.events import ORDER_CONFIRMED, ORDER_SHIPPED, ORDER_CANCELLED
+from app.core.eventbus import Event, eventbus
+from app.core.events import ORDER_CANCELLED, ORDER_CONFIRMED, ORDER_SHIPPED
 from app.core.exceptions import NotFoundException, ValidationException
 from app.modules.orders.models import Order, OrderItem, OrderStatus
 from app.modules.orders.repository import order_repo

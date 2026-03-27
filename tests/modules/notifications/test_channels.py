@@ -1,10 +1,10 @@
 import pytest
 
 from app.modules.notifications.channels import (
-    InAppChannel,
-    EmailChannel,
-    SmsChannel,
     CHANNEL_REGISTRY,
+    EmailChannel,
+    InAppChannel,
+    SmsChannel,
 )
 
 

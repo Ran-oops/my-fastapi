@@ -1,7 +1,7 @@
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
-from typing import Callable
+from datetime import UTC, datetime
 
 
 @dataclass

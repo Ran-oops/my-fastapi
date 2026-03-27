@@ -1,13 +1,13 @@
 import logging
-from datetime import datetime, UTC
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.eventbus import Event
 from app.modules.notifications.channels import CHANNEL_REGISTRY
-from app.modules.notifications.models import Notification, NotificationTemplate
+from app.modules.notifications.models import Notification
 from app.modules.notifications.repository import template_repo
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class NotificationHandler:
         channel_name: str,
         channel,
         user_id: int,
-    ) -> Optional[Notification]:
+    ) -> Notification | None:
         """发送到单个渠道"""
         template = await template_repo.get_by_name(session, event.event_type, channel_name)
         if not template:
@@ -75,7 +75,7 @@ class NotificationHandler:
         await session.refresh(notification)
         return notification
 
-    def _render(self, template: Optional[str], context: dict) -> str:
+    def _render(self, template: str | None, context: dict) -> str:
         """简单模板渲染"""
         if not template:
             return ""

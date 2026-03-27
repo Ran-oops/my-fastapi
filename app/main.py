@@ -11,15 +11,15 @@ from app.api.v1 import api_router
 from app.core.config import settings
 from app.core.eventbus import eventbus
 from app.core.events import (
+    ORDER_CANCELLED,
     ORDER_CONFIRMED,
     ORDER_SHIPPED,
-    ORDER_CANCELLED,
-    USER_REGISTERED,
-    USER_PASSWORD_RESET,
     TASK_COMPLETED,
     TASK_FAILED,
+    USER_PASSWORD_RESET,
+    USER_REGISTERED,
 )
-from app.db.session import business_engine, config_engine, user_engine, UserSessionFactory
+from app.db.session import UserSessionFactory, business_engine, config_engine, user_engine
 from app.modules.notifications.handlers import notification_handler
 
 

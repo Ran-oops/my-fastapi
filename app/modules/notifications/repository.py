@@ -1,7 +1,4 @@
-from datetime import datetime, UTC
-from typing import Optional
-
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.repository import BaseRepository
@@ -21,8 +18,8 @@ class NotificationRepository(BaseRepository[Notification, NotificationTemplateCr
         user_id: int,
         skip: int = 0,
         limit: int = 100,
-        is_read: Optional[bool] = None,
-        status: Optional[str] = None,
+        is_read: bool | None = None,
+        status: str | None = None,
     ) -> list[Notification]:
         """获取用户通知列表"""
         conditions = [Notification.user_id == user_id]
@@ -45,8 +42,8 @@ class NotificationRepository(BaseRepository[Notification, NotificationTemplateCr
         self,
         session: AsyncSession,
         user_id: int,
-        is_read: Optional[bool] = None,
-        status: Optional[str] = None,
+        is_read: bool | None = None,
+        status: str | None = None,
     ) -> int:
         """统计用户通知数量"""
         conditions = [Notification.user_id == user_id]
@@ -59,7 +56,7 @@ class NotificationRepository(BaseRepository[Notification, NotificationTemplateCr
         result = await session.execute(stmt)
         return len(list(result.all()))
 
-    async def mark_read(self, session: AsyncSession, notification_id: int, user_id: int) -> Optional[Notification]:
+    async def mark_read(self, session: AsyncSession, notification_id: int, user_id: int) -> Notification | None:
         """标记单条已读"""
         stmt = select(Notification).where(and_(Notification.id == notification_id, Notification.user_id == user_id))
         result = await session.execute(stmt)
@@ -91,7 +88,7 @@ class NotificationTemplateRepository(
     def __init__(self):
         super().__init__(NotificationTemplate)
 
-    async def get_by_name(self, session: AsyncSession, name: str, channel: str) -> Optional[NotificationTemplate]:
+    async def get_by_name(self, session: AsyncSession, name: str, channel: str) -> NotificationTemplate | None:
         """根据名称和渠道获取模板"""
         stmt = select(NotificationTemplate).where(
             and_(
