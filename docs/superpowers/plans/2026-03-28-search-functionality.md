@@ -417,7 +417,7 @@ git commit -m "feat(search): add search schemas and response models"
 # app/modules/search/repository.py
 from __future__ import annotations
 
-from sqlalchemy import select, func, text
+from sqlalchemy import select, func, text, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.products.models import Product
@@ -431,6 +431,16 @@ class SearchRepository:
     
     def __init__(self, session: AsyncSession):
         self.session = session
+    
+    def _get_sort_column(self, model, sort_by: str, similarity):
+        """获取排序列"""
+        if sort_by == 'relevance':
+            return similarity.desc()
+        elif sort_by == 'price' and hasattr(model, 'price'):
+            return model.price
+        elif sort_by == 'created_at' and hasattr(model, 'created_at'):
+            return model.created_at
+        return similarity.desc()
     
     async def search_products(
         self, 
@@ -468,7 +478,15 @@ class SearchRepository:
         total = await self.session.scalar(count_stmt)
         
         # 排序和分页
-        stmt = stmt.order_by(similarity.desc())
+        sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
+        sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
+        
+        sort_column = self._get_sort_column(Product, sort_by, similarity)
+        if sort_order == 'asc':
+            stmt = stmt.order_by(asc(sort_column))
+        else:
+            stmt = stmt.order_by(desc(sort_column))
+        
         stmt = stmt.offset(skip).limit(limit)
         
         result = await self.session.execute(stmt)
@@ -510,6 +528,24 @@ class SearchRepository:
         total = await self.session.scalar(count_stmt)
         
         # 排序和分页
+        sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
+        sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
+        
+        sort_column = self._get_sort_column(Order, sort_by, similarity)
+        if sort_order == 'asc':
+            stmt = stmt.order_by(asc(sort_column))
+        else:
+            stmt = stmt.order_by(desc(sort_column))
+        
+        stmt = stmt.offset(skip).limit(limit)
+        
+        result = await self.session.execute(stmt)
+        orders = result.scalars().all()
+        
+        return orders, total or 0
+        total = await self.session.scalar(count_stmt)
+        
+        # 排序和分页
         stmt = stmt.order_by(similarity.desc())
         stmt = stmt.offset(skip).limit(limit)
         
@@ -547,7 +583,15 @@ class SearchRepository:
         total = await self.session.scalar(count_stmt)
         
         # 排序和分页
-        stmt = stmt.order_by(similarity.desc())
+        sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
+        sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
+        
+        sort_column = self._get_sort_column(User, sort_by, similarity)
+        if sort_order == 'asc':
+            stmt = stmt.order_by(asc(sort_column))
+        else:
+            stmt = stmt.order_by(desc(sort_column))
+        
         stmt = stmt.offset(skip).limit(limit)
         
         result = await self.session.execute(stmt)
@@ -1131,6 +1175,70 @@ async def search(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.get("/suggest", response_model=SearchSuggestionResponse)
+async def suggest(
+    q: str = Query(..., min_length=2, description="搜索关键词（至少2字符）"),
+    type: str = Query("all", description="搜索模块"),
+    limit: int = Query(5, ge=1, le=20, description="返回建议数量"),
+    session: AsyncSession = Depends(get_user_session),
+    current_user: User = Depends(get_current_user),
+):
+    """获取搜索建议"""
+    service = SearchService(session)
+    return await service.suggest(
+        query=q,
+        search_type=type,
+        limit=limit
+    )
+
+
+@router.get("/history")
+async def get_history(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(10, ge=1, le=100, description="每页数量"),
+    session: AsyncSession = Depends(get_user_session),
+    current_user: User = Depends(get_current_user),
+):
+    """获取搜索历史"""
+    service = SearchService(session)
+    pagination = PaginationParams(page=page, page_size=page_size)
+    return await service.get_history(
+        user_id=current_user.id,
+        pagination=pagination
+    )
+
+
+@router.delete("/history/{history_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_history(
+    history_id: int,
+    session: AsyncSession = Depends(get_user_session),
+    current_user: User = Depends(get_current_user),
+):
+    """删除搜索历史"""
+    service = SearchService(session)
+    deleted = await service.delete_history(
+        user_id=current_user.id,
+        history_id=history_id
+    )
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="搜索历史不存在"
+        )
+    return None
+
+
+@router.delete("/history", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_history(
+    session: AsyncSession = Depends(get_user_session),
+    current_user: User = Depends(get_current_user),
+):
+    """清空搜索历史"""
+    service = SearchService(session)
+    await service.clear_history(user_id=current_user.id)
+    return None
 ```
 
 ### Step 2: 验证Router导入
