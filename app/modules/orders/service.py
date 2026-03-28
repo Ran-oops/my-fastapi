@@ -10,6 +10,7 @@ from app.modules.orders.models import Order, OrderItem, OrderStatus
 from app.modules.orders.repository import order_repo
 from app.modules.orders.schemas import OrderCreate, OrderUpdate
 from app.modules.orders.tasks import cancel_timeout
+from app.modules.search.utils import update_order_search_vector
 from app.tasks.dispatcher import dispatch
 
 
@@ -59,6 +60,9 @@ async def create_order(session: AsyncSession, data: OrderCreate) -> Order:
     order.total_amount = total_amount
     await session.commit()
     await session.refresh(order)
+    update_order_search_vector(order)
+    await session.commit()
+    await session.refresh(order)
     dispatch(cancel_timeout, order.id, countdown=settings.ORDER_CANCEL_TIMEOUT)
     return order
 
@@ -85,6 +89,7 @@ async def update_order_status(session: AsyncSession, order_id: int, data: OrderU
     if data.status is not None:
         _validate_status_transition(order.status, data.status)
         order.status = data.status.value
+        update_order_search_vector(order)
         await session.commit()
         await session.refresh(order)
 

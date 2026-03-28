@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictException, NotFoundException, UnauthorizedException
 from app.core.security import create_access_token
+from app.modules.search.utils import update_user_search_vector
 from app.modules.users.models import User
 from app.modules.users.repository import user_repo
 from app.modules.users.schemas import Token, UserCreate, UserUpdate
@@ -31,7 +32,9 @@ async def create_user(session: AsyncSession, data: UserCreate) -> User:
     existing = await user_repo.get_by_username(session, username=data.username)
     if existing:
         raise ConflictException(f"Username {data.username} already taken")
-    return await user_repo.create(session, data=data)
+    user = await user_repo.create(session, data=data)
+    update_user_search_vector(user)
+    return user
 
 
 async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> User:
@@ -46,7 +49,9 @@ async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> 
         existing = await user_repo.get_by_username(session, username=data.username)
         if existing:
             raise ConflictException(f"Username {data.username} already taken")
-    return await user_repo.update(session, instance=user, data=data)
+    user = await user_repo.update(session, instance=user, data=data)
+    update_user_search_vector(user)
+    return user
 
 
 async def delete_user(session: AsyncSession, user_id: int) -> User:
