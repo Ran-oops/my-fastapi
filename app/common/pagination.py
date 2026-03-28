@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.common.schemas import ListResponse
 
@@ -11,8 +11,8 @@ T = TypeVar("T")
 class PaginationParams(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    page: int = 1
-    page_size: int = 10
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=10, ge=1, le=100)
 
     @property
     def skip(self) -> int:
