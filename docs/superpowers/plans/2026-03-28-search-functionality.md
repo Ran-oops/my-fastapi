@@ -128,11 +128,15 @@ class User(UserBase):
 alembic revision --autogenerate -m "add search functionality"
 ```
 
-### Step 7: 编辑迁移文件添加pg_trgm扩展和触发器
+### Step 7: 创建数据库迁移
+
+**迁移策略:** 分为基础迁移（通用）和PostgreSQL迁移（特定）
+
+**基础迁移（两种数据库通用）:**
 
 ```python
-# alembic/versions/xxx_add_search_functionality.py
-"""add search functionality
+# alembic/versions/xxx_add_search_base.py
+"""add search base functionality
 
 Revision ID: xxx
 Revises: yyy
@@ -145,15 +149,75 @@ revision = 'xxx'
 down_revision = 'yyy'  # 替换为实际的前一个revision
 
 def upgrade():
+    # 1. 添加search_vector列（TEXT类型，兼容两种数据库）
+    op.add_column('products', sa.Column('search_vector', sa.Text, nullable=True))
+    op.add_column('orders', sa.Column('search_vector', sa.Text, nullable=True))
+    op.add_column('users', sa.Column('search_vector', sa.Text, nullable=True))
+    
+    # 2. 创建search_history表
+    op.create_table(
+        'search_history',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id'), nullable=False),
+        sa.Column('query', sa.String(200), nullable=False),
+        sa.Column('search_type', sa.String(20), nullable=False),
+        sa.Column('result_count', sa.Integer(), default=0, nullable=False),
+        sa.Column('created_at', sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.DateTime(), server_default=sa.func.now(), nullable=False),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_search_history_user_id', 'search_history', ['user_id'])
+    op.create_index('ix_search_history_created_at', 'search_history', ['created_at'])
+    
+    # 3. 创建通用索引（SQLite和PostgreSQL都支持）
+    op.create_index('ix_products_name', 'products', ['name'])
+    op.create_index('ix_products_sku', 'products', ['sku'])
+    op.create_index('ix_orders_status', 'orders', ['status'])
+    op.create_index('ix_users_username', 'users', ['username'])
+    op.create_index('ix_users_email', 'users', ['email'])
+
+def downgrade():
+    op.drop_index('ix_users_email', table_name='users')
+    op.drop_index('ix_users_username', table_name='users')
+    op.drop_index('ix_orders_status', table_name='orders')
+    op.drop_index('ix_products_sku', table_name='products')
+    op.drop_index('ix_products_name', table_name='products')
+    
+    op.drop_index('ix_search_history_created_at', table_name='search_history')
+    op.drop_index('ix_search_history_user_id', table_name='search_history')
+    op.drop_table('search_history')
+    
+    op.drop_column('users', 'search_vector')
+    op.drop_column('orders', 'search_vector')
+    op.drop_column('products', 'search_vector')
+```
+
+**PostgreSQL迁移（仅PostgreSQL）:**
+
+```python
+# alembic/versions/xxx_add_search_postgresql.py
+"""add search PostgreSQL functionality
+
+Revision ID: zzz
+Revises: xxx
+Create Date: 2026-03-28
+"""
+from alembic import op
+import sqlalchemy as sa
+
+revision = 'zzz'
+down_revision = 'xxx'  # 依赖基础迁移
+
+def upgrade():
+    # 检查是否为PostgreSQL
+    bind = op.get_bind()
+    if bind.dialect.name != 'postgresql':
+        return
+    
     # 1. 安装pg_trgm扩展
     op.execute('CREATE EXTENSION IF NOT EXISTS pg_trgm')
     
-    # 2. 添加search_vector列
-    op.add_column('products', sa.Column('search_vector', sa.dialects.postgresql.TSVECTOR, nullable=True))
-    op.add_column('orders', sa.Column('search_vector', sa.dialects.postgresql.TSVECTOR, nullable=True))
-    op.add_column('users', sa.Column('search_vector', sa.dialects.postgresql.TSVECTOR, nullable=True))
-    
-    # 3. 创建GIN索引
+    # 2. 创建GIN索引
     op.execute('CREATE INDEX ix_products_search_vector ON products USING GIN(search_vector)')
     op.execute('CREATE INDEX ix_products_name_trgm ON products USING GIN(name gin_trgm_ops)')
     op.execute('CREATE INDEX ix_products_sku_trgm ON products USING GIN(sku gin_trgm_ops)')
@@ -165,7 +229,7 @@ def upgrade():
     op.execute('CREATE INDEX ix_users_username_trgm ON users USING GIN(username gin_trgm_ops)')
     op.execute('CREATE INDEX ix_users_email_trgm ON users USING GIN(email gin_trgm_ops)')
     
-    # 4. 创建触发器函数
+    # 3. 创建触发器函数
     op.execute('''
         CREATE OR REPLACE FUNCTION product_search_vector_update() RETURNS trigger AS $$
         BEGIN
@@ -202,7 +266,7 @@ def upgrade():
         $$ LANGUAGE plpgsql
     ''')
     
-    # 5. 创建触发器
+    # 4. 创建触发器
     op.execute('''
         CREATE TRIGGER product_search_vector_trigger
             BEFORE INSERT OR UPDATE ON products
@@ -221,7 +285,7 @@ def upgrade():
             FOR EACH ROW EXECUTE FUNCTION user_search_vector_update()
     ''')
     
-    # 6. 回填现有数据的search_vector
+    # 5. 回填现有数据的search_vector
     op.execute('''
         UPDATE products SET search_vector = 
             setweight(to_tsvector('simple', COALESCE(name, '')), 'A') ||
@@ -242,27 +306,11 @@ def upgrade():
             setweight(to_tsvector('simple', COALESCE(email, '')), 'B') ||
             setweight(to_tsvector('simple', COALESCE(full_name, '')), 'C')
     ''')
-    
-    # 7. 创建search_history表
-    op.create_table(
-        'search_history',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id'), nullable=False),
-        sa.Column('query', sa.String(200), nullable=False),
-        sa.Column('search_type', sa.String(20), nullable=False),
-        sa.Column('result_count', sa.Integer(), default=0, nullable=False),
-        sa.Column('created_at', sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_search_history_user_id', 'search_history', ['user_id'])
-    op.create_index('ix_search_history_created_at', 'search_history', ['created_at'])
-
 
 def downgrade():
-    op.drop_index('ix_search_history_created_at', table_name='search_history')
-    op.drop_index('ix_search_history_user_id', table_name='search_history')
-    op.drop_table('search_history')
+    bind = op.get_bind()
+    if bind.dialect.name != 'postgresql':
+        return
     
     op.execute('DROP TRIGGER IF EXISTS user_search_vector_trigger ON users')
     op.execute('DROP TRIGGER IF EXISTS order_search_vector_trigger ON orders')
@@ -282,10 +330,6 @@ def downgrade():
     op.drop_index('ix_products_sku_trgm', table_name='products')
     op.drop_index('ix_products_name_trgm', table_name='products')
     op.drop_index('ix_products_search_vector', table_name='products')
-    
-    op.drop_column('users', 'search_vector')
-    op.drop_column('orders', 'search_vector')
-    op.drop_column('products', 'search_vector')
     
     op.execute('DROP EXTENSION IF EXISTS pg_trgm')
 ```
@@ -1169,7 +1213,158 @@ git commit -m "feat(search): add search adapters and repository with multi-datab
 
 ---
 
-## Task 4: 搜索Service实现
+## Task 4: 修改现有服务以支持搜索向量
+
+**说明:** 在创建/更新产品、订单、用户时，需要填充search_vector字段（SQLite兼容）
+
+**Files:**
+- Modify: `app/modules/products/service.py`
+- Modify: `app/modules/orders/service.py`
+- Modify: `app/modules/users/service.py`
+
+### Step 1: 添加搜索向量更新函数
+
+```python
+# app/modules/search/utils.py
+from __future__ import annotations
+
+
+def update_product_search_vector(product) -> None:
+    """更新产品搜索向量（SQLite兼容）"""
+    parts = []
+    if product.name:
+        parts.append(product.name)
+    if product.sku:
+        parts.append(product.sku)
+    if product.category:
+        parts.append(product.category)
+    if product.description:
+        parts.append(product.description)
+    product.search_vector = ' '.join(parts)
+
+
+def update_order_search_vector(order) -> None:
+    """更新订单搜索向量（SQLite兼容）"""
+    parts = []
+    if order.status:
+        parts.append(order.status)
+    if order.user_id:
+        parts.append(str(order.user_id))
+    order.search_vector = ' '.join(parts)
+
+
+def update_user_search_vector(user) -> None:
+    """更新用户搜索向量（SQLite兼容）"""
+    parts = []
+    if user.username:
+        parts.append(user.username)
+    if user.email:
+        parts.append(user.email)
+    if user.full_name:
+        parts.append(user.full_name)
+    user.search_vector = ' '.join(parts)
+```
+
+### Step 2: 修改产品服务
+
+在 `app/modules/products/service.py` 的 `create_product` 和 `update_product` 方法中添加：
+
+```python
+from app.modules.search.utils import update_product_search_vector
+
+async def create_product(session: AsyncSession, data: ProductCreate) -> Product:
+    """创建产品"""
+    product = Product(**data.model_dump())
+    update_product_search_vector(product)  # 添加这行
+    session.add(product)
+    await session.commit()
+    await session.refresh(product)
+    return product
+
+
+async def update_product(session: AsyncSession, product_id: int, data: ProductUpdate) -> Product:
+    """更新产品"""
+    product = await get_product(session, product_id)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(product, key, value)
+    update_product_search_vector(product)  # 添加这行
+    await session.commit()
+    await session.refresh(product)
+    return product
+```
+
+### Step 3: 修改订单服务
+
+在 `app/modules/orders/service.py` 的 `create_order` 和 `update_order_status` 方法中添加：
+
+```python
+from app.modules.search.utils import update_order_search_vector
+
+async def create_order(session: AsyncSession, data: OrderCreate) -> Order:
+    """创建订单"""
+    order = Order(**data.model_dump())
+    update_order_search_vector(order)  # 添加这行
+    session.add(order)
+    await session.commit()
+    await session.refresh(order)
+    return order
+
+
+async def update_order_status(session: AsyncSession, order_id: int, data: OrderUpdate) -> Order:
+    """更新订单状态"""
+    order = await get_order(session, order_id)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(order, key, value)
+    update_order_search_vector(order)  # 添加这行
+    await session.commit()
+    await session.refresh(order)
+    return order
+```
+
+### Step 4: 修改用户服务
+
+在 `app/modules/users/service.py` 的 `create_user` 和 `update_user` 方法中添加：
+
+```python
+from app.modules.search.utils import update_user_search_vector
+
+async def create_user(session: AsyncSession, data: UserCreate) -> User:
+    """创建用户"""
+    user = User(**data.model_dump())
+    update_user_search_vector(user)  # 添加这行
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> User:
+    """更新用户"""
+    user = await get_user(session, user_id)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
+    update_user_search_vector(user)  # 添加这行
+    await session.commit()
+    await session.refresh(user)
+    return user
+```
+
+### Step 5: 验证修改
+
+```bash
+python -c "from app.modules.search.utils import update_product_search_vector; print('工具函数导入成功')"
+```
+
+### Step 6: 提交
+
+```bash
+git add app/modules/search/utils.py app/modules/products/service.py app/modules/orders/service.py app/modules/users/service.py
+git commit -m "feat(search): add search vector update to existing services"
+```
+
+---
+
+## Task 5: 搜索Service实现
 
 **Files:**
 - Create: `app/modules/search/service.py`
@@ -1466,7 +1661,7 @@ git commit -m "feat(search): add search service with highlighting and history"
 
 ---
 
-## Task 5: 搜索API路由实现
+## Task 6: 搜索API路由实现
 
 **Files:**
 - Create: `app/modules/search/router.py`
@@ -1658,7 +1853,7 @@ git commit -m "feat(search): add search API endpoints with filtering and history
 
 ---
 
-## Task 6: 注册搜索路由
+## Task 7: 注册搜索路由
 
 **Files:**
 - Modify: `app/api/v1/__init__.py`
@@ -1711,7 +1906,7 @@ git commit -m "feat(search): register search router in API v1"
 
 ---
 
-## Task 7: 扩展PaginationParams
+## Task 8: 扩展PaginationParams
 
 **Files:**
 - Modify: `app/common/pagination.py`
@@ -1767,7 +1962,7 @@ git commit -m "feat(search): add page_size max validation to PaginationParams"
 
 ---
 
-## Task 8: 搜索Service测试
+## Task 9: 搜索Service测试
 
 **Files:**
 - Create: `tests/modules/search/__init__.py`
@@ -1982,7 +2177,7 @@ git commit -m "test(search): add search service unit tests"
 
 ---
 
-## Task 9: 搜索API测试
+## Task 10: 搜索API测试
 
 **Files:**
 - Create: `tests/modules/search/test_search_api.py`
@@ -2133,7 +2328,7 @@ git commit -m "test(search): add search API integration tests"
 
 ---
 
-## Task 10: 搜索历史测试
+## Task 11: 搜索历史测试
 
 **Files:**
 - Create: `tests/modules/search/test_search_history.py`
@@ -2282,7 +2477,7 @@ git commit -m "test(search): add search history tests"
 
 ---
 
-## Task 11: 集成测试和验证
+## Task 12: 集成测试和验证
 
 **Files:**
 - Modify: `tests/modules/search/conftest.py`
