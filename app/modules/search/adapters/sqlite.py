@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import asc, desc, func, select
+from sqlalchemy import asc, desc, func, select, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.orders.models import Order
@@ -127,9 +127,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
 
         # 搜索条件：使用 LIKE 模糊匹配
         search_pattern = f"%{query}%"
-        stmt = stmt.where(
-            Order.status.ilike(search_pattern) | func.cast(Order.user_id, func.text()).ilike(search_pattern)
-        )
+        stmt = stmt.where(Order.status.ilike(search_pattern) | cast(Order.user_id, String).ilike(search_pattern))
 
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
