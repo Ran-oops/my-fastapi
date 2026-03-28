@@ -17,10 +17,12 @@
 │  │ ProductSearch│ OrderSearch │ UserSearch  │           │
 │  └─────────────┴─────────────┴─────────────┘           │
 ├─────────────────────────────────────────────────────────┤
-│              SearchRepository                           │
+│                  SearchRepository                        │
 │  ┌─────────────────────────────────────────┐           │
-│  │ PostgreSQL: pg_trgm + GIN Index         │           │
-│  │ SQLite: LIKE + 应用层search_vector       │           │
+│  │         SearchAdapter (抽象层)            │           │
+│  ├─────────────────────────────────────────┤           │
+│  │ PostgreSQLAdapter │   SQLiteAdapter     │           │
+│  │ (pg_trgm + GIN)   │   (LIKE + 索引)      │           │
 │  └─────────────────────────────────────────┘           │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -29,9 +31,9 @@
 
 - **统一入口**: `/api/v1/search` 作为唯一搜索端点
 - **模块过滤**: 通过 `type` 参数指定搜索模块（products/orders/users/all）
-- **分层架构**: Repository → Service → Router，符合现有DDD模式
+- **分层架构**: Router → Service → Repository → Adapter → Database
 - **异步支持**: 所有搜索操作使用 `async/await`
-- **数据库兼容**: 支持PostgreSQL（生产）和SQLite（开发）
+- **数据库兼容**: 通过适配器层支持 PostgreSQL（生产）和 SQLite（开发）
 
 ## 2. API设计
 
@@ -159,9 +161,74 @@ DELETE /api/v1/search/history
 
 ### 数据库兼容性
 
-搜索功能需支持两种数据库：
-- **PostgreSQL**: 生产环境，使用 pg_trgm 全文搜索
-- **SQLite**: 开发环境，使用 LIKE 模糊搜索
+搜索功能需支持两种数据库，通过适配器层实现：
+
+```
+app/modules/search/
+├── adapters/
+│   ├── __init__.py
+│   ├── base.py          # BaseSearchAdapter 抽象基类
+│   ├── postgresql.py    # PostgreSQL 适配器
+│   └── sqlite.py        # SQLite 适配器
+├── repository.py        # 调用适配器，不关心数据库细节
+└── ...
+```
+
+**适配器接口（BaseSearchAdapter）:**
+
+```python
+from abc import ABC, abstractmethod
+from sqlalchemy.ext.asyncio import AsyncSession
+
+class BaseSearchAdapter(ABC):
+    """搜索适配器抽象基类"""
+    
+    def __init__(self, session: AsyncSession):
+        self.session = session
+    
+    @abstractmethod
+    async def search_products(
+        self, 
+        query: str, 
+        skip: int = 0, 
+        limit: int = 10,
+        filters: dict | None = None
+    ) -> tuple[list, int]:
+        """搜索产品，返回 (结果列表, 总数)"""
+        pass
+    
+    @abstractmethod
+    async def search_orders(
+        self, 
+        query: str, 
+        skip: int = 0, 
+        limit: int = 10,
+        filters: dict | None = None
+    ) -> tuple[list, int]:
+        """搜索订单"""
+        pass
+    
+    @abstractmethod
+    async def search_users(
+        self, 
+        query: str, 
+        skip: int = 0, 
+        limit: int = 10,
+        filters: dict | None = None
+    ) -> tuple[list, int]:
+        """搜索用户"""
+        pass
+    
+    @abstractmethod
+    async def get_suggestions(
+        self, 
+        query: str, 
+        search_type: str, 
+        limit: int = 5
+    ) -> list[tuple[str, str, float]]:
+        """获取搜索建议，返回 [(文本, 类型, 相似度得分)]"""
+        pass
+```
 
 ### PostgreSQL扩展（仅生产环境）
 
@@ -174,8 +241,22 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 **search_vector列（两种数据库通用）:**
 
-- PostgreSQL: 使用TSVECTOR类型，数据库触发器自动填充
-- SQLite: 使用TEXT类型，应用层填充
+- PostgreSQL: 使用 TEXT 类型，数据库触发器自动填充
+- SQLite: 使用 TEXT 类型，应用层填充
+
+**说明:** 使用 TEXT 类型而不是 TSVECTOR，以兼容 SQLite。PostgreSQL 触发器会将内容转换为 tsvector 进行索引。
+
+**适配器实现细节:**
+
+PostgreSQL 适配器：
+- 使用 `func.similarity()` 进行 trigram 相似度搜索
+- 使用 GIN 索引加速查询
+- 使用 `to_tsvector` 和 `to_tsquery` 进行全文搜索
+
+SQLite 适配器：
+- 使用 `LIKE` 或 `ILIKE` 进行模糊匹配
+- 使用普通 B-tree 索引
+- 应用层计算相似度得分
 
 **GIN索引（仅PostgreSQL）:**
 
@@ -452,32 +533,37 @@ class SearchService:
 
 **注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块不包含在响应中。
 
-### 搜索策略（数据库适配）
+### 搜索策略（适配器实现）
 
-**PostgreSQL策略（三级降级）:**
+**PostgreSQL 适配器策略（三级降级）:**
 1. **精确匹配**: 查询与字段完全一致时优先返回
 2. **Trigram相似度**: 使用 `similarity()` 函数，阈值 > 0.3
 3. **ILIKE模糊匹配**: 最后降级方案
 
-**SQLite策略（两级降级）:**
+**SQLite 适配器策略（两级降级）:**
 1. **精确匹配**: 查询与字段完全一致时优先返回
-2. **LIKE模糊匹配**: 使用 `LIKE` 或 `ILIKE`（SQLite 3.34+支持）
+2. **LIKE模糊匹配**: 使用 `LIKE` 进行模糊匹配
 
-**数据库检测:**
-
-在 `app/modules/search/repository.py` 中添加数据库类型检测：
+**适配器工厂:**
 
 ```python
-from sqlalchemy import func, text
+# app/modules/search/adapters/__init__.py
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.modules.search.adapters.base import BaseSearchAdapter
+from app.modules.search.adapters.postgresql import PostgreSQLSearchAdapter
+from app.modules.search.adapters.sqlite import SQLiteSearchAdapter
 
-def is_postgresql(session: AsyncSession) -> bool:
-    """检测是否为PostgreSQL数据库"""
-    return session.bind.dialect.name == 'postgresql'
-
-def is_sqlite(session: AsyncSession) -> bool:
-    """检测是否为SQLite数据库"""
-    return session.bind.dialect.name == 'sqlite'
+def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
+    """根据数据库类型创建对应的搜索适配器"""
+    dialect = session.bind.dialect.name
+    
+    if dialect == 'postgresql':
+        return PostgreSQLSearchAdapter(session)
+    elif dialect == 'sqlite':
+        return SQLiteSearchAdapter(session)
+    else:
+        # 默认使用 SQLite 适配器（兼容性最好）
+        return SQLiteSearchAdapter(session)
 ```
 
 ### 搜索字段权重
@@ -630,24 +716,32 @@ app/
 │       ├── __init__.py
 │       ├── models.py          # SearchHistory模型
 │       ├── schemas.py         # 搜索请求/响应Schema
-│       ├── repository.py      # 搜索数据库查询
+│       ├── adapters/
+│       │   ├── __init__.py    # 适配器工厂
+│       │   ├── base.py        # BaseSearchAdapter 抽象基类
+│       │   ├── postgresql.py  # PostgreSQL 适配器
+│       │   └── sqlite.py      # SQLite 适配器
+│       ├── repository.py      # 搜索数据访问层（调用适配器）
 │       ├── service.py         # 搜索业务逻辑
 │       └── router.py          # 搜索API路由
 └── db/
     └── migrations/
-        └── xxx_add_search.py  # Alembic迁移（添加pg_trgm扩展和search_vector列）
+        └── xxx_add_search.py  # Alembic迁移（添加search_vector列）
 ```
 
 ## 8. 实现顺序
 
 1. 创建SearchHistory模型和迁移
 2. 为现有模型添加search_vector列（TEXT类型，兼容两种数据库）
-3. 实现数据库类型检测工具函数
-4. 实现SearchRepository（支持PostgreSQL和SQLite）
-5. 实现SearchService
-6. 实现搜索API路由
-7. 在 `app/api/v1/__init__.py` 注册搜索路由
-8. 添加搜索建议功能
-9. 添加搜索历史功能
-10. 实现结果高亮
-11. 编写测试（同时测试SQLite和PostgreSQL）
+3. 实现搜索适配器抽象基类（BaseSearchAdapter）
+4. 实现PostgreSQL适配器（PostgreSQLSearchAdapter）
+5. 实现SQLite适配器（SQLiteSearchAdapter）
+6. 实现适配器工厂（create_search_adapter）
+7. 实现SearchRepository（调用适配器）
+8. 实现SearchService
+9. 实现搜索API路由
+10. 在 `app/api/v1/__init__.py` 注册搜索路由
+11. 添加搜索建议功能
+12. 添加搜索历史功能
+13. 实现结果高亮
+14. 编写测试（同时测试SQLite和PostgreSQL适配器）
