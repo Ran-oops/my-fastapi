@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from app.modules.notifications import service as notification_service
@@ -7,15 +9,16 @@ from app.modules.notifications.schemas import NotificationTemplateCreate
 @pytest.mark.asyncio
 class TestNotificationService:
     async def test_create_template(self, session):
+        unique_name = f"order.confirmed.{uuid.uuid4().hex[:8]}"
         data = NotificationTemplateCreate(
-            name="order.confirmed",
+            name=unique_name,
             channel="in_app",
             subject="Order Confirmed",
             body="Your order #{{order_id}} is confirmed",
         )
         template = await notification_service.create_template(session, data)
         assert template.id is not None
-        assert template.name == "order.confirmed"
+        assert template.name == unique_name
         assert template.channel == "in_app"
 
     async def test_get_templates(self, session, test_template):
