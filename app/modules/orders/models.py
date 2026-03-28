@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from enum import StrEnum
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String
+from sqlalchemy import ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import UserBase
@@ -25,6 +25,7 @@ class Order(UserBase):
     status: Mapped[str] = mapped_column(String(20), default=OrderStatus.PENDING.value, nullable=False)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0.00"))
     items: Mapped[list[OrderItem]] = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class OrderItem(UserBase):

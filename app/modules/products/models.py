@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Numeric, String
+from sqlalchemy import Boolean, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import UserBase
@@ -18,3 +18,4 @@ class Product(UserBase):
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)

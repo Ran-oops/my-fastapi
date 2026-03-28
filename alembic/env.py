@@ -7,6 +7,7 @@ from alembic import context  # type: ignore[import-untyped]
 from app.core.config import settings
 from app.db.base import UserBase as Base
 from app.tasks.models import TaskRecord  # noqa: F401
+from app.modules.search.models import SearchHistory  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
