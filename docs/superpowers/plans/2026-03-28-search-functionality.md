@@ -1993,7 +1993,7 @@ from app.modules.search.models import SearchHistory
 
 
 @pytest.fixture
-async def sample_products(db_session: AsyncSession):
+async def sample_products(session: AsyncSession):
     """创建测试产品数据"""
     products = [
         Product(
@@ -2023,17 +2023,17 @@ async def sample_products(db_session: AsyncSession):
     ]
     
     for product in products:
-        db_session.add(product)
-    await db_session.commit()
+        session.add(product)
+    await session.commit()
     
     for product in products:
-        await db_session.refresh(product)
+        await session.refresh(product)
     
     return products
 
 
 @pytest.fixture
-async def sample_users(db_session: AsyncSession):
+async def sample_users(session: AsyncSession):
     """创建测试用户数据"""
     users = [
         User(
@@ -2053,11 +2053,11 @@ async def sample_users(db_session: AsyncSession):
     ]
     
     for user in users:
-        db_session.add(user)
-    await db_session.commit()
+        session.add(user)
+    await session.commit()
     
     for user in users:
-        await db_session.refresh(user)
+        await session.refresh(user)
     
     return users
 ```
@@ -2079,11 +2079,11 @@ class TestSearchService:
     
     async def test_search_products(
         self, 
-        db_session: AsyncSession, 
+        session: AsyncSession, 
         sample_products
     ):
         """测试产品搜索"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
         
         result = await service.search(
@@ -2100,10 +2100,10 @@ class TestSearchService:
     
     async def test_search_empty_query(
         self, 
-        db_session: AsyncSession
+        session: AsyncSession
     ):
         """测试空查询"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
         
         with pytest.raises(ValueError, match="搜索关键词不能为空"):
@@ -2116,10 +2116,10 @@ class TestSearchService:
     
     async def test_search_invalid_type(
         self, 
-        db_session: AsyncSession
+        session: AsyncSession
     ):
         """测试无效搜索类型"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
         
         with pytest.raises(ValueError, match="无效的搜索类型"):
@@ -2132,11 +2132,11 @@ class TestSearchService:
     
     async def test_suggest(
         self, 
-        db_session: AsyncSession, 
+        session: AsyncSession, 
         sample_products
     ):
         """测试搜索建议"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         
         result = await service.suggest(
             query="手机",
@@ -2152,10 +2152,10 @@ class TestSearchService:
     
     async def test_suggest_min_length(
         self, 
-        db_session: AsyncSession
+        session: AsyncSession
     ):
         """测试搜索建议最小长度"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         
         result = await service.suggest(
             query="a",  # 只有1个字符
@@ -2201,14 +2201,14 @@ class TestSearchAPI:
     async def test_search_endpoint(
         self, 
         client: AsyncClient, 
-        auth_headers: dict,
+        user_headers: dict,
         sample_products
     ):
         """测试搜索端点"""
         response = await client.get(
             "/api/v1/search",
             params={"q": "手机", "type": "products"},
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 200
@@ -2232,13 +2232,13 @@ class TestSearchAPI:
     async def test_search_empty_query(
         self, 
         client: AsyncClient, 
-        auth_headers: dict
+        user_headers: dict
     ):
         """测试空查询"""
         response = await client.get(
             "/api/v1/search",
             params={"q": ""},
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 400
@@ -2246,14 +2246,14 @@ class TestSearchAPI:
     async def test_suggest_endpoint(
         self, 
         client: AsyncClient, 
-        auth_headers: dict,
+        user_headers: dict,
         sample_products
     ):
         """测试搜索建议端点"""
         response = await client.get(
             "/api/v1/search/suggest",
             params={"q": "手机", "limit": 3},
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 200
@@ -2264,13 +2264,13 @@ class TestSearchAPI:
     async def test_suggest_min_length(
         self, 
         client: AsyncClient, 
-        auth_headers: dict
+        user_headers: dict
     ):
         """测试搜索建议最小长度"""
         response = await client.get(
             "/api/v1/search/suggest",
             params={"q": "a"},  # 只有1个字符
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 422  # 验证错误
@@ -2278,12 +2278,12 @@ class TestSearchAPI:
     async def test_history_endpoint(
         self, 
         client: AsyncClient, 
-        auth_headers: dict
+        user_headers: dict
     ):
         """测试搜索历史端点"""
         response = await client.get(
             "/api/v1/search/history",
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 200
@@ -2293,12 +2293,12 @@ class TestSearchAPI:
     async def test_delete_history(
         self, 
         client: AsyncClient, 
-        auth_headers: dict
+        user_headers: dict
     ):
         """测试删除搜索历史"""
         response = await client.delete(
             "/api/v1/search/history/1",
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 204
@@ -2306,12 +2306,12 @@ class TestSearchAPI:
     async def test_clear_history(
         self, 
         client: AsyncClient, 
-        auth_headers: dict
+        user_headers: dict
     ):
         """测试清空搜索历史"""
         response = await client.delete(
             "/api/v1/search/history",
-            headers=auth_headers
+            headers=user_headers
         )
         
         assert response.status_code == 204
@@ -2354,11 +2354,11 @@ class TestSearchHistory:
     
     async def test_save_search_history(
         self, 
-        db_session: AsyncSession, 
+        session: AsyncSession, 
         sample_products
     ):
         """测试保存搜索历史"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
         
         # 执行搜索会自动保存历史
@@ -2381,11 +2381,11 @@ class TestSearchHistory:
     
     async def test_get_history_pagination(
         self, 
-        db_session: AsyncSession, 
+        session: AsyncSession, 
         sample_products
     ):
         """测试搜索历史分页"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         
         # 执行多次搜索
         for i in range(5):
@@ -2411,11 +2411,11 @@ class TestSearchHistory:
     
     async def test_delete_history(
         self, 
-        db_session: AsyncSession, 
+        session: AsyncSession, 
         sample_products
     ):
         """测试删除搜索历史"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
         
         # 执行搜索
@@ -2440,11 +2440,11 @@ class TestSearchHistory:
     
     async def test_clear_history(
         self, 
-        db_session: AsyncSession, 
+        session: AsyncSession, 
         sample_products
     ):
         """测试清空搜索历史"""
-        service = SearchService(db_session)
+        service = SearchService(session)
         
         # 执行多次搜索
         for i in range(3):
