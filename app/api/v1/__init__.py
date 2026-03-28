@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.modules.audit.router import router as audit_router
 from app.modules.config.router import router as config_router
+from app.modules.exports.router import router as exports_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.orders.router import router as orders_router
 from app.modules.products.router import router as products_router
@@ -21,3 +22,4 @@ api_router.include_router(config_router, prefix="/config", tags=["config"])
 api_router.include_router(audit_router, prefix="/audit", tags=["audit"])
 api_router.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
+api_router.include_router(exports_router, prefix="/exports", tags=["exports"])
