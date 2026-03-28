@@ -122,10 +122,14 @@ class User(UserBase):
     search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-### Step 6: 创建Alembic迁移
+### Step 6: 准备数据库迁移
+
+**说明:** 由于需要支持PostgreSQL和SQLite两种数据库，我们将手动创建迁移文件而不是使用`--autogenerate`。这允许我们为不同数据库创建特定的迁移逻辑。
 
 ```bash
-alembic revision --autogenerate -m "add search functionality"
+# 查看当前迁移状态
+alembic current
+alembic history
 ```
 
 ### Step 7: 创建数据库迁移
@@ -2517,12 +2521,13 @@ git commit -m "feat(search): complete search functionality implementation"
 
 - [ ] Task 1: 数据库迁移和扩展安装
 - [ ] Task 2: 搜索Schema定义
-- [ ] Task 3: 搜索Repository实现
-- [ ] Task 4: 搜索Service实现
-- [ ] Task 5: 搜索API路由实现
-- [ ] Task 6: 注册搜索路由
-- [ ] Task 7: 扩展PaginationParams
-- [ ] Task 8: 搜索Service测试
-- [ ] Task 9: 搜索API测试
-- [ ] Task 10: 搜索历史测试
-- [ ] Task 11: 集成测试和验证
+- [ ] Task 3: 搜索适配器和Repository实现
+- [ ] Task 4: 修改现有服务以支持搜索向量
+- [ ] Task 5: 搜索Service实现
+- [ ] Task 6: 搜索API路由实现
+- [ ] Task 7: 注册搜索路由
+- [ ] Task 8: 扩展PaginationParams
+- [ ] Task 9: 搜索Service测试
+- [ ] Task 10: 搜索API测试
+- [ ] Task 11: 搜索历史测试
+- [ ] Task 12: 集成测试和验证
