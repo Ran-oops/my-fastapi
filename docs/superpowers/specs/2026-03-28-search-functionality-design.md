@@ -19,7 +19,8 @@
 ├─────────────────────────────────────────────────────────┤
 │              SearchRepository                           │
 │  ┌─────────────────────────────────────────┐           │
-│  │ PostgreSQL + pg_trgm + GIN Index        │           │
+│  │ PostgreSQL: pg_trgm + GIN Index         │           │
+│  │ SQLite: LIKE + 应用层search_vector       │           │
 │  └─────────────────────────────────────────┘           │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -30,6 +31,7 @@
 - **模块过滤**: 通过 `type` 参数指定搜索模块（products/orders/users/all）
 - **分层架构**: Repository → Service → Router，符合现有DDD模式
 - **异步支持**: 所有搜索操作使用 `async/await`
+- **数据库兼容**: 支持PostgreSQL（生产）和SQLite（开发）
 
 ## 2. API设计
 
@@ -155,16 +157,27 @@ DELETE /api/v1/search/history
 
 ## 3. 数据模型
 
-### PostgreSQL扩展
+### 数据库兼容性
+
+搜索功能需支持两种数据库：
+- **PostgreSQL**: 生产环境，使用 pg_trgm 全文搜索
+- **SQLite**: 开发环境，使用 LIKE 模糊搜索
+
+### PostgreSQL扩展（仅生产环境）
 
 ```sql
--- Alembic迁移中添加
+-- Alembic迁移中添加（仅PostgreSQL）
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
 ### 模型变更
 
-**GIN索引创建（在Alembic迁移中）:**
+**search_vector列（两种数据库通用）:**
+
+- PostgreSQL: 使用TSVECTOR类型，数据库触发器自动填充
+- SQLite: 使用TEXT类型，应用层填充
+
+**GIN索引（仅PostgreSQL）:**
 
 ```sql
 -- 为产品表创建GIN索引
@@ -180,6 +193,17 @@ CREATE INDEX ix_orders_status_trgm ON orders USING GIN(status gin_trgm_ops);
 CREATE INDEX ix_users_search_vector ON users USING GIN(search_vector);
 CREATE INDEX ix_users_username_trgm ON users USING GIN(username gin_trgm_ops);
 CREATE INDEX ix_users_email_trgm ON users USING GIN(email gin_trgm_ops);
+```
+
+**普通索引（SQLite通用）:**
+
+```sql
+-- SQLite使用普通B-tree索引
+CREATE INDEX ix_products_name ON products(name);
+CREATE INDEX ix_products_sku ON products(sku);
+CREATE INDEX ix_orders_status ON orders(status);
+CREATE INDEX ix_users_username ON users(username);
+CREATE INDEX ix_users_email ON users(email);
 ```
 
 **PaginationParams扩展:**
@@ -199,15 +223,16 @@ class PaginationParams(BaseModel):
 在 `app/modules/products/models.py` 中添加:
 
 ```python
-from sqlalchemy import TSVECTOR
+from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 class Product(UserBase):
     # ... 现有字段 ...
-    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
+    # search_vector: PostgreSQL使用TSVECTOR，SQLite使用TEXT
+    search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-**Product search_vector填充触发器:**
+**Product search_vector填充（数据库触发器 - 仅PostgreSQL）:**
 
 ```sql
 CREATE OR REPLACE FUNCTION product_search_vector_update() RETURNS trigger AS $$
@@ -226,20 +251,39 @@ CREATE TRIGGER product_search_vector_trigger
     FOR EACH ROW EXECUTE FUNCTION product_search_vector_update();
 ```
 
+**Product search_vector填充（应用层 - SQLite）:**
+
+在 `app/modules/products/service.py` 的 `create_product` 和 `update_product` 方法中添加：
+
+```python
+def update_search_vector(product: Product) -> None:
+    """应用层填充search_vector（SQLite兼容）"""
+    parts = []
+    if product.name:
+        parts.append(product.name)
+    if product.sku:
+        parts.append(product.sku)
+    if product.category:
+        parts.append(product.category)
+    if product.description:
+        parts.append(product.description)
+    product.search_vector = ' '.join(parts)
+```
+
 #### Order模型
 
 在 `app/modules/orders/models.py` 中添加:
 
 ```python
-from sqlalchemy import TSVECTOR
+from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 class Order(UserBase):
     # ... 现有字段 ...
-    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
+    search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-**Order search_vector填充触发器:**
+**Order search_vector填充（数据库触发器 - 仅PostgreSQL）:**
 
 ```sql
 CREATE OR REPLACE FUNCTION order_search_vector_update() RETURNS trigger AS $$
@@ -256,20 +300,35 @@ CREATE TRIGGER order_search_vector_trigger
     FOR EACH ROW EXECUTE FUNCTION order_search_vector_update();
 ```
 
+**Order search_vector填充（应用层 - SQLite）:**
+
+在 `app/modules/orders/service.py` 中添加：
+
+```python
+def update_search_vector(order: Order) -> None:
+    """应用层填充search_vector（SQLite兼容）"""
+    parts = []
+    if order.status:
+        parts.append(order.status)
+    if order.user_id:
+        parts.append(str(order.user_id))
+    order.search_vector = ' '.join(parts)
+```
+
 #### User模型
 
 在 `app/modules/users/models.py` 中添加:
 
 ```python
-from sqlalchemy import TSVECTOR
+from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 class User(UserBase):
     # ... 现有字段 ...
-    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
+    search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-**User search_vector填充触发器:**
+**User search_vector填充（数据库触发器 - 仅PostgreSQL）:**
 
 ```sql
 CREATE OR REPLACE FUNCTION user_search_vector_update() RETURNS trigger AS $$
@@ -285,6 +344,23 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER user_search_vector_trigger
     BEFORE INSERT OR UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION user_search_vector_update();
+```
+
+**User search_vector填充（应用层 - SQLite）:**
+
+在 `app/modules/users/service.py` 中添加：
+
+```python
+def update_search_vector(user: User) -> None:
+    """应用层填充search_vector（SQLite兼容）"""
+    parts = []
+    if user.username:
+        parts.append(user.username)
+    if user.email:
+        parts.append(user.email)
+    if user.full_name:
+        parts.append(user.full_name)
+    user.search_vector = ' '.join(parts)
 ```
 
 ### 新增搜索历史表
@@ -376,11 +452,33 @@ class SearchService:
 
 **注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块不包含在响应中。
 
-### 搜索策略（三级降级）
+### 搜索策略（数据库适配）
 
+**PostgreSQL策略（三级降级）:**
 1. **精确匹配**: 查询与字段完全一致时优先返回
 2. **Trigram相似度**: 使用 `similarity()` 函数，阈值 > 0.3
 3. **ILIKE模糊匹配**: 最后降级方案
+
+**SQLite策略（两级降级）:**
+1. **精确匹配**: 查询与字段完全一致时优先返回
+2. **LIKE模糊匹配**: 使用 `LIKE` 或 `ILIKE`（SQLite 3.34+支持）
+
+**数据库检测:**
+
+在 `app/modules/search/repository.py` 中添加数据库类型检测：
+
+```python
+from sqlalchemy import func, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+def is_postgresql(session: AsyncSession) -> bool:
+    """检测是否为PostgreSQL数据库"""
+    return session.bind.dialect.name == 'postgresql'
+
+def is_sqlite(session: AsyncSession) -> bool:
+    """检测是否为SQLite数据库"""
+    return session.bind.dialect.name == 'sqlite'
+```
 
 ### 搜索字段权重
 
@@ -542,14 +640,14 @@ app/
 
 ## 8. 实现顺序
 
-1. 安装PostgreSQL扩展（pg_trgm）
-2. 创建SearchHistory模型和迁移
-3. 为现有模型添加search_vector列和触发器
-4. 实现SearchRepository
+1. 创建SearchHistory模型和迁移
+2. 为现有模型添加search_vector列（TEXT类型，兼容两种数据库）
+3. 实现数据库类型检测工具函数
+4. 实现SearchRepository（支持PostgreSQL和SQLite）
 5. 实现SearchService
 6. 实现搜索API路由
 7. 在 `app/api/v1/__init__.py` 注册搜索路由
 8. 添加搜索建议功能
 9. 添加搜索历史功能
 10. 实现结果高亮
-11. 编写测试
+11. 编写测试（同时测试SQLite和PostgreSQL）
