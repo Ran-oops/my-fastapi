@@ -104,7 +104,9 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 }
 ```
 
-**注意:** 当指定具体模块时，`data` 只包含该模块的结果。
+**注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块不包含在响应中。
+
+**响应格式说明:** 搜索API使用自定义响应格式（`data` + `meta`），与现有 `DataResponse`/`PaginatedResponse` 不同。这是因为搜索结果需要返回多个模块的数据，且每个结果包含 `score` 和 `highlight` 字段。
 
 ### 搜索建议端点
 
@@ -197,11 +199,12 @@ class PaginationParams(BaseModel):
 在 `app/modules/products/models.py` 中添加:
 
 ```python
-from sqlalchemy import Column, TSVECTOR
+from sqlalchemy import TSVECTOR
+from sqlalchemy.orm import Mapped, mapped_column
 
 class Product(UserBase):
     # ... 现有字段 ...
-    search_vector = Column(TSVECTOR)
+    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
 ```
 
 **Product search_vector填充触发器:**
@@ -228,9 +231,12 @@ CREATE TRIGGER product_search_vector_trigger
 在 `app/modules/orders/models.py` 中添加:
 
 ```python
+from sqlalchemy import TSVECTOR
+from sqlalchemy.orm import Mapped, mapped_column
+
 class Order(UserBase):
     # ... 现有字段 ...
-    search_vector = Column(TSVECTOR)
+    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
 ```
 
 **Order search_vector填充触发器:**
@@ -255,9 +261,12 @@ CREATE TRIGGER order_search_vector_trigger
 在 `app/modules/users/models.py` 中添加:
 
 ```python
+from sqlalchemy import TSVECTOR
+from sqlalchemy.orm import Mapped, mapped_column
+
 class User(UserBase):
     # ... 现有字段 ...
-    search_vector = Column(TSVECTOR)
+    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
 ```
 
 **User search_vector填充触发器:**
@@ -365,7 +374,7 @@ class SearchService:
 }
 ```
 
-**注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块返回空数组或不包含。
+**注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块不包含在响应中。
 
 ### 搜索策略（三级降级）
 
@@ -535,11 +544,12 @@ app/
 
 1. 安装PostgreSQL扩展（pg_trgm）
 2. 创建SearchHistory模型和迁移
-3. 为现有模型添加search_vector列
+3. 为现有模型添加search_vector列和触发器
 4. 实现SearchRepository
 5. 实现SearchService
 6. 实现搜索API路由
-7. 添加搜索建议功能
-8. 添加搜索历史功能
-9. 实现结果高亮
-10. 编写测试
+7. 在 `app/api/v1/__init__.py` 注册搜索路由
+8. 添加搜索建议功能
+9. 添加搜索历史功能
+10. 实现结果高亮
+11. 编写测试
