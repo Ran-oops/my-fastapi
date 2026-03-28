@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import UserBase
@@ -8,6 +8,7 @@ from app.db.base import UserBase
 
 class SearchHistory(UserBase):
     __tablename__ = "search_history"
+    __table_args__ = (Index("ix_search_history_created_at", "created_at"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)

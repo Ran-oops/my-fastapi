@@ -1,7 +1,7 @@
 """add search PostgreSQL functionality
 
-Revision ID: 004
-Revises: 003
+Revision ID: 2026_03_28_0000-004
+Revises: 2026_03_28_0000-003
 Create Date: 2026-03-28 00:00:00.000000
 
 """
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "004"
-down_revision: Union[str, None] = "003"
+revision: str = "2026_03_28_0000-004"
+down_revision: Union[str, None] = "2026_03_28_0000-003"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
