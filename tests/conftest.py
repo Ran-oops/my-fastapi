@@ -69,9 +69,27 @@ async def test_user(session):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def superuser_token(test_user):
-    test_user.is_superuser = True
-    return create_access_token(subject=str(test_user.id))
+async def test_superuser(session):
+    import uuid
+
+    unique_id = str(uuid.uuid4())[:8]
+    user = User(
+        email=f"superuser_{unique_id}@example.com",
+        username=f"superuser_{unique_id}",
+        hashed_password=get_password_hash("testpassword123"),
+        full_name="Test Superuser",
+        is_active=True,
+        is_superuser=True,
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture(scope="function")
+async def superuser_token(test_superuser):
+    return create_access_token(subject=str(test_superuser.id))
 
 
 @pytest_asyncio.fixture(scope="function")

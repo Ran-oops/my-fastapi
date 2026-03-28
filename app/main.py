@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.api.v1 import api_router
 from app.core.config import settings
@@ -18,6 +20,14 @@ from app.core.events import (
     TASK_FAILED,
     USER_PASSWORD_RESET,
     USER_REGISTERED,
+)
+from app.core.exceptions import BaseAPIException
+from app.core.exception_handlers import (
+    api_exception_handler,
+    validation_exception_handler,
+    integrity_error_handler,
+    sqlalchemy_error_handler,
+    generic_exception_handler,
 )
 from app.db.session import UserSessionFactory, business_engine, config_engine, user_engine
 from app.modules.notifications.handlers import notification_handler
@@ -71,14 +81,11 @@ if settings.BACKEND_CORS_ORIGINS:
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-
-@app.exception_handler(Exception)
-async def global_exception_handler(_request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error", "status_code": 500},
-    )
+app.add_exception_handler(BaseAPIException, api_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(IntegrityError, integrity_error_handler)
+app.add_exception_handler(SQLAlchemyError, sqlalchemy_error_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 
 @app.get("/")

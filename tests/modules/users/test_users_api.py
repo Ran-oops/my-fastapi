@@ -1,15 +1,19 @@
 import pytest
 from fastapi import status
+import uuid
 
 
 @pytest.mark.asyncio
 class TestUserRegistration:
     async def test_register_success(self, client):
+        unique_id = str(uuid.uuid4())[:8]
+        email = f"test_{unique_id}@example.com"
+        username = f"testuser_{unique_id}"
         response = await client.post(
             "/api/v1/auth/register",
             json={
-                "email": "test@example.com",
-                "username": "testuser",
+                "email": email,
+                "username": username,
                 "full_name": "Test User",
                 "password": "testpassword123",
                 "is_active": True,
@@ -18,8 +22,8 @@ class TestUserRegistration:
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["success"] is True
-        assert data["data"]["email"] == "test@example.com"
-        assert data["data"]["username"] == "testuser"
+        assert data["data"]["email"] == email
+        assert data["data"]["username"] == username
 
     async def test_register_duplicate_email(self, client):
         await client.post(

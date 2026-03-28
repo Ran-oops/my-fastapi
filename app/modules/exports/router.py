@@ -8,15 +8,37 @@ from app.db.session import get_user_session as get_session
 from app.common.schemas import DataResponse
 from app.modules.users.models import User
 from app.tasks.dispatcher import dispatch
+from app.tasks.celery_app import celery_app
 from app.modules.exports.tasks import export_order_data, export_product_data, export_audit_logs
 
 router = APIRouter()
 
 
+VALID_FORMATS = ["csv", "json", "excel"]
+
+
+@router.get("/status/{task_id}", response_model=DataResponse[dict])
+async def get_task_status(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Get export task status"""
+    result = celery_app.AsyncResult(task_id)
+    response = {
+        "task_id": task_id,
+        "status": result.state,
+    }
+    if result.state == "SUCCESS":
+        response["result"] = result.result
+    elif result.state == "FAILURE":
+        response["error"] = str(result.info)
+    return DataResponse(data=response)
+
+
 @router.post("/orders/", response_model=DataResponse[dict], status_code=status.HTTP_202_ACCEPTED)
 async def export_orders(
     format: str = "csv",
-    status: Optional[str] = None,
+    order_status: Optional[str] = None,
     user_id: Optional[int] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
@@ -24,9 +46,14 @@ async def export_orders(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """Export order data (admin only)"""
+    """Export order data (admin only). Formats: csv, json, excel"""
+    if format not in VALID_FORMATS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid format. Supported formats: {VALID_FORMATS}",
+        )
     filters = {
-        "status": status,
+        "status": order_status,
         "user_id": user_id,
         "date_from": date_from,
         "date_to": date_to,
@@ -47,7 +74,12 @@ async def export_products(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """Export product data (admin only)"""
+    """Export product data (admin only). Formats: csv, json, excel"""
+    if format not in VALID_FORMATS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid format. Supported formats: {VALID_FORMATS}",
+        )
     filters = {
         "category": category,
         "is_active": is_active,
@@ -71,7 +103,12 @@ async def export_audit(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_superuser),
 ):
-    """Export audit logs (superuser only)"""
+    """Export audit logs (superuser only). Formats: csv, json, excel"""
+    if format not in VALID_FORMATS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid format. Supported formats: {VALID_FORMATS}",
+        )
     filters = {
         "user_id": user_id,
         "action": action,

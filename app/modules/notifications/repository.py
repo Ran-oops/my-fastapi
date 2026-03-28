@@ -1,4 +1,4 @@
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.repository import BaseRepository
@@ -46,15 +46,17 @@ class NotificationRepository(BaseRepository[Notification, NotificationTemplateCr
         status: str | None = None,
     ) -> int:
         """统计用户通知数量"""
+        from sqlalchemy import func
+
         conditions = [Notification.user_id == user_id]
         if is_read is not None:
             conditions.append(Notification.is_read == is_read)
         if status is not None:
             conditions.append(Notification.status == status)
 
-        stmt = select(Notification.id).where(and_(*conditions))
+        stmt = select(func.count(Notification.id)).where(and_(*conditions))
         result = await session.execute(stmt)
-        return len(list(result.all()))
+        return result.scalar() or 0
 
     async def mark_read(self, session: AsyncSession, notification_id: int, user_id: int) -> Notification | None:
         """标记单条已读"""
@@ -68,16 +70,15 @@ class NotificationRepository(BaseRepository[Notification, NotificationTemplateCr
         return notification
 
     async def mark_all_read(self, session: AsyncSession, user_id: int) -> int:
-        """标记全部已读"""
-        stmt = select(Notification).where(and_(Notification.user_id == user_id, Notification.is_read == False))
+        """标记全部已读 - 使用批量更新"""
+        stmt = (
+            update(Notification)
+            .where(and_(Notification.user_id == user_id, Notification.is_read == False))
+            .values(is_read=True)
+        )
         result = await session.execute(stmt)
-        notifications = list(result.scalars().all())
-        count = 0
-        for notification in notifications:
-            notification.is_read = True
-            count += 1
         await session.commit()
-        return count
+        return result.rowcount
 
 
 class NotificationTemplateRepository(

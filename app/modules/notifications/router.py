@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user
@@ -96,8 +97,14 @@ async def create_template(
     current_user: User = Depends(get_current_active_superuser),
 ):
     """创建模板（管理员）"""
-    template = await notification_service.create_template(session, data)
-    return DataResponse(data=NotificationTemplateResponse.model_validate(template))
+    try:
+        template = await notification_service.create_template(session, data)
+        return DataResponse(data=NotificationTemplateResponse.model_validate(template))
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Template with this name already exists",
+        )
 
 
 @router.put("/templates/{template_id}", response_model=DataResponse[NotificationTemplateResponse])

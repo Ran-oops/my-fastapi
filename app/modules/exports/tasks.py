@@ -10,9 +10,23 @@ from app.tasks.celery_app import celery_app
 from app.tasks.db import get_sync_session
 
 
+def _write_excel(data: list[dict], headers: list[str], file_path: str) -> None:
+    try:
+        import openpyxl
+    except ImportError:
+        raise ImportError("openpyxl is required for Excel export. Install with: pip install openpyxl")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(headers)
+    for row in data:
+        ws.append([row.get(h) for h in headers])
+    wb.save(file_path)
+
+
 @celery_app.task(bind=True, max_retries=2, retry_backoff=True)
 def export_order_data(self, filters: dict, format: str = "csv"):
-    """Export order data to CSV/Excel file."""
+    """Export order data to CSV/JSON/Excel file."""
     session = next(get_sync_session())
     try:
         query = session.query(Order).order_by(Order.id.desc())
@@ -28,6 +42,21 @@ def export_order_data(self, filters: dict, format: str = "csv"):
 
         limit = filters.get("limit", 1000)
         orders = query.limit(limit).all()
+
+        if format == "excel":
+            data = [
+                {
+                    "id": order.id,
+                    "user_id": order.user_id,
+                    "status": order.status,
+                    "total_amount": str(order.total_amount),
+                    "created_at": order.created_at.isoformat() if order.created_at else None,
+                }
+                for order in orders
+            ]
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".xlsx", delete=False) as f:
+                _write_excel(data, ["id", "user_id", "status", "total_amount", "created_at"], f.name)
+                return {"file_path": f.name, "count": len(orders)}
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=f".{format}", delete=False, newline="") as f:
             if format == "csv":
@@ -48,7 +77,7 @@ def export_order_data(self, filters: dict, format: str = "csv"):
                 ]
                 json.dump(data, f, indent=2)
 
-        return {"file_path": f.name, "count": len(orders)}
+            return {"file_path": f.name, "count": len(orders)}
     except Exception as exc:
         raise self.retry(exc=exc)
     finally:
@@ -57,7 +86,7 @@ def export_order_data(self, filters: dict, format: str = "csv"):
 
 @celery_app.task(bind=True, max_retries=2, retry_backoff=True)
 def export_product_data(self, filters: dict, format: str = "csv"):
-    """Export product data to CSV/Excel file."""
+    """Export product data to CSV/JSON/Excel file."""
     session = next(get_sync_session())
     try:
         query = session.query(Product).order_by(Product.id.desc())
@@ -69,6 +98,23 @@ def export_product_data(self, filters: dict, format: str = "csv"):
 
         limit = filters.get("limit", 1000)
         products = query.limit(limit).all()
+
+        if format == "excel":
+            data = [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "sku": p.sku,
+                    "price": str(p.price),
+                    "category": p.category,
+                    "is_active": p.is_active,
+                    "created_at": p.created_at.isoformat() if p.created_at else None,
+                }
+                for p in products
+            ]
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".xlsx", delete=False) as f:
+                _write_excel(data, ["id", "name", "sku", "price", "category", "is_active", "created_at"], f.name)
+                return {"file_path": f.name, "count": len(products)}
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=f".{format}", delete=False, newline="") as f:
             if format == "csv":
@@ -101,7 +147,7 @@ def export_product_data(self, filters: dict, format: str = "csv"):
                 ]
                 json.dump(data, f, indent=2)
 
-        return {"file_path": f.name, "count": len(products)}
+            return {"file_path": f.name, "count": len(products)}
     except Exception as exc:
         raise self.retry(exc=exc)
     finally:
@@ -110,7 +156,7 @@ def export_product_data(self, filters: dict, format: str = "csv"):
 
 @celery_app.task(bind=True, max_retries=2, retry_backoff=True)
 def export_audit_logs(self, filters: dict, format: str = "csv"):
-    """Export audit logs to CSV/Excel file."""
+    """Export audit logs to CSV/JSON/Excel file."""
     session = next(get_sync_session())
     try:
         query = session.query(AuditLog).order_by(AuditLog.id.desc())
@@ -128,6 +174,27 @@ def export_audit_logs(self, filters: dict, format: str = "csv"):
 
         limit = filters.get("limit", 1000)
         logs = query.limit(limit).all()
+
+        if format == "excel":
+            data = [
+                {
+                    "id": log.id,
+                    "user_id": log.user_id,
+                    "action": log.action,
+                    "resource_type": log.resource_type,
+                    "resource_id": log.resource_id,
+                    "ip_address": log.ip_address,
+                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                }
+                for log in logs
+            ]
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".xlsx", delete=False) as f:
+                _write_excel(
+                    data,
+                    ["id", "user_id", "action", "resource_type", "resource_id", "ip_address", "created_at"],
+                    f.name,
+                )
+                return {"file_path": f.name, "count": len(logs)}
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=f".{format}", delete=False, newline="") as f:
             if format == "csv":
@@ -160,7 +227,7 @@ def export_audit_logs(self, filters: dict, format: str = "csv"):
                 ]
                 json.dump(data, f, indent=2)
 
-        return {"file_path": f.name, "count": len(logs)}
+            return {"file_path": f.name, "count": len(logs)}
     except Exception as exc:
         raise self.retry(exc=exc)
     finally:
