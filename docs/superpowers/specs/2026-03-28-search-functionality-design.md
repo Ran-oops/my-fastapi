@@ -48,6 +48,12 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 | page | 否 | int | 1 | 页码 |
 | page_size | 否 | int | 10 | 每页数量（最大100） |
 
+**分页规则:**
+
+- 当 `type=all` 时：每个模块返回 `page_size` 条结果，总计最多 `page_size * 3` 条
+- 当 `type=products` 时：只返回产品的 `page_size` 条结果
+- `meta.total` 表示当前搜索类型的总结果数
+
 **响应结构:**
 
 ```json
@@ -90,6 +96,8 @@ DELETE /api/v1/search/history/{id}
 DELETE /api/v1/search/history
 ```
 
+**认证方式:** 所有历史端点需要JWT认证，通过 `get_current_user` 依赖获取当前用户ID。
+
 ## 3. 数据模型
 
 ### PostgreSQL扩展
@@ -97,7 +105,6 @@ DELETE /api/v1/search/history
 ```sql
 -- Alembic迁移中添加
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS unaccent;
 ```
 
 ### 模型变更
@@ -114,6 +121,25 @@ class Product(UserBase):
     search_vector = Column(TSVECTOR)
 ```
 
+**Product search_vector填充触发器:**
+
+```sql
+CREATE OR REPLACE FUNCTION product_search_vector_update() RETURNS trigger AS $$
+BEGIN
+    NEW.search_vector := 
+        setweight(to_tsvector('simple', COALESCE(NEW.name, '')), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.sku, '')), 'B') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.category, '')), 'C') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.description, '')), 'D');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER product_search_vector_trigger
+    BEFORE INSERT OR UPDATE ON products
+    FOR EACH ROW EXECUTE FUNCTION product_search_vector_update();
+```
+
 #### Order模型
 
 在 `app/modules/orders/models.py` 中添加:
@@ -124,6 +150,23 @@ class Order(UserBase):
     search_vector = Column(TSVECTOR)
 ```
 
+**Order search_vector填充触发器:**
+
+```sql
+CREATE OR REPLACE FUNCTION order_search_vector_update() RETURNS trigger AS $$
+BEGIN
+    NEW.search_vector := 
+        setweight(to_tsvector('simple', COALESCE(NEW.status, '')), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.user_id::text, '')), 'B');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER order_search_vector_trigger
+    BEFORE INSERT OR UPDATE ON orders
+    FOR EACH ROW EXECUTE FUNCTION order_search_vector_update();
+```
+
 #### User模型
 
 在 `app/modules/users/models.py` 中添加:
@@ -132,6 +175,24 @@ class Order(UserBase):
 class User(UserBase):
     # ... 现有字段 ...
     search_vector = Column(TSVECTOR)
+```
+
+**User search_vector填充触发器:**
+
+```sql
+CREATE OR REPLACE FUNCTION user_search_vector_update() RETURNS trigger AS $$
+BEGIN
+    NEW.search_vector := 
+        setweight(to_tsvector('simple', COALESCE(NEW.username, '')), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.email, '')), 'B') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.full_name, '')), 'C');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER user_search_vector_trigger
+    BEFORE INSERT OR UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION user_search_vector_update();
 ```
 
 ### 新增搜索历史表
@@ -150,6 +211,8 @@ class SearchHistory(UserBase):
     search_type: Mapped[str] = mapped_column(String(20), nullable=False)
     result_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 ```
+
+**注意:** SearchHistory使用 `UserBase` 作为基类，因为它存储在用户数据库中，需要时间戳字段。
 
 ## 4. 服务层设计
 
@@ -173,7 +236,53 @@ class SearchService:
         search_type: str,
         limit: int = 5
     ) -> list[SearchSuggestion]
+    
+    async def get_history(
+        self,
+        session: AsyncSession,
+        user_id: int,
+        pagination: PaginationParams
+    ) -> PaginatedResponse[SearchHistoryRead]
+    
+    async def delete_history(
+        self,
+        session: AsyncSession,
+        user_id: int,
+        history_id: int
+    ) -> None
+    
+    async def clear_history(
+        self,
+        session: AsyncSession,
+        user_id: int
+    ) -> None
 ```
+
+### 响应结构说明
+
+**当 `type=all` 时:**
+```json
+{
+  "data": {
+    "products": [...],
+    "orders": [...],
+    "users": [...]
+  },
+  "meta": {...}
+}
+```
+
+**当 `type=products` 时:**
+```json
+{
+  "data": {
+    "products": [...]
+  },
+  "meta": {...}
+}
+```
+
+**注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块返回空数组或不包含。
 
 ### 搜索策略（三级降级）
 
@@ -183,11 +292,13 @@ class SearchService:
 
 ### 搜索字段权重
 
-| 模块 | 高权重字段 | 低权重字段 |
-|------|-----------|-----------|
-| 产品 | name (1.0), sku (0.8) | description (0.3), category (0.5) |
-| 订单 | status (0.8) | user_id (0.5) |
-| 用户 | username (1.0), email (0.9) | full_name (0.7) |
+| 模块 | 高权重字段 | 低权重字段 | 说明 |
+|------|-----------|-----------|------|
+| 产品 | name (1.0), sku (0.8) | description (0.3), category (0.5) | 支持完整文本搜索 |
+| 订单 | status (0.8) | user_id (0.5) | 仅支持状态和用户ID搜索 |
+| 用户 | username (1.0), email (0.9) | full_name (0.7) | 支持用户名/邮箱搜索 |
+
+**订单搜索限制说明:** 当前Order模型仅包含status和user_id字段，搜索能力有限。如需扩展订单搜索（如按产品名称、收货地址搜索），需要在Order模型中添加相关字段或关联OrderItem表。
 
 ### 相关性排序
 
@@ -201,7 +312,7 @@ class SearchService:
 
 - 输入2个字符后触发建议
 - 返回最相关的5条建议
-- 缓存热门搜索词（Redis或内存）
+- 缓存策略：使用Redis缓存热门搜索键（复用现有Celery Redis基础设施），缓存有效期5分钟
 
 ### 搜索结果高亮
 
@@ -219,11 +330,31 @@ class SearchService:
 
 ### 高级过滤和排序
 
+**产品过滤参数:**
 ```
 GET /api/v1/search?q=手机&type=products
   &category=配件
   &price_min=10&price_max=100
+  &is_active=true
   &sort_by=relevance|price|created_at
+  &sort_order=asc|desc
+```
+
+**订单过滤参数:**
+```
+GET /api/v1/search?q=待发货&type=orders
+  &status=PENDING|CONFIRMED|SHIPPED|COMPLETED|CANCELLED
+  &user_id=123
+  &date_from=2026-01-01&date_to=2026-12-31
+  &sort_by=relevance|created_at
+  &sort_order=asc|desc
+```
+
+**用户过滤参数:**
+```
+GET /api/v1/search?q=admin&type=users
+  &is_active=true
+  &sort_by=relevance|created_at
   &sort_order=asc|desc
 ```
 
@@ -300,7 +431,7 @@ app/
 
 ## 8. 实现顺序
 
-1. 安装PostgreSQL扩展（pg_trgm, unaccent）
+1. 安装PostgreSQL扩展（pg_trgm）
 2. 创建SearchHistory模型和迁移
 3. 为现有模型添加search_vector列
 4. 实现SearchRepository
