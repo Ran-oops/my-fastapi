@@ -220,7 +220,29 @@ def upgrade():
             FOR EACH ROW EXECUTE FUNCTION user_search_vector_update()
     ''')
     
-    # 6. 创建search_history表
+    # 6. 回填现有数据的search_vector
+    op.execute('''
+        UPDATE products SET search_vector = 
+            setweight(to_tsvector('simple', COALESCE(name, '')), 'A') ||
+            setweight(to_tsvector('simple', COALESCE(sku, '')), 'B') ||
+            setweight(to_tsvector('simple', COALESCE(category, '')), 'C') ||
+            setweight(to_tsvector('simple', COALESCE(description, '')), 'D')
+    ''')
+    
+    op.execute('''
+        UPDATE orders SET search_vector = 
+            setweight(to_tsvector('simple', COALESCE(status, '')), 'A') ||
+            setweight(to_tsvector('simple', COALESCE(user_id::text, '')), 'B')
+    ''')
+    
+    op.execute('''
+        UPDATE users SET search_vector = 
+            setweight(to_tsvector('simple', COALESCE(username, '')), 'A') ||
+            setweight(to_tsvector('simple', COALESCE(email, '')), 'B') ||
+            setweight(to_tsvector('simple', COALESCE(full_name, '')), 'C')
+    ''')
+    
+    # 7. 创建search_history表
     op.create_table(
         'search_history',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -416,7 +438,7 @@ class SearchRepository:
         skip: int = 0, 
         limit: int = 10,
         filters: dict | None = None
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[Product], int]:
         """搜索产品"""
         # 构建基础查询
         stmt = select(Product)
@@ -460,7 +482,7 @@ class SearchRepository:
         skip: int = 0, 
         limit: int = 10,
         filters: dict | None = None
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[Order], int]:
         """搜索订单"""
         stmt = select(Order)
         
@@ -475,8 +497,10 @@ class SearchRepository:
             if 'date_to' in filters:
                 stmt = stmt.where(Order.created_at <= filters['date_to'])
         
-        # 搜索条件
+        # 搜索条件：使用trigram相似度
+        similarity = func.similarity(Order.status, query)
         stmt = stmt.where(
+            (similarity > 0.3) |
             Order.status.ilike(f'%{query}%') |
             func.cast(Order.user_id, text('text')).ilike(f'%{query}%')
         )
@@ -486,7 +510,7 @@ class SearchRepository:
         total = await self.session.scalar(count_stmt)
         
         # 排序和分页
-        stmt = stmt.order_by(Order.created_at.desc())
+        stmt = stmt.order_by(similarity.desc())
         stmt = stmt.offset(skip).limit(limit)
         
         result = await self.session.execute(stmt)
@@ -500,7 +524,7 @@ class SearchRepository:
         skip: int = 0, 
         limit: int = 10,
         filters: dict | None = None
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[User], int]:
         """搜索用户"""
         stmt = select(User)
         
@@ -581,7 +605,8 @@ class SearchRepository:
         search_type: str, 
         result_count: int
     ) -> SearchHistory:
-        """保存搜索历史"""
+        """保存搜索历史（限制每个用户最多100条）"""
+        # 保存新记录
         history = SearchHistory(
             user_id=user_id,
             query=query,
@@ -589,6 +614,29 @@ class SearchRepository:
             result_count=result_count
         )
         self.session.add(history)
+        await self.session.flush()  # 先flush获取ID
+        
+        # 检查并删除超过100条的旧记录
+        count_stmt = (
+            select(func.count())
+            .select_from(SearchHistory)
+            .where(SearchHistory.user_id == user_id)
+        )
+        total = await self.session.scalar(count_stmt)
+        
+        if total and total > 100:
+            # 删除最旧的记录，保留100条
+            delete_stmt = (
+                select(SearchHistory)
+                .where(SearchHistory.user_id == user_id)
+                .order_by(SearchHistory.created_at.asc())
+                .limit(total - 100)
+            )
+            result = await self.session.execute(delete_stmt)
+            old_records = result.scalars().all()
+            for record in old_records:
+                await self.session.delete(record)
+        
         await self.session.commit()
         await self.session.refresh(history)
         return history
@@ -642,18 +690,21 @@ class SearchRepository:
     
     async def clear_search_history(self, user_id: int) -> int:
         """清空用户搜索历史"""
-        stmt = (
-            select(SearchHistory)
+        from sqlalchemy import delete
+        
+        # 先获取数量
+        count_stmt = (
+            select(func.count())
+            .select_from(SearchHistory)
             .where(SearchHistory.user_id == user_id)
         )
-        result = await self.session.execute(stmt)
-        histories = result.scalars().all()
+        count = await self.session.scalar(count_stmt) or 0
         
-        count = len(histories)
-        for history in histories:
-            await self.session.delete(history)
-        
+        # 使用DELETE语句直接删除
+        delete_stmt = delete(SearchHistory).where(SearchHistory.user_id == user_id)
+        await self.session.execute(delete_stmt)
         await self.session.commit()
+        
         return count
 ```
 
