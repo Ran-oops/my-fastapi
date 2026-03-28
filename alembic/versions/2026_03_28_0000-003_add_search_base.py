@@ -1,20 +1,20 @@
 """add search base functionality
 
 Revision ID: 003
-Revises: 002
+Revises: 2026_03_27_0000-001
 Create Date: 2026-03-28 00:00:00.000000
 
 """
 
 from typing import Sequence, Union
 
-from alembic import op  # type: ignore[import-untyped]
+from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
 revision: str = "003"
-down_revision: Union[str, None] = "002"
+down_revision: Union[str, None] = "2026_03_27_0000-001"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -41,21 +41,8 @@ def upgrade() -> None:
     op.create_index("ix_search_history_user_id", "search_history", ["user_id"])
     op.create_index("ix_search_history_created_at", "search_history", ["created_at"])
 
-    # 3. Create common indexes (SQLite and PostgreSQL both support)
-    op.create_index("ix_products_name", "products", ["name"])
-    op.create_index("ix_products_sku", "products", ["sku"])
-    op.create_index("ix_orders_status", "orders", ["status"])
-    op.create_index("ix_users_username", "users", ["username"])
-    op.create_index("ix_users_email", "users", ["email"])
-
 
 def downgrade() -> None:
-    op.drop_index("ix_users_email", table_name="users")
-    op.drop_index("ix_users_username", table_name="users")
-    op.drop_index("ix_orders_status", table_name="orders")
-    op.drop_index("ix_products_sku", table_name="products")
-    op.drop_index("ix_products_name", table_name="products")
-
     op.drop_index("ix_search_history_created_at", table_name="search_history")
     op.drop_index("ix_search_history_user_id", table_name="search_history")
     op.drop_table("search_history")
