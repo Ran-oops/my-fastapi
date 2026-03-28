@@ -9,6 +9,7 @@ from app.modules.products.router import router as products_router
 from app.modules.roles.router import router as roles_router
 from app.modules.users.auth_router import router as auth_router
 from app.modules.users.user_router import router as users_router
+from app.modules.search.router import router as search_router
 from app.tasks.router import router as tasks_router
 
 
@@ -23,3 +24,4 @@ api_router.include_router(audit_router, prefix="/audit", tags=["audit"])
 api_router.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(exports_router, prefix="/exports", tags=["exports"])
+api_router.include_router(search_router, prefix="/search", tags=["search"])
