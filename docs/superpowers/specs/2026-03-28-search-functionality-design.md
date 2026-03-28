@@ -39,6 +39,8 @@
 GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 ```
 
+**认证:** 需要JWT认证（通过 `get_current_user`）
+
 **参数说明:**
 
 | 参数 | 必填 | 类型 | 默认值 | 说明 |
@@ -54,12 +56,22 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 - 当 `type=products` 时：只返回产品的 `page_size` 条结果
 - `meta.total` 表示当前搜索类型的总结果数
 
-**响应结构:**
+**响应结构（type=all）:**
 
 ```json
 {
   "data": {
-    "products": [...],
+    "products": [
+      {
+        "id": 1,
+        "name": "手机壳",
+        "sku": "CASE-001",
+        "score": 0.85,
+        "highlight": {
+          "name": "<mark>手机</mark>壳"
+        }
+      }
+    ],
     "orders": [...],
     "users": [...]
   },
@@ -74,11 +86,33 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 }
 ```
 
+**响应结构（type=products）:**
+
+```json
+{
+  "data": {
+    "products": [...]
+  },
+  "meta": {
+    "total": 50,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 5,
+    "query": "手机",
+    "search_type": "products"
+  }
+}
+```
+
+**注意:** 当指定具体模块时，`data` 只包含该模块的结果。
+
 ### 搜索建议端点
 
 ```
 GET /api/v1/search/suggest?q={query}&type={module}&limit={limit}
 ```
+
+**认证:** 需要JWT认证（通过 `get_current_user`）
 
 **参数说明:**
 
@@ -87,6 +121,25 @@ GET /api/v1/search/suggest?q={query}&type={module}&limit={limit}
 | q | 是 | string | - | 搜索关键词（至少2字符） |
 | type | 否 | string | all | 搜索模块 |
 | limit | 否 | int | 5 | 返回建议数量 |
+
+**响应结构:**
+
+```json
+{
+  "data": [
+    {
+      "text": "手机壳",
+      "type": "products",
+      "score": 0.92
+    },
+    {
+      "text": "手机配件",
+      "type": "products",
+      "score": 0.85
+    }
+  ]
+}
+```
 
 ### 搜索历史端点
 
@@ -108,6 +161,36 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
 ### 模型变更
+
+**GIN索引创建（在Alembic迁移中）:**
+
+```sql
+-- 为产品表创建GIN索引
+CREATE INDEX ix_products_search_vector ON products USING GIN(search_vector);
+CREATE INDEX ix_products_name_trgm ON products USING GIN(name gin_trgm_ops);
+CREATE INDEX ix_products_sku_trgm ON products USING GIN(sku gin_trgm_ops);
+
+-- 为订单表创建GIN索引
+CREATE INDEX ix_orders_search_vector ON orders USING GIN(search_vector);
+CREATE INDEX ix_orders_status_trgm ON orders USING GIN(status gin_trgm_ops);
+
+-- 为用户表创建GIN索引
+CREATE INDEX ix_users_search_vector ON users USING GIN(search_vector);
+CREATE INDEX ix_users_username_trgm ON users USING GIN(username gin_trgm_ops);
+CREATE INDEX ix_users_email_trgm ON users USING GIN(email gin_trgm_ops);
+```
+
+**PaginationParams扩展:**
+
+在 `app/common/pagination.py` 中添加 `page_size` 最大值验证：
+
+```python
+class PaginationParams(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=10, ge=1, le=100)
+```
 
 #### Product模型
 
@@ -316,21 +399,36 @@ class SearchService:
 
 ### 搜索结果高亮
 
+每个搜索结果包含 `highlight` 字段，包含匹配文本的高亮版本：
+
 ```json
 {
-  "highlight": {
-    "name": "<mark>手机</mark>壳",
-    "description": "适用于iPhone的<mark>手机</mark>壳"
+  "data": {
+    "products": [
+      {
+        "id": 1,
+        "name": "手机壳",
+        "sku": "CASE-001",
+        "score": 0.85,
+        "highlight": {
+          "name": "<mark>手机</mark>壳",
+          "description": "适用于iPhone的<mark>手机</mark>壳"
+        }
+      }
+    ]
   }
 }
 ```
 
+- `highlight` 是每个结果对象的可选字段
 - 使用 `<mark>` 标签包裹匹配文本
-- 支持多字段高亮
+- 只包含有匹配的字段
 
 ### 高级过滤和排序
 
-**产品过滤参数:**
+所有过滤和排序参数都是 `/api/v1/search` 端点的查询参数。
+
+**产品过滤参数（type=products时可用）:**
 ```
 GET /api/v1/search?q=手机&type=products
   &category=配件
@@ -340,7 +438,7 @@ GET /api/v1/search?q=手机&type=products
   &sort_order=asc|desc
 ```
 
-**订单过滤参数:**
+**订单过滤参数（type=orders时可用）:**
 ```
 GET /api/v1/search?q=待发货&type=orders
   &status=PENDING|CONFIRMED|SHIPPED|COMPLETED|CANCELLED
@@ -349,8 +447,9 @@ GET /api/v1/search?q=待发货&type=orders
   &sort_by=relevance|created_at
   &sort_order=asc|desc
 ```
+**说明:** `date_from` 和 `date_to` 过滤的是 `created_at` 字段（来自 `TimestampMixin`）。
 
-**用户过滤参数:**
+**用户过滤参数（type=users时可用）:**
 ```
 GET /api/v1/search?q=admin&type=users
   &is_active=true
@@ -409,8 +508,11 @@ async def test_search_empty_query():
 
 ### 性能测试
 
-- 搜索响应时间 < 500ms（10万条数据）
+- 搜索响应时间目标 < 500ms（10万条数据）
+- 搜索超时保护 > 3秒（返回504错误）
 - 并发搜索测试（10个并发请求）
+
+**说明:** 500ms是性能目标，3秒是超时保护。正常情况应达到500ms以内，超过3秒表示系统异常。
 
 ## 7. 文件结构
 
