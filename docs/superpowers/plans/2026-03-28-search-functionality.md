@@ -543,16 +543,6 @@ class SearchRepository:
         orders = result.scalars().all()
         
         return orders, total or 0
-        total = await self.session.scalar(count_stmt)
-        
-        # 排序和分页
-        stmt = stmt.order_by(similarity.desc())
-        stmt = stmt.offset(skip).limit(limit)
-        
-        result = await self.session.execute(stmt)
-        orders = result.scalars().all()
-        
-        return orders, total or 0
     
     async def search_users(
         self, 
