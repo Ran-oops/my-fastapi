@@ -1,12 +1,12 @@
 [project]
 name = "enterprise-fastapi"
 version = "1.0.0"
-description = "Enterprise FastAPI project with multi-database architecture"
+description = "Enterprise FastAPI project with SQLite fallback"
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
 authors = [{ name = "Enterprise Team", email = "team@example.com" }]
-keywords = ["fastapi", "async", "enterprise", "multi-database"]
+keywords = ["fastapi", "async", "enterprise", "sqlite", "postgresql"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: FastAPI",
@@ -30,8 +30,6 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.0",
     "aiosqlite>=0.19.0",
     "asyncpg>=0.29.0",
-    "aiomysql>=0.2.0",
-    "aioodbc>=0.4.0",
     "alembic>=1.13.0",
     "python-dotenv>=1.0.0",
     "typer>=0.9.0",
