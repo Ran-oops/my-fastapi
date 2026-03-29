@@ -14,7 +14,7 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
     elif dialect == "sqlite":
         return SQLiteSearchAdapter(session)
     else:
-        # 默认使用 SQLite 适配器（兼容性最好）
+        # 默认使用 SQLite 适配器(兼容性最好)
         return SQLiteSearchAdapter(session)
 
 

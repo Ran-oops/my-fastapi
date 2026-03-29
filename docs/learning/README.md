@@ -647,7 +647,7 @@ class UserService:
 async def get_user(db: AsyncSession = Depends(get_user_db)):
     ...
 
-# 手动管理会话（仅在 CLI 或脚本中）
+# 手动管理会话(仅在 CLI 或脚本中)
 async with UserSessionLocal() as session:
     try:
         # 操作

@@ -16,7 +16,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
         super().__init__(session)
 
     def _calculate_similarity(self, text: str, query: str) -> float:
-        """计算相似度得分（应用层实现）"""
+        """计算相似度得分(应用层实现)"""
         if not text or not query:
             return 0.0
 
@@ -35,7 +35,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
         if text_lower.startswith(query_lower):
             return 0.6
 
-        # 模糊匹配（简单实现）
+        # 模糊匹配(简单实现)
         # 计算公共子序列长度
         common_len = 0
         for i in range(min(len(text_lower), len(query_lower))):

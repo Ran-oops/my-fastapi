@@ -217,7 +217,7 @@ CREATE INDEX ix_orders_status ON orders(status);
 |------|------|------|------|
 | id | INT | PK, IDENTITY | 主键，自增 |
 | order_no | VARCHAR(50) | UNIQUE, NOT NULL | 订单编号 |
-| user_id | INT | NOT NULL | 用户ID（外部引用） |
+| user_id | INT | NOT NULL | 用户ID(外部引用) |
 | total_amount | DECIMAL(10,2) | NOT NULL | 订单总金额 |
 | status | VARCHAR(20) | NOT NULL, DEFAULT 'pending' | 订单状态 |
 | remark | NVARCHAR(MAX) | NULL | 备注 |
@@ -304,7 +304,7 @@ CREATE INDEX ix_products_name ON products(name);
 ```
 数据库类型: MySQL 8.0+
 驱动: aiomysql
-访问模式: Read Only（只读）
+访问模式: Read Only(只读)
 连接池: pool_size=5, max_overflow=10
 ```
 
@@ -540,7 +540,7 @@ ANALYZE users;
 -- 清理死数据
 DELETE FROM logs WHERE created_at < NOW() - INTERVAL '90 days';
 
--- 分区大表（按时间）
+-- 分区大表(按时间)
 CREATE TABLE orders_2026 PARTITION OF orders
 FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
 ```

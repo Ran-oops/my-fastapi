@@ -30,10 +30,10 @@
 ### 关键设计决策
 
 - **统一入口**: `/api/v1/search` 作为唯一搜索端点
-- **模块过滤**: 通过 `type` 参数指定搜索模块（products/orders/users/all）
+- **模块过滤**: 通过 `type` 参数指定搜索模块(products/orders/users/all)
 - **分层架构**: Router → Service → Repository → Adapter → Database
 - **异步支持**: 所有搜索操作使用 `async/await`
-- **数据库兼容**: 通过适配器层支持 PostgreSQL（生产）和 SQLite（开发）
+- **数据库兼容**: 通过适配器层支持 PostgreSQL(生产)和 SQLite(开发)
 
 ## 2. API设计
 
@@ -43,7 +43,7 @@
 GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 ```
 
-**认证:** 需要JWT认证（通过 `get_current_user`）
+**认证:** 需要JWT认证(通过 `get_current_user`)
 
 **参数说明:**
 
@@ -52,7 +52,7 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 | q | 是 | string | - | 搜索关键词 |
 | type | 否 | string | all | 搜索模块: products/orders/users/all |
 | page | 否 | int | 1 | 页码 |
-| page_size | 否 | int | 10 | 每页数量（最大100） |
+| page_size | 否 | int | 10 | 每页数量(最大100) |
 
 **分页规则:**
 
@@ -60,7 +60,7 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 - 当 `type=products` 时：只返回产品的 `page_size` 条结果
 - `meta.total` 表示当前搜索类型的总结果数
 
-**响应结构（type=all）:**
+**响应结构(type=all):**
 
 ```json
 {
@@ -90,7 +90,7 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 }
 ```
 
-**响应结构（type=products）:**
+**响应结构(type=products):**
 
 ```json
 {
@@ -110,7 +110,7 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 
 **注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块不包含在响应中。
 
-**响应格式说明:** 搜索API使用自定义响应格式（`data` + `meta`），与现有 `DataResponse`/`PaginatedResponse` 不同。这是因为搜索结果需要返回多个模块的数据，且每个结果包含 `score` 和 `highlight` 字段。
+**响应格式说明:** 搜索API使用自定义响应格式(`data` + `meta`)，与现有 `DataResponse`/`PaginatedResponse` 不同。这是因为搜索结果需要返回多个模块的数据，且每个结果包含 `score` 和 `highlight` 字段。
 
 ### 搜索建议端点
 
@@ -118,13 +118,13 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 GET /api/v1/search/suggest?q={query}&type={module}&limit={limit}
 ```
 
-**认证:** 需要JWT认证（通过 `get_current_user`）
+**认证:** 需要JWT认证(通过 `get_current_user`)
 
 **参数说明:**
 
 | 参数 | 必填 | 类型 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| q | 是 | string | - | 搜索关键词（至少2字符） |
+| q | 是 | string | - | 搜索关键词(至少2字符) |
 | type | 否 | string | all | 搜索模块 |
 | limit | 否 | int | 5 | 返回建议数量 |
 
@@ -174,7 +174,7 @@ app/modules/search/
 └── ...
 ```
 
-**适配器接口（BaseSearchAdapter）:**
+**适配器接口(BaseSearchAdapter):**
 
 ```python
 from abc import ABC, abstractmethod
@@ -230,16 +230,16 @@ class BaseSearchAdapter(ABC):
         pass
 ```
 
-### PostgreSQL扩展（仅生产环境）
+### PostgreSQL扩展(仅生产环境)
 
 ```sql
--- Alembic迁移中添加（仅PostgreSQL）
+-- Alembic迁移中添加(仅PostgreSQL)
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
 ### 模型变更
 
-**search_vector列（两种数据库通用）:**
+**search_vector列(两种数据库通用):**
 
 - PostgreSQL: 使用 TEXT 类型，数据库触发器自动填充
 - SQLite: 使用 TEXT 类型，应用层填充
@@ -258,7 +258,7 @@ SQLite 适配器：
 - 使用普通 B-tree 索引
 - 应用层计算相似度得分
 
-**GIN索引（仅PostgreSQL）:**
+**GIN索引(仅PostgreSQL):**
 
 ```sql
 -- 为产品表创建GIN索引
@@ -276,7 +276,7 @@ CREATE INDEX ix_users_username_trgm ON users USING GIN(username gin_trgm_ops);
 CREATE INDEX ix_users_email_trgm ON users USING GIN(email gin_trgm_ops);
 ```
 
-**普通索引（SQLite通用）:**
+**普通索引(SQLite通用):**
 
 ```sql
 -- SQLite使用普通B-tree索引
@@ -313,7 +313,7 @@ class Product(UserBase):
     search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-**Product search_vector填充（数据库触发器 - 仅PostgreSQL）:**
+**Product search_vector填充(数据库触发器 - 仅PostgreSQL):**
 
 ```sql
 CREATE OR REPLACE FUNCTION product_search_vector_update() RETURNS trigger AS $$
@@ -332,13 +332,13 @@ CREATE TRIGGER product_search_vector_trigger
     FOR EACH ROW EXECUTE FUNCTION product_search_vector_update();
 ```
 
-**Product search_vector填充（应用层 - SQLite）:**
+**Product search_vector填充(应用层 - SQLite):**
 
 在 `app/modules/products/service.py` 的 `create_product` 和 `update_product` 方法中添加：
 
 ```python
 def update_search_vector(product: Product) -> None:
-    """应用层填充search_vector（SQLite兼容）"""
+    """应用层填充search_vector(SQLite兼容)"""
     parts = []
     if product.name:
         parts.append(product.name)
@@ -364,7 +364,7 @@ class Order(UserBase):
     search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-**Order search_vector填充（数据库触发器 - 仅PostgreSQL）:**
+**Order search_vector填充(数据库触发器 - 仅PostgreSQL):**
 
 ```sql
 CREATE OR REPLACE FUNCTION order_search_vector_update() RETURNS trigger AS $$
@@ -381,13 +381,13 @@ CREATE TRIGGER order_search_vector_trigger
     FOR EACH ROW EXECUTE FUNCTION order_search_vector_update();
 ```
 
-**Order search_vector填充（应用层 - SQLite）:**
+**Order search_vector填充(应用层 - SQLite):**
 
 在 `app/modules/orders/service.py` 中添加：
 
 ```python
 def update_search_vector(order: Order) -> None:
-    """应用层填充search_vector（SQLite兼容）"""
+    """应用层填充search_vector(SQLite兼容)"""
     parts = []
     if order.status:
         parts.append(order.status)
@@ -409,7 +409,7 @@ class User(UserBase):
     search_vector: Mapped[str | None] = mapped_column(Text, nullable=True)
 ```
 
-**User search_vector填充（数据库触发器 - 仅PostgreSQL）:**
+**User search_vector填充(数据库触发器 - 仅PostgreSQL):**
 
 ```sql
 CREATE OR REPLACE FUNCTION user_search_vector_update() RETURNS trigger AS $$
@@ -427,13 +427,13 @@ CREATE TRIGGER user_search_vector_trigger
     FOR EACH ROW EXECUTE FUNCTION user_search_vector_update();
 ```
 
-**User search_vector填充（应用层 - SQLite）:**
+**User search_vector填充(应用层 - SQLite):**
 
 在 `app/modules/users/service.py` 中添加：
 
 ```python
 def update_search_vector(user: User) -> None:
-    """应用层填充search_vector（SQLite兼容）"""
+    """应用层填充search_vector(SQLite兼容)"""
     parts = []
     if user.username:
         parts.append(user.username)
@@ -533,14 +533,14 @@ class SearchService:
 
 **注意:** 当指定具体模块时，`data` 只包含该模块的结果，其他模块不包含在响应中。
 
-### 搜索策略（适配器实现）
+### 搜索策略(适配器实现)
 
-**PostgreSQL 适配器策略（三级降级）:**
+**PostgreSQL 适配器策略(三级降级):**
 1. **精确匹配**: 查询与字段完全一致时优先返回
 2. **Trigram相似度**: 使用 `similarity()` 函数，阈值 > 0.3
 3. **ILIKE模糊匹配**: 最后降级方案
 
-**SQLite 适配器策略（两级降级）:**
+**SQLite 适配器策略(两级降级):**
 1. **精确匹配**: 查询与字段完全一致时优先返回
 2. **LIKE模糊匹配**: 使用 `LIKE` 进行模糊匹配
 
@@ -562,7 +562,7 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
     elif dialect == 'sqlite':
         return SQLiteSearchAdapter(session)
     else:
-        # 默认使用 SQLite 适配器（兼容性最好）
+        # 默认使用 SQLite 适配器(兼容性最好)
         return SQLiteSearchAdapter(session)
 ```
 
@@ -574,7 +574,7 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
 | 订单 | status (0.8) | user_id (0.5) | 仅支持状态和用户ID搜索 |
 | 用户 | username (1.0), email (0.9) | full_name (0.7) | 支持用户名/邮箱搜索 |
 
-**订单搜索限制说明:** 当前Order模型仅包含status和user_id字段，搜索能力有限。如需扩展订单搜索（如按产品名称、收货地址搜索），需要在Order模型中添加相关字段或关联OrderItem表。
+**订单搜索限制说明:** 当前Order模型仅包含status和user_id字段，搜索能力有限。如需扩展订单搜索(如按产品名称、收货地址搜索)，需要在Order模型中添加相关字段或关联OrderItem表。
 
 ### 相关性排序
 
@@ -588,7 +588,7 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
 
 - 输入2个字符后触发建议
 - 返回最相关的5条建议
-- 缓存策略：使用Redis缓存热门搜索键（复用现有Celery Redis基础设施），缓存有效期5分钟
+- 缓存策略：使用Redis缓存热门搜索键(复用现有Celery Redis基础设施)，缓存有效期5分钟
 
 ### 搜索结果高亮
 
@@ -621,7 +621,7 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
 
 所有过滤和排序参数都是 `/api/v1/search` 端点的查询参数。
 
-**产品过滤参数（type=products时可用）:**
+**产品过滤参数(type=products时可用):**
 ```
 GET /api/v1/search?q=手机&type=products
   &category=配件
@@ -631,7 +631,7 @@ GET /api/v1/search?q=手机&type=products
   &sort_order=asc|desc
 ```
 
-**订单过滤参数（type=orders时可用）:**
+**订单过滤参数(type=orders时可用):**
 ```
 GET /api/v1/search?q=待发货&type=orders
   &status=PENDING|CONFIRMED|SHIPPED|COMPLETED|CANCELLED
@@ -640,9 +640,9 @@ GET /api/v1/search?q=待发货&type=orders
   &sort_by=relevance|created_at
   &sort_order=asc|desc
 ```
-**说明:** `date_from` 和 `date_to` 过滤的是 `created_at` 字段（来自 `TimestampMixin`）。
+**说明:** `date_from` 和 `date_to` 过滤的是 `created_at` 字段(来自 `TimestampMixin`)。
 
-**用户过滤参数（type=users时可用）:**
+**用户过滤参数(type=users时可用):**
 ```
 GET /api/v1/search?q=admin&type=users
   &is_active=true
@@ -662,13 +662,13 @@ GET /api/v1/search?q=admin&type=users
 |----------|-----------|----------|
 | 空查询 | 400 | "搜索关键词不能为空" |
 | 无效type参数 | 400 | "无效的搜索类型，可选值: products, orders, users, all" |
-| 搜索超时（>3秒） | 504 | "搜索请求超时，请稍后重试" |
+| 搜索超时(>3秒) | 504 | "搜索请求超时，请稍后重试" |
 
 ## 6. 测试策略
 
 ### 单元测试
 
-- `SearchService` 方法测试（模拟数据库）
+- `SearchService` 方法测试(模拟数据库)
 - 搜索建议逻辑测试
 - 过滤和排序逻辑测试
 
@@ -701,9 +701,9 @@ async def test_search_empty_query():
 
 ### 性能测试
 
-- 搜索响应时间目标 < 500ms（10万条数据）
-- 搜索超时保护 > 3秒（返回504错误）
-- 并发搜索测试（10个并发请求）
+- 搜索响应时间目标 < 500ms(10万条数据)
+- 搜索超时保护 > 3秒(返回504错误)
+- 并发搜索测试(10个并发请求)
 
 **说明:** 500ms是性能目标，3秒是超时保护。正常情况应达到500ms以内，超过3秒表示系统异常。
 
@@ -721,27 +721,27 @@ app/
 │       │   ├── base.py        # BaseSearchAdapter 抽象基类
 │       │   ├── postgresql.py  # PostgreSQL 适配器
 │       │   └── sqlite.py      # SQLite 适配器
-│       ├── repository.py      # 搜索数据访问层（调用适配器）
+│       ├── repository.py      # 搜索数据访问层(调用适配器)
 │       ├── service.py         # 搜索业务逻辑
 │       └── router.py          # 搜索API路由
 └── db/
     └── migrations/
-        └── xxx_add_search.py  # Alembic迁移（添加search_vector列）
+        └── xxx_add_search.py  # Alembic迁移(添加search_vector列)
 ```
 
 ## 8. 实现顺序
 
 1. 创建SearchHistory模型和迁移
-2. 为现有模型添加search_vector列（TEXT类型，兼容两种数据库）
-3. 实现搜索适配器抽象基类（BaseSearchAdapter）
-4. 实现PostgreSQL适配器（PostgreSQLSearchAdapter）
-5. 实现SQLite适配器（SQLiteSearchAdapter）
-6. 实现适配器工厂（create_search_adapter）
-7. 实现SearchRepository（调用适配器）
+2. 为现有模型添加search_vector列(TEXT类型，兼容两种数据库)
+3. 实现搜索适配器抽象基类(BaseSearchAdapter)
+4. 实现PostgreSQL适配器(PostgreSQLSearchAdapter)
+5. 实现SQLite适配器(SQLiteSearchAdapter)
+6. 实现适配器工厂(create_search_adapter)
+7. 实现SearchRepository(调用适配器)
 8. 实现SearchService
 9. 实现搜索API路由
 10. 在 `app/api/v1/__init__.py` 注册搜索路由
 11. 添加搜索建议功能
 12. 添加搜索历史功能
 13. 实现结果高亮
-14. 编写测试（同时测试SQLite和PostgreSQL适配器）
+14. 编写测试(同时测试SQLite和PostgreSQL适配器)

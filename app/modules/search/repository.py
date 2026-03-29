@@ -17,27 +17,27 @@ class SearchRepository:
     async def search_products(
         self, query: str, skip: int = 0, limit: int = 10, filters: dict | None = None
     ) -> tuple[list, int]:
-        """搜索产品（委托给适配器）"""
+        """搜索产品(委托给适配器)"""
         return await self.adapter.search_products(query, skip, limit, filters)
 
     async def search_orders(
         self, query: str, skip: int = 0, limit: int = 10, filters: dict | None = None
     ) -> tuple[list, int]:
-        """搜索订单（委托给适配器）"""
+        """搜索订单(委托给适配器)"""
         return await self.adapter.search_orders(query, skip, limit, filters)
 
     async def search_users(
         self, query: str, skip: int = 0, limit: int = 10, filters: dict | None = None
     ) -> tuple[list, int]:
-        """搜索用户（委托给适配器）"""
+        """搜索用户(委托给适配器)"""
         return await self.adapter.search_users(query, skip, limit, filters)
 
     async def get_suggestions(self, query: str, search_type: str, limit: int = 5) -> list[tuple[str, str, float]]:
-        """获取搜索建议（委托给适配器）"""
+        """获取搜索建议(委托给适配器)"""
         return await self.adapter.get_suggestions(query, search_type, limit)
 
     async def save_search_history(self, user_id: int, query: str, search_type: str, result_count: int) -> SearchHistory:
-        """保存搜索历史（限制每个用户最多100条）"""
+        """保存搜索历史(限制每个用户最多100条)"""
         # 保存新记录
         history = SearchHistory(user_id=user_id, query=query, search_type=search_type, result_count=result_count)
         self.session.add(history)

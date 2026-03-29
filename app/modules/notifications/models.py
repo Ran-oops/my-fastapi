@@ -50,7 +50,7 @@ class Notification(UserBase):
 
 
 class NotificationPreference(UserBase):
-    """用户通知偏好（预留）"""
+    """用户通知偏好(预留)"""
 
     __tablename__ = "notification_preferences"
 

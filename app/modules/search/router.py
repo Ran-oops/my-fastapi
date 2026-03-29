@@ -96,7 +96,7 @@ async def search(
 
 @router.get("/suggest", response_model=SearchSuggestionResponse)
 async def suggest(
-    q: str = Query(..., min_length=2, description="搜索关键词（至少2字符）"),
+    q: str = Query(..., min_length=2, description="搜索关键词(至少2字符)"),
     type: str = Query("all", description="搜索模块"),
     limit: int = Query(5, ge=1, le=20, description="返回建议数量"),
     session: AsyncSession = Depends(get_user_session),

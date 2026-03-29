@@ -298,7 +298,7 @@ class PaginationParams(BaseModel):
 
 ### 添加新领域模块
 
-1. 在 `app/modules/` 创建新目录（如 `orders/`）
+1. 在 `app/modules/` 创建新目录(如 `orders/`)
 2. 创建以下文件：
    - `models.py` - SQLAlchemy 模型
    - `schemas.py` - Pydantic schemas

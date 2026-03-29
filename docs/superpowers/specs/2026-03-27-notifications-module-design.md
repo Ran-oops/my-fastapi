@@ -10,7 +10,7 @@
 - **触发场景**：订单状态变更、用户账户事件、系统事件
 - **持久化**：是，存储到数据库
 - **模板管理**：数据库模板，支持动态修改
-- **用户偏好**：先不实现，统一发送（预留表结构）
+- **用户偏好**：先不实现，统一发送(预留表结构)
 
 ## Architecture
 
@@ -56,7 +56,7 @@
 
 ## Component Design
 
-### 1. EventBus（事件总线）
+### 1. EventBus(事件总线)
 
 **文件**：`app/core/eventbus.py`
 
@@ -141,12 +141,12 @@ class EmailChannel(NotificationChannel):
     """邮件渠道"""
     
     def send(self, user_id: int, subject: str, body: str) -> bool:
-        # 发送邮件（占位实现）
+        # 发送邮件(占位实现)
         print(f"[Email] To: {user_id}, Subject: {subject}")
         return True
 
 class SmsChannel(NotificationChannel):
-    """短信渠道（预留）"""
+    """短信渠道(预留)"""
     
     def send(self, user_id: int, subject: str, body: str) -> bool:
         # 预留实现
@@ -204,7 +204,7 @@ notification_handler = NotificationHandler()
 
 ## Data Model
 
-### 1. NotificationTemplate（通知模板）
+### 1. NotificationTemplate(通知模板)
 
 ```python
 # app/modules/notifications/models.py
@@ -218,11 +218,11 @@ class NotificationTemplate(UserBase):
     name = Column(String(100), unique=True, nullable=False)  # 模板名：order.confirmed
     channel = Column(String(20), nullable=False)             # 渠道：in_app, email, sms
     subject = Column(String(200))                            # 邮件主题
-    body = Column(Text, nullable=False)                      # 模板内容（支持变量）
+    body = Column(Text, nullable=False)                      # 模板内容(支持变量)
     is_active = Column(Boolean, default=True)
 ```
 
-### 2. Notification（通知记录）
+### 2. Notification(通知记录)
 
 ```python
 class Notification(UserBase):
@@ -240,7 +240,7 @@ class Notification(UserBase):
     sent_at = Column(DateTime)
 ```
 
-### 3. NotificationPreference（用户偏好 - 预留）
+### 3. NotificationPreference(用户偏好 - 预留)
 
 ```python
 class NotificationPreference(UserBase):
@@ -255,7 +255,7 @@ class NotificationPreference(UserBase):
 
 ## API Routes
 
-### 用户通知接口（需要认证）
+### 用户通知接口(需要认证)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -264,7 +264,7 @@ class NotificationPreference(UserBase):
 | PUT | `/api/v1/notifications/{id}/read` | 标记已读 |
 | PUT | `/api/v1/notifications/read-all` | 全部标记已读 |
 
-### 模板管理接口（仅管理员）
+### 模板管理接口(仅管理员)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|

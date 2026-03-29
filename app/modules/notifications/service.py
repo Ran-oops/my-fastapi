@@ -72,6 +72,6 @@ async def get_templates(session: AsyncSession, skip: int = 0, limit: int = 100) 
 
 
 async def publish_event(event_type: str, data: dict) -> None:
-    """发布事件（供业务模块调用）"""
+    """发布事件(供业务模块调用)"""
     event = Event(event_type=event_type, data=data)
     eventbus.publish(event)

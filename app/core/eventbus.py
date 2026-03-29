@@ -35,7 +35,7 @@ class EventBus:
             handler(event)
 
     def clear(self) -> None:
-        """清空所有订阅（测试用）"""
+        """清空所有订阅(测试用)"""
         self._subscribers.clear()
 
 

@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 创建一个企业级FastAPI项目，包含清晰的目录结构（apis, core, models, crud, schemas, services, tests），全部使用异步操作，数据库使用SQL Server。
+**Goal:** 创建一个企业级FastAPI项目，包含清晰的目录结构(apis, core, models, crud, schemas, services, tests)，全部使用异步操作，数据库使用SQL Server。
 
 **Architecture:** 
 - 采用分层架构：API层 → Service层 → CRUD层 → Model层

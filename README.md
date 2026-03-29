@@ -1,6 +1,6 @@
 # Enterprise FastAPI Project
 
-企业级FastAPI项目模板，使用异步操作、多数据库架构和领域驱动设计（DDD）。
+企业级FastAPI项目模板，使用异步操作、多数据库架构和领域驱动设计(DDD)。
 
 ## 项目结构
 
@@ -49,7 +49,7 @@ app/
 ### 开发工具
 
 - **uv**: 极速Python包管理器
-- **just**: 命令运行器（替代 Makefile）
+- **just**: 命令运行器(替代 Makefile)
 - **ruff**: 极速Python linter和formatter
 - **ty**: Astral出品的类型检查器
 - **rumdl**: Markdown linter
@@ -170,13 +170,13 @@ just cli permissions check --user-id 1 --code users:read
 ### 其他命令
 
 ```bash
-# FTE计算（占位）
+# FTE计算(占位)
 just cli calculate-fte
 
-# 数据导入（占位）
+# 数据导入(占位)
 just cli import-data --source <source>
 
-# QC报告（占位）
+# QC报告(占位)
 just cli qc-report --type daily
 ```
 
@@ -289,7 +289,7 @@ uv run pytest tests -v --cov=app --cov-report=term-missing
 ## 安全说明
 
 - JWT Token 默认30分钟过期
-- 密码使用bcrypt加密（限制72字节）
+- 密码使用bcrypt加密(限制72字节)
 - 密码强度要求：至少8字符，包含字母和数字
 - 生产环境请更换 `SECRET_KEY`
 
@@ -297,7 +297,7 @@ uv run pytest tests -v --cov=app --cov-report=term-missing
 
 ### 添加新的领域模块
 
-1. 在 `app/modules/` 创建新目录（如 `orders/`）
+1. 在 `app/modules/` 创建新目录(如 `orders/`)
 2. 创建以下文件：
    - `models.py` - SQLAlchemy 模型
    - `schemas.py` - Pydantic schemas

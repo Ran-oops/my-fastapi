@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 def update_product_search_vector(product) -> None:
-    """更新产品搜索向量（SQLite兼容）"""
+    """更新产品搜索向量(SQLite兼容)"""
     parts = []
     if product.name:
         parts.append(product.name)
@@ -16,7 +16,7 @@ def update_product_search_vector(product) -> None:
 
 
 def update_order_search_vector(order) -> None:
-    """更新订单搜索向量（SQLite兼容）"""
+    """更新订单搜索向量(SQLite兼容)"""
     parts = []
     if order.status:
         parts.append(order.status)
@@ -26,7 +26,7 @@ def update_order_search_vector(order) -> None:
 
 
 def update_user_search_vector(user) -> None:
-    """更新用户搜索向量（SQLite兼容）"""
+    """更新用户搜索向量(SQLite兼容)"""
     parts = []
     if user.username:
         parts.append(user.username)

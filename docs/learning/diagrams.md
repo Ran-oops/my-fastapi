@@ -773,7 +773,7 @@ sequenceDiagram
     ├── Active:     正常活跃状态
     ├── Inactive:   用户主动停用或长时间未登录
     ├── Suspended:  被管理员禁用
-    └── Deleted:    软删除状态（数据保留）
+    └── Deleted:    软删除状态(数据保留)
 ```
 
 ### 订单状态流转

@@ -265,7 +265,7 @@ curl -X GET http://localhost:8000/api/v1/users/1 \
 
 ### GET /users/
 
-获取用户列表（分页）。
+获取用户列表(分页)。
 
 **认证**: 需要超级管理员权限
 
@@ -331,7 +331,7 @@ curl -X GET "http://localhost:8000/api/v1/users/?page=1&page_size=10" \
 
 更新用户信息。
 
-**认证**: 需要（普通用户只能更新自己的信息）
+**认证**: 需要(普通用户只能更新自己的信息)
 
 **路径参数**:
 
@@ -383,7 +383,7 @@ curl -X PUT http://localhost:8000/api/v1/users/1 \
 
 | 状态码 | 说明 |
 |--------|------|
-| 403 | 无权限（非管理员不能修改其他用户） |
+| 403 | 无权限(非管理员不能修改其他用户) |
 | 404 | 用户不存在 |
 | 409 | 邮箱或用户名已存在 |
 
@@ -460,7 +460,7 @@ class PaginatedResponse[T](ListResponse[T]):
 | 401 | Unauthorized | 未认证或令牌无效 |
 | 403 | Forbidden | 无权限 |
 | 404 | Not Found | 资源不存在 |
-| 409 | Conflict | 资源冲突（重复） |
+| 409 | Conflict | 资源冲突(重复) |
 | 422 | Unprocessable Entity | 验证失败 |
 | 500 | Internal Server Error | 服务器错误 |
 

@@ -83,7 +83,7 @@ async def list_templates(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_superuser),
 ):
-    """获取模板列表（管理员）"""
+    """获取模板列表(管理员)"""
     templates = await notification_service.get_templates(session)
     return DataResponse(data=[NotificationTemplateResponse.model_validate(t) for t in templates])
 
@@ -96,7 +96,7 @@ async def create_template(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_superuser),
 ):
-    """创建模板（管理员）"""
+    """创建模板(管理员)"""
     try:
         template = await notification_service.create_template(session, data)
         return DataResponse(data=NotificationTemplateResponse.model_validate(template))
@@ -114,7 +114,7 @@ async def update_template(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_superuser),
 ):
-    """更新模板（管理员）"""
+    """更新模板(管理员)"""
     try:
         template = await notification_service.update_template(session, template_id, data)
     except ValueError:
@@ -128,7 +128,7 @@ async def delete_template(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_superuser),
 ):
-    """删除模板（管理员）"""
+    """删除模板(管理员)"""
     try:
         await notification_service.delete_template(session, template_id)
     except ValueError:

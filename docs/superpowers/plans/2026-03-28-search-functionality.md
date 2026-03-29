@@ -4,7 +4,7 @@
 
 **Goal:** 实现统一搜索功能，支持产品、订单、用户模块的全文搜索、搜索建议、搜索历史和结果高亮
 
-**Architecture:** 使用PostgreSQL pg_trgm扩展实现全文搜索（生产环境），SQLite LIKE搜索（开发环境），通过GIN索引加速查询（PostgreSQL），采用DDD分层架构（Repository → Service → Router），统一搜索API端点支持多模块搜索
+**Architecture:** 使用PostgreSQL pg_trgm扩展实现全文搜索(生产环境)，SQLite LIKE搜索(开发环境)，通过GIN索引加速查询(PostgreSQL)，采用DDD分层架构(Repository → Service → Router)，统一搜索API端点支持多模块搜索
 
 **Tech Stack:** FastAPI, SQLAlchemy 2.0, PostgreSQL (生产), SQLite (开发), pg_trgm, Pydantic V2
 
@@ -134,9 +134,9 @@ alembic history
 
 ### Step 7: 创建数据库迁移
 
-**迁移策略:** 分为基础迁移（通用）和PostgreSQL迁移（特定）
+**迁移策略:** 分为基础迁移(通用)和PostgreSQL迁移(特定)
 
-**基础迁移（两种数据库通用）:**
+**基础迁移(两种数据库通用):**
 
 ```python
 # alembic/versions/xxx_add_search_base.py
@@ -153,7 +153,7 @@ revision = 'xxx'
 down_revision = 'yyy'  # 替换为实际的前一个revision
 
 def upgrade():
-    # 1. 添加search_vector列（TEXT类型，兼容两种数据库）
+    # 1. 添加search_vector列(TEXT类型，兼容两种数据库)
     op.add_column('products', sa.Column('search_vector', sa.Text, nullable=True))
     op.add_column('orders', sa.Column('search_vector', sa.Text, nullable=True))
     op.add_column('users', sa.Column('search_vector', sa.Text, nullable=True))
@@ -173,7 +173,7 @@ def upgrade():
     op.create_index('ix_search_history_user_id', 'search_history', ['user_id'])
     op.create_index('ix_search_history_created_at', 'search_history', ['created_at'])
     
-    # 3. 创建通用索引（SQLite和PostgreSQL都支持）
+    # 3. 创建通用索引(SQLite和PostgreSQL都支持)
     op.create_index('ix_products_name', 'products', ['name'])
     op.create_index('ix_products_sku', 'products', ['sku'])
     op.create_index('ix_orders_status', 'orders', ['status'])
@@ -196,7 +196,7 @@ def downgrade():
     op.drop_column('products', 'search_vector')
 ```
 
-**PostgreSQL迁移（仅PostgreSQL）:**
+**PostgreSQL迁移(仅PostgreSQL):**
 
 ```python
 # alembic/versions/xxx_add_search_postgresql.py
@@ -483,7 +483,7 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
     elif dialect == 'sqlite':
         return SQLiteSearchAdapter(session)
     else:
-        # 默认使用 SQLite 适配器（兼容性最好）
+        # 默认使用 SQLite 适配器(兼容性最好)
         return SQLiteSearchAdapter(session)
 
 
@@ -799,7 +799,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
         super().__init__(session)
     
     def _calculate_similarity(self, text: str, query: str) -> float:
-        """计算相似度得分（应用层实现）"""
+        """计算相似度得分(应用层实现)"""
         if not text or not query:
             return 0.0
         
@@ -818,7 +818,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
         if text_lower.startswith(query_lower):
             return 0.6
         
-        # 模糊匹配（简单实现）
+        # 模糊匹配(简单实现)
         # 计算公共子序列长度
         common_len = 0
         for i in range(min(len(text_lower), len(query_lower))):
@@ -1059,7 +1059,7 @@ class SearchRepository:
         limit: int = 10,
         filters: dict | None = None
     ) -> tuple[list, int]:
-        """搜索产品（委托给适配器）"""
+        """搜索产品(委托给适配器)"""
         return await self.adapter.search_products(query, skip, limit, filters)
     
     async def search_orders(
@@ -1069,7 +1069,7 @@ class SearchRepository:
         limit: int = 10,
         filters: dict | None = None
     ) -> tuple[list, int]:
-        """搜索订单（委托给适配器）"""
+        """搜索订单(委托给适配器)"""
         return await self.adapter.search_orders(query, skip, limit, filters)
     
     async def search_users(
@@ -1079,7 +1079,7 @@ class SearchRepository:
         limit: int = 10,
         filters: dict | None = None
     ) -> tuple[list, int]:
-        """搜索用户（委托给适配器）"""
+        """搜索用户(委托给适配器)"""
         return await self.adapter.search_users(query, skip, limit, filters)
     
     async def get_suggestions(
@@ -1088,7 +1088,7 @@ class SearchRepository:
         search_type: str, 
         limit: int = 5
     ) -> list[tuple[str, str, float]]:
-        """获取搜索建议（委托给适配器）"""
+        """获取搜索建议(委托给适配器)"""
         return await self.adapter.get_suggestions(query, search_type, limit)
     
     async def save_search_history(
@@ -1098,7 +1098,7 @@ class SearchRepository:
         search_type: str, 
         result_count: int
     ) -> SearchHistory:
-        """保存搜索历史（限制每个用户最多100条）"""
+        """保存搜索历史(限制每个用户最多100条)"""
         # 保存新记录
         history = SearchHistory(
             user_id=user_id,
@@ -1219,7 +1219,7 @@ git commit -m "feat(search): add search adapters and repository with multi-datab
 
 ## Task 4: 修改现有服务以支持搜索向量
 
-**说明:** 在创建/更新产品、订单、用户时，需要填充search_vector字段（SQLite兼容）
+**说明:** 在创建/更新产品、订单、用户时，需要填充search_vector字段(SQLite兼容)
 
 **Files:**
 - Modify: `app/modules/products/service.py`
@@ -1234,7 +1234,7 @@ from __future__ import annotations
 
 
 def update_product_search_vector(product) -> None:
-    """更新产品搜索向量（SQLite兼容）"""
+    """更新产品搜索向量(SQLite兼容)"""
     parts = []
     if product.name:
         parts.append(product.name)
@@ -1248,7 +1248,7 @@ def update_product_search_vector(product) -> None:
 
 
 def update_order_search_vector(order) -> None:
-    """更新订单搜索向量（SQLite兼容）"""
+    """更新订单搜索向量(SQLite兼容)"""
     parts = []
     if order.status:
         parts.append(order.status)
@@ -1258,7 +1258,7 @@ def update_order_search_vector(order) -> None:
 
 
 def update_user_search_vector(user) -> None:
-    """更新用户搜索向量（SQLite兼容）"""
+    """更新用户搜索向量(SQLite兼容)"""
     parts = []
     if user.username:
         parts.append(user.username)
@@ -1408,7 +1408,7 @@ class SearchService:
         if not text or not query:
             return text
         
-        # 使用正则表达式匹配（不区分大小写）
+        # 使用正则表达式匹配(不区分大小写)
         pattern = re.compile(re.escape(query), re.IGNORECASE)
         return pattern.sub(f'<mark>{query}</mark>', text)
     
@@ -1780,7 +1780,7 @@ async def search(
 
 @router.get("/suggest", response_model=SearchSuggestionResponse)
 async def suggest(
-    q: str = Query(..., min_length=2, description="搜索关键词（至少2字符）"),
+    q: str = Query(..., min_length=2, description="搜索关键词(至少2字符)"),
     type: str = Query("all", description="搜索模块"),
     limit: int = Query(5, ge=1, le=20, description="返回建议数量"),
     session: AsyncSession = Depends(get_user_session),
