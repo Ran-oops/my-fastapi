@@ -7,17 +7,25 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context  # type: ignore[import-untyped]
 from app.core.config import settings
-from app.db.base import UserBase as Base
-from app.modules.search.models import SearchHistory  # noqa: F401
-from app.tasks.models import TaskRecord  # noqa: F401
-
+from app.db.base import Base
+from app.modules.config.models import SystemConfig
+from app.modules.users.models import User
+from app.modules.roles.models import Role, Permission
+from app.modules.users.associations import user_roles
+from app.modules.roles.associations import role_permissions
+from app.modules.orders.models import Order, OrderItem
+from app.modules.products.models import Product
+from app.modules.audit.models import AuditLog
+from app.modules.search.models import SearchHistory
+from app.modules.notifications.models import Notification, NotificationTemplate, NotificationPreference
+from app.tasks.models import TaskRecord
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
-config.set_main_option("sqlalchemy.url", settings.USER_DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
