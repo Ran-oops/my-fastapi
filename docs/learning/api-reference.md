@@ -18,29 +18,30 @@
 
 ### Base URL
 
-```
+```text
 http://localhost:8000/api/v1
 ```
 
 ### API 文档入口
 
-| 文档类型 | URL |
-|---------|-----|
-| Swagger UI | http://localhost:8000/api/v1/docs |
-| ReDoc | http://localhost:8000/api/v1/redoc |
+| 文档类型     | URL                                       |
+| ------------ | ----------------------------------------- |
+| Swagger UI   | http://localhost:8000/api/v1/docs         |
+| ReDoc        | http://localhost:8000/api/v1/redoc        |
 | OpenAPI JSON | http://localhost:8000/api/v1/openapi.json |
 
 ### 认证方式
 
 所有需要认证的接口使用 Bearer Token：
 
-```
+```text
 Authorization: Bearer <access_token>
 ```
 
 ### 通用响应格式
 
 **成功响应**:
+
 ```json
 {
     "success": true,
@@ -50,6 +51,7 @@ Authorization: Bearer <access_token>
 ```
 
 **分页响应**:
+
 ```json
 {
     "success": true,
@@ -63,6 +65,7 @@ Authorization: Bearer <access_token>
 ```
 
 **错误响应**:
+
 ```json
 {
     "detail": "Error message",
@@ -83,13 +86,13 @@ Authorization: Bearer <access_token>
 
 **请求体**:
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| email | string | 是 | 邮箱地址，必须有效 |
-| username | string | 是 | 用户名 |
-| password | string | 是 | 密码，至少8字符，包含字母和数字 |
-| full_name | string | 否 | 全名 |
-| is_active | boolean | 否 | 是否激活，默认 true |
+| 字段      | 类型    | 必填 | 说明                            |
+| --------- | ------- | ---- | ------------------------------- |
+| email     | string  | 是   | 邮箱地址，必须有效              |
+| username  | string  | 是   | 用户名                          |
+| password  | string  | 是   | 密码，至少8字符，包含字母和数字 |
+| full_name | string  | 否   | 全名                            |
+| is_active | boolean | 否   | 是否激活，默认 true             |
 
 **请求示例**:
 
@@ -125,11 +128,11 @@ curl -X POST http://localhost:8000/api/v1/auth/register \
 
 **错误响应**:
 
-| 状态码 | 说明 | 示例 |
-|--------|------|------|
-| 409 | 邮箱已注册 | `{"detail": "Email user@example.com already registered"}` |
-| 409 | 用户名已存在 | `{"detail": "Username johndoe already taken"}` |
-| 422 | 验证失败 | `{"detail": [{"loc": ["body", "password"], "msg": "must be at least 8 characters"}]}` |
+| 状态码 | 说明         | 示例                                                                                  |
+| ------ | ------------ | ------------------------------------------------------------------------------------- |
+| 409    | 邮箱已注册   | `{"detail": "Email user@example.com already registered"}`                             |
+| 409    | 用户名已存在 | `{"detail": "Username johndoe already taken"}`                                        |
+| 422    | 验证失败     | `{"detail": [{"loc": ["body", "password"], "msg": "must be at least 8 characters"}]}` |
 
 ---
 
@@ -141,10 +144,10 @@ curl -X POST http://localhost:8000/api/v1/auth/register \
 
 **请求体**:
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| username | string | 是 | 用户名 |
-| password | string | 是 | 密码 |
+| 字段     | 类型   | 必填 | 说明   |
+| -------- | ------ | ---- | ------ |
+| username | string | 是   | 用户名 |
+| password | string | 是   | 密码   |
 
 **请求示例**:
 
@@ -172,10 +175,10 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 
 **错误响应**:
 
-| 状态码 | 说明 |
-|--------|------|
-| 404 | 用户不存在或密码错误 |
-| 404 | 用户已禁用 |
+| 状态码 | 说明                 |
+| ------ | -------------------- |
+| 404    | 用户不存在或密码错误 |
+| 404    | 用户已禁用           |
 
 ---
 
@@ -223,8 +226,8 @@ curl -X GET http://localhost:8000/api/v1/users/me \
 
 **路径参数**:
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数    | 类型    | 说明    |
+| ------- | ------- | ------- |
 | user_id | integer | 用户 ID |
 
 **请求示例**:
@@ -255,11 +258,11 @@ curl -X GET http://localhost:8000/api/v1/users/1 \
 
 **错误响应**:
 
-| 状态码 | 说明 |
-|--------|------|
-| 404 | 用户不存在 |
-| 401 | 未认证 |
-| 403 | 无权限 |
+| 状态码 | 说明       |
+| ------ | ---------- |
+| 404    | 用户不存在 |
+| 401    | 未认证     |
+| 403    | 无权限     |
 
 ---
 
@@ -271,10 +274,10 @@ curl -X GET http://localhost:8000/api/v1/users/1 \
 
 **查询参数**:
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| page | integer | 1 | 页码 |
-| page_size | integer | 10 | 每页数量 |
+| 参数      | 类型    | 默认值 | 说明     |
+| --------- | ------- | ------ | -------- |
+| page      | integer | 1      | 页码     |
+| page_size | integer | 10     | 每页数量 |
 
 **请求示例**:
 
@@ -320,10 +323,10 @@ curl -X GET "http://localhost:8000/api/v1/users/?page=1&page_size=10" \
 
 **错误响应**:
 
-| 状态码 | 说明 |
-|--------|------|
-| 401 | 未认证 |
-| 403 | 需要超级管理员权限 |
+| 状态码 | 说明               |
+| ------ | ------------------ |
+| 401    | 未认证             |
+| 403    | 需要超级管理员权限 |
 
 ---
 
@@ -335,18 +338,18 @@ curl -X GET "http://localhost:8000/api/v1/users/?page=1&page_size=10" \
 
 **路径参数**:
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数    | 类型    | 说明    |
+| ------- | ------- | ------- |
 | user_id | integer | 用户 ID |
 
 **请求体** (所有字段可选):
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| email | string | 邮箱地址 |
-| username | string | 用户名 |
-| full_name | string | 全名 |
-| password | string | 新密码 |
+| 字段      | 类型    | 说明     |
+| --------- | ------- | -------- |
+| email     | string  | 邮箱地址 |
+| username  | string  | 用户名   |
+| full_name | string  | 全名     |
+| password  | string  | 新密码   |
 | is_active | boolean | 是否激活 |
 
 **请求示例**:
@@ -381,11 +384,11 @@ curl -X PUT http://localhost:8000/api/v1/users/1 \
 
 **错误响应**:
 
-| 状态码 | 说明 |
-|--------|------|
-| 403 | 无权限(非管理员不能修改其他用户) |
-| 404 | 用户不存在 |
-| 409 | 邮箱或用户名已存在 |
+| 状态码 | 说明                             |
+| ------ | -------------------------------- |
+| 403    | 无权限(非管理员不能修改其他用户) |
+| 404    | 用户不存在                       |
+| 409    | 邮箱或用户名已存在               |
 
 ---
 
@@ -397,8 +400,8 @@ curl -X PUT http://localhost:8000/api/v1/users/1 \
 
 **路径参数**:
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数    | 类型    | 说明    |
+| ------- | ------- | ------- |
 | user_id | integer | 用户 ID |
 
 **请求示例**:
@@ -412,11 +415,11 @@ curl -X DELETE http://localhost:8000/api/v1/users/1 \
 
 **错误响应**:
 
-| 状态码 | 说明 |
-|--------|------|
-| 401 | 未认证 |
-| 403 | 需要超级管理员权限 |
-| 404 | 用户不存在 |
+| 状态码 | 说明               |
+| ------ | ------------------ |
+| 401    | 未认证             |
+| 403    | 需要超级管理员权限 |
+| 404    | 用户不存在         |
 
 ---
 
@@ -443,10 +446,10 @@ class PaginatedResponse[T](ListResponse[T]):
 
 ### 请求头
 
-| 头字段 | 说明 | 示例 |
-|--------|------|------|
-| Content-Type | 请求体格式 | `application/json` |
-| Authorization | 认证令牌 | `Bearer eyJhbGci...` |
+| 头字段        | 说明       | 示例                 |
+| ------------- | ---------- | -------------------- |
+| Content-Type  | 请求体格式 | `application/json`   |
+| Authorization | 认证令牌   | `Bearer eyJhbGci...` |
 
 ---
 
@@ -454,15 +457,15 @@ class PaginatedResponse[T](ListResponse[T]):
 
 ### 错误状态码
 
-| 状态码 | 说明 | 使用场景 |
-|--------|------|----------|
-| 400 | Bad Request | 请求格式错误 |
-| 401 | Unauthorized | 未认证或令牌无效 |
-| 403 | Forbidden | 无权限 |
-| 404 | Not Found | 资源不存在 |
-| 409 | Conflict | 资源冲突(重复) |
-| 422 | Unprocessable Entity | 验证失败 |
-| 500 | Internal Server Error | 服务器错误 |
+| 状态码 | 说明                  | 使用场景         |
+| ------ | --------------------- | ---------------- |
+| 400    | Bad Request           | 请求格式错误     |
+| 401    | Unauthorized          | 未认证或令牌无效 |
+| 403    | Forbidden             | 无权限           |
+| 404    | Not Found             | 资源不存在       |
+| 409    | Conflict              | 资源冲突(重复)   |
+| 422    | Unprocessable Entity  | 验证失败         |
+| 500    | Internal Server Error | 服务器错误       |
 
 ### 错误响应格式
 
@@ -477,6 +480,7 @@ class PaginatedResponse[T](ListResponse[T]):
 ### 常见错误示例
 
 **401 未认证**:
+
 ```json
 {
     "detail": "Could not validate credentials"
@@ -484,6 +488,7 @@ class PaginatedResponse[T](ListResponse[T]):
 ```
 
 **403 权限不足**:
+
 ```json
 {
     "detail": "The user doesn't have enough privileges"
@@ -491,6 +496,7 @@ class PaginatedResponse[T](ListResponse[T]):
 ```
 
 **404 资源不存在**:
+
 ```json
 {
     "detail": "User 999 not found"
@@ -498,6 +504,7 @@ class PaginatedResponse[T](ListResponse[T]):
 ```
 
 **409 资源冲突**:
+
 ```json
 {
     "detail": "Email user@example.com already registered"
@@ -510,10 +517,10 @@ class PaginatedResponse[T](ListResponse[T]):
 
 ### 请求参数
 
-| 参数 | 类型 | 默认值 | 最小值 | 最大值 |
-|------|------|--------|--------|--------|
-| page | integer | 1 | 1 | - |
-| page_size | integer | 10 | 1 | 100 |
+| 参数      | 类型    | 默认值 | 最小值 | 最大值 |
+| --------- | ------- | ------ | ------ | ------ |
+| page      | integer | 1      | 1      | -      |
+| page_size | integer | 10     | 1      | 100    |
 
 ### 计算公式
 
@@ -525,12 +532,12 @@ total_pages = ceil(total / page_size)
 
 ### 响应字段
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| total | integer | 总记录数 |
-| page | integer | 当前页码 |
-| page_size | integer | 每页数量 |
-| total_pages | integer | 总页数 |
+| 字段        | 类型    | 说明     |
+| ----------- | ------- | -------- |
+| total       | integer | 总记录数 |
+| page        | integer | 当前页码 |
+| page_size   | integer | 每页数量 |
+| total_pages | integer | 总页数   |
 
 ---
 
@@ -538,20 +545,20 @@ total_pages = ceil(total / page_size)
 
 ### 认证相关
 
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | /auth/register | 用户注册 | 否 |
-| POST | /auth/login | 用户登录 | 否 |
+| 方法 | 路径           | 说明     | 认证 |
+| ---- | -------------- | -------- | ---- |
+| POST | /auth/register | 用户注册 | 否   |
+| POST | /auth/login    | 用户登录 | 否   |
 
 ### 用户相关
 
-| 方法 | 路径 | 说明 | 认证 | 权限 |
-|------|------|------|------|------|
-| GET | /users/me | 获取当前用户 | 是 | 用户本人 |
-| GET | /users/{id} | 获取指定用户 | 是 | 用户本人/管理员 |
-| GET | /users/ | 用户列表 | 是 | 管理员 |
-| PUT | /users/{id} | 更新用户 | 是 | 用户本人/管理员 |
-| DELETE | /users/{id} | 删除用户 | 是 | 管理员 |
+| 方法   | 路径        | 说明         | 认证 | 权限            |
+| ------ | ----------- | ------------ | ---- | --------------- |
+| GET    | /users/me   | 获取当前用户 | 是   | 用户本人        |
+| GET    | /users/{id} | 获取指定用户 | 是   | 用户本人/管理员 |
+| GET    | /users/     | 用户列表     | 是   | 管理员          |
+| PUT    | /users/{id} | 更新用户     | 是   | 用户本人/管理员 |
+| DELETE | /users/{id} | 删除用户     | 是   | 管理员          |
 
 ---
 

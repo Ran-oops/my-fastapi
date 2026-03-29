@@ -20,6 +20,7 @@
 ### Q: 这个项目是做什么的?
 
 **A:** 这是一个企业级 FastAPI 项目模板，展示了如何构建生产级的 Python Web API。主要特点包括：
+
 - 异步架构 (async/await)
 - 多数据库支持 (PostgreSQL, SQL Server, MySQL)
 - 分层架构设计 (API → Service → CRUD → Model)
@@ -28,17 +29,18 @@
 
 ### Q: 为什么选择 FastAPI 而不是 Django/Flask?
 
-**A:** 
+**A:**
 
-| 特性 | FastAPI | Django | Flask |
-|------|---------|--------|-------|
-| 异步支持 | 原生支持 | 有限 | 需要扩展 |
-| 性能 | 高 | 中 | 中 |
-| 自动 API 文档 | 是 | 否 | 需要扩展 |
-| 类型检查 | Pydantic | 无 | 无 |
-| 学习曲线 | 中 | 高 | 低 |
+| 特性          | FastAPI  | Django | Flask    |
+| ------------- | -------- | ------ | -------- |
+| 异步支持      | 原生支持 | 有限   | 需要扩展 |
+| 性能          | 高       | 中     | 中       |
+| 自动 API 文档 | 是       | 否     | 需要扩展 |
+| 类型检查      | Pydantic | 无     | 无       |
+| 学习曲线      | 中       | 高     | 低       |
 
 FastAPI 特别适合：
+
 - 高性能 API 服务
 - 微服务架构
 - 需要自动文档的项目
@@ -85,7 +87,8 @@ DEBUG=False
 ```
 
 创建对应的环境文件：
-```
+
+```text
 .env.development
 .env.testing
 .env.production
@@ -110,16 +113,17 @@ openssl rand -base64 32
 
 ### Q: UV 和 pip 有什么区别?
 
-**A:** 
+**A:**
 
-| 特性 | UV | pip |
-|------|-----|-----|
-| 速度 | 极快 (Rust 编写) | 较慢 |
-| 锁文件 | 自动生成 | 需要 pip-tools |
-| 虚拟环境 | 自动管理 | 手动创建 |
-| 依赖解析 | 更智能 | 基本 |
+| 特性     | UV               | pip            |
+| -------- | ---------------- | -------------- |
+| 速度     | 极快 (Rust 编写) | 较慢           |
+| 锁文件   | 自动生成         | 需要 pip-tools |
+| 虚拟环境 | 自动管理         | 手动创建       |
+| 依赖解析 | 更智能           | 基本           |
 
 推荐使用 UV，但项目也支持 pip：
+
 ```bash
 # UV (推荐)
 uv sync
@@ -139,6 +143,7 @@ pip install package
 **A:** 三步完成：
 
 1. **创建模型**
+
 ```python
 # app/models/user_db/models.py
 class NewTable(UserDBBase):
@@ -148,11 +153,13 @@ class NewTable(UserDBBase):
 ```
 
 2. **生成迁移**
+
 ```bash
 alembic revision --autogenerate -m "add new_table"
 ```
 
 3. **执行迁移**
+
 ```bash
 alembic upgrade head
 ```
@@ -169,6 +176,7 @@ ConfigDBBase = declarative_base(cls=ConfigBase)      # MySQL
 ```
 
 这样可以：
+
 - 避免表名冲突
 - 独立管理迁移
 - 分离关注点
@@ -178,6 +186,7 @@ ConfigDBBase = declarative_base(cls=ConfigBase)      # MySQL
 **A:** 不同数据库的表不能建立外键关联。解决方案：
 
 1. **应用层维护一致性**
+
 ```python
 # 创建订单时，同时更新用户统计
 async def create_order(order_data, user_id):
@@ -194,13 +203,14 @@ async def create_order(order_data, user_id):
 
 **A:** 异步驱动的优势：
 
-| 驱动 | 类型 | 特点 |
-|------|------|------|
-| asyncpg | PostgreSQL | 最快的 PostgreSQL 驱动 |
-| aiomysql | MySQL | MySQL 异步支持 |
-| aioodbc | SQL Server | 通过 ODBC 连接 |
+| 驱动     | 类型       | 特点                   |
+| -------- | ---------- | ---------------------- |
+| asyncpg  | PostgreSQL | 最快的 PostgreSQL 驱动 |
+| aiomysql | MySQL      | MySQL 异步支持         |
+| aioodbc  | SQL Server | 通过 ODBC 连接         |
 
 好处：
+
 - 不阻塞事件循环
 - 更高的并发能力
 - 更好的资源利用
@@ -224,14 +234,15 @@ async def create_order(order_data, user_id):
 
 **A:** 不同 Schema 的用途：
 
-| Schema | 用途 | 示例 |
-|--------|------|------|
-| `*Create` | 创建请求 | UserCreate |
-| `*Update` | 更新请求 | UserUpdate |
-| `*Response` | API 响应 | UserResponse |
-| `*InDB` | 数据库操作 | UserInDB |
+| Schema      | 用途       | 示例         |
+| ----------- | ---------- | ------------ |
+| `*Create`   | 创建请求   | UserCreate   |
+| `*Update`   | 更新请求   | UserUpdate   |
+| `*Response` | API 响应   | UserResponse |
+| `*InDB`     | 数据库操作 | UserInDB     |
 
 好处：
+
 - 隐藏敏感字段 (如 hashed_password)
 - 灵活控制输入/输出
 - 清晰的 API 契约
@@ -249,6 +260,7 @@ async def create_order(order_data, user_id):
 ```
 
 优点：
+
 - 前端处理统一
 - 便于添加元数据
 - 方便错误处理
@@ -283,6 +295,7 @@ async def upload_file(
 3. **状态管理**：无需服务端存储 Token
 
 推荐配置：
+
 ```python
 ACCESS_TOKEN_EXPIRE_MINUTES = 30      # 访问令牌 30 分钟
 REFRESH_TOKEN_EXPIRE_MINUTES = 10080  # 刷新令牌 7 天
@@ -341,10 +354,12 @@ async def admin_endpoint(
 
 1. **缩短过期时间**
 2. **实现 Token 黑名单**
+
 ```python
 # Redis 中存储黑名单
 await redis.setex(f"blacklist:{token}", expire_time, "1")
 ```
+
 3. **提供用户登出功能**
 4. **敏感操作需要二次验证**
 
@@ -383,12 +398,12 @@ from unittest.mock import AsyncMock, patch
 @pytest.mark.asyncio
 async def test_service():
     mock_db = AsyncMock()
-    
+
     with patch("app.services.user.user_crud") as mock_crud:
         mock_crud.get.return_value = User(id=1, email="test@example.com")
-        
+
         result = await user_service.get_user_by_id(mock_db, 1)
-        
+
         assert result.email == "test@example.com"
 ```
 
@@ -396,12 +411,12 @@ async def test_service():
 
 **A:** pytest 的优势：
 
-| 特性 | pytest | unittest |
-|------|--------|----------|
-| 语法简洁 | 是 | 否 |
-| Fixtures | 强大 | 基本 |
-| 参数化 | 简单 | 复杂 |
-| 插件生态 | 丰富 | 有限 |
+| 特性     | pytest         | unittest     |
+| -------- | -------------- | ------------ |
+| 语法简洁 | 是             | 否           |
+| Fixtures | 强大           | 基本         |
+| 参数化   | 简单           | 复杂         |
+| 插件生态 | 丰富           | 有限         |
 | 异步支持 | pytest-asyncio | 需要额外配置 |
 
 ---
@@ -413,6 +428,7 @@ async def test_service():
 **A:** 推荐方案：
 
 1. **Gunicorn + Uvicorn**
+
 ```bash
 gunicorn app.main:app \
     --worker-class uvicorn.workers.UvicornWorker \
@@ -431,10 +447,10 @@ gunicorn app.main:app \
 server {
     listen 443 ssl http2;
     server_name api.example.com;
-    
+
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
-    
+
     location / {
         proxy_pass http://127.0.0.1:8000;
     }
@@ -442,6 +458,7 @@ server {
 ```
 
 或使用 Let's Encrypt：
+
 ```bash
 certbot --nginx -d api.example.com
 ```
@@ -450,12 +467,12 @@ certbot --nginx -d api.example.com
 
 **A:** 推荐监控方案：
 
-| 类型 | 工具 | 用途 |
-|------|------|------|
+| 类型 | 工具                 | 用途     |
+| ---- | -------------------- | -------- |
 | 指标 | Prometheus + Grafana | 性能监控 |
-| 日志 | ELK / Loki | 日志分析 |
-| 错误 | Sentry | 错误追踪 |
-| 追踪 | Jaeger / Zipkin | 请求追踪 |
+| 日志 | ELK / Loki           | 日志分析 |
+| 错误 | Sentry               | 错误追踪 |
+| 追踪 | Jaeger / Zipkin      | 请求追踪 |
 
 ### Q: 数据库如何备份?
 
@@ -473,6 +490,7 @@ mysqldump -h localhost -u root db_name > backup.sql
 ```
 
 建议：
+
 - 每日自动备份
 - 异地存储
 - 定期恢复测试
@@ -486,11 +504,13 @@ mysqldump -h localhost -u root db_name > backup.sql
 **A:** 常见优化方法：
 
 1. **添加索引**
+
 ```python
 email: Mapped[str] = mapped_column(index=True)
 ```
 
 2. **预加载关系**
+
 ```python
 result = await db.execute(
     select(User).options(selectinload(User.roles))
@@ -536,7 +556,8 @@ async def upload_large_file(file: UploadFile = File(...)):
 
 ### Q: 遇到问题如何获取帮助?
 
-**A:** 
+**A:**
+
 1. 查看本文档和项目文档
 2. 搜索 GitHub Issues
 3. 提交新的 Issue
@@ -545,6 +566,7 @@ async def upload_large_file(file: UploadFile = File(...)):
 ### Q: 项目有什么限制?
 
 **A:** 当前限制：
+
 - 不支持跨数据库事务
 - 配置数据库为只读
 - 无实时功能 (WebSocket)

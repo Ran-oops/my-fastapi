@@ -16,7 +16,7 @@
 
 ### 整体架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                      业务模块                           │
 │  orders/users/tasks/...                                 │
@@ -74,16 +74,16 @@ class Event:
 
 class EventBus:
     """事件总线 - 发布/订阅模式"""
-    
+
     def __init__(self):
         self._subscribers: dict[str, list[Callable]] = {}
-    
+
     def subscribe(self, event_type: str, handler: Callable):
         """订阅事件"""
         if event_type not in self._subscribers:
             self._subscribers[event_type] = []
         self._subscribers[event_type].append(handler)
-    
+
     def publish(self, event: Event):
         """发布事件"""
         handlers = self._subscribers.get(event.event_type, [])
@@ -124,7 +124,7 @@ from abc import ABC, abstractmethod
 
 class NotificationChannel(ABC):
     """通知渠道抽象基类"""
-    
+
     @abstractmethod
     def send(self, user_id: int, subject: str, body: str) -> bool:
         """发送通知"""
@@ -132,14 +132,14 @@ class NotificationChannel(ABC):
 
 class InAppChannel(NotificationChannel):
     """站内信渠道"""
-    
+
     def send(self, user_id: int, subject: str, body: str) -> bool:
         # 存储到数据库
         return True
 
 class EmailChannel(NotificationChannel):
     """邮件渠道"""
-    
+
     def send(self, user_id: int, subject: str, body: str) -> bool:
         # 发送邮件(占位实现)
         print(f"[Email] To: {user_id}, Subject: {subject}")
@@ -147,7 +147,7 @@ class EmailChannel(NotificationChannel):
 
 class SmsChannel(NotificationChannel):
     """短信渠道(预留)"""
-    
+
     def send(self, user_id: int, subject: str, body: str) -> bool:
         # 预留实现
         return True
@@ -171,27 +171,27 @@ from app.modules.notifications.repository import get_template
 
 class NotificationHandler:
     """事件驱动的通知处理器"""
-    
+
     def handle_event(self, event: Event):
         """处理事件，发送通知"""
         template_name = event.event_type
-        
+
         # 查询所有活跃渠道
         for channel_name, channel in CHANNEL_REGISTRY.items():
             # 查询模板
             template = get_template(template_name, channel_name)
             if not template or not template.is_active:
                 continue
-            
+
             # 渲染模板
             subject = self._render(template.subject, event.data)
             body = self._render(template.body, event.data)
-            
+
             # 发送通知
             user_id = event.data.get("user_id")
             if user_id:
                 channel.send(user_id, subject, body)
-    
+
     def _render(self, template: str, context: dict) -> str:
         """简单模板渲染"""
         for key, value in context.items():
@@ -213,7 +213,7 @@ from app.db.base import UserBase
 
 class NotificationTemplate(UserBase):
     __tablename__ = "notification_templates"
-    
+
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)  # 模板名：order.confirmed
     channel = Column(String(20), nullable=False)             # 渠道：in_app, email, sms
@@ -227,7 +227,7 @@ class NotificationTemplate(UserBase):
 ```python
 class Notification(UserBase):
     __tablename__ = "notifications"
-    
+
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False, index=True)
     template_name = Column(String(100), nullable=False)
@@ -245,7 +245,7 @@ class Notification(UserBase):
 ```python
 class NotificationPreference(UserBase):
     __tablename__ = "notification_preferences"
-    
+
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False, unique=True)
     email_enabled = Column(Boolean, default=True)
@@ -257,21 +257,21 @@ class NotificationPreference(UserBase):
 
 ### 用户通知接口(需要认证)
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/v1/notifications/` | 获取我的通知列表 |
-| GET | `/api/v1/notifications/{id}` | 获取通知详情 |
-| PUT | `/api/v1/notifications/{id}/read` | 标记已读 |
-| PUT | `/api/v1/notifications/read-all` | 全部标记已读 |
+| 方法 | 路径                              | 说明             |
+| ---- | --------------------------------- | ---------------- |
+| GET  | `/api/v1/notifications/`          | 获取我的通知列表 |
+| GET  | `/api/v1/notifications/{id}`      | 获取通知详情     |
+| PUT  | `/api/v1/notifications/{id}/read` | 标记已读         |
+| PUT  | `/api/v1/notifications/read-all`  | 全部标记已读     |
 
 ### 模板管理接口(仅管理员)
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/v1/notifications/templates` | 获取模板列表 |
-| POST | `/api/v1/notifications/templates` | 创建模板 |
-| PUT | `/api/v1/notifications/templates/{id}` | 更新模板 |
-| DELETE | `/api/v1/notifications/templates/{id}` | 删除模板 |
+| 方法   | 路径                                   | 说明         |
+| ------ | -------------------------------------- | ------------ |
+| GET    | `/api/v1/notifications/templates`      | 获取模板列表 |
+| POST   | `/api/v1/notifications/templates`      | 创建模板     |
+| PUT    | `/api/v1/notifications/templates/{id}` | 更新模板     |
+| DELETE | `/api/v1/notifications/templates/{id}` | 删除模板     |
 
 ### 响应格式
 
@@ -304,20 +304,20 @@ from app.core.events import ORDER_CONFIRMED, ORDER_SHIPPED, ORDER_CANCELLED
 
 async def update_order_status(session, order_id, data):
     # ... 现有逻辑 ...
-    
+
     # 发布事件
     if data.status == OrderStatus.CONFIRMED:
         eventbus.publish(Event(
             event_type=ORDER_CONFIRMED,
             data={"order_id": order_id, "user_id": order.user_id}
         ))
-    
+
     return order
 ```
 
 ## File Structure
 
-```
+```text
 app/
 ├── core/
 │   ├── eventbus.py          # 事件总线
@@ -337,30 +337,30 @@ app/
 ## Implementation Order
 
 1. **Phase 1**: 核心基础设施
-   - EventBus (`app/core/eventbus.py`)
-   - 事件类型 (`app/core/events.py`)
-   - 数据模型 (`models.py`)
+    - EventBus (`app/core/eventbus.py`)
+    - 事件类型 (`app/core/events.py`)
+    - 数据模型 (`models.py`)
 
 2. **Phase 2**: 通知渠道
-   - 渠口接口 (`channels.py`)
-   - 事件处理器 (`handlers.py`)
+    - 渠口接口 (`channels.py`)
+    - 事件处理器 (`handlers.py`)
 
 3. **Phase 3**: 数据层
-   - Repository (`repository.py`)
-   - Schemas (`schemas.py`)
+    - Repository (`repository.py`)
+    - Schemas (`schemas.py`)
 
 4. **Phase 4**: 业务层
-   - Service (`service.py`)
-   - Router (`router.py`)
+    - Service (`service.py`)
+    - Router (`router.py`)
 
 5. **Phase 5**: 集成
-   - 订单模块集成
-   - 用户模块集成
-   - 任务模块集成
+    - 订单模块集成
+    - 用户模块集成
+    - 任务模块集成
 
 6. **Phase 6**: 测试
-   - 单元测试
-   - 集成测试
+    - 单元测试
+    - 集成测试
 
 ## Success Criteria
 

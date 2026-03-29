@@ -18,7 +18,7 @@
 
 ### 安全层次
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           应用层安全                                     │
 │  ┌───────────────────────────────────────────────────────────────────┐  │
@@ -49,14 +49,14 @@
 class Settings(BaseSettings):
     # 密钥配置
     SECRET_KEY: str = "change-this-secret-key-in-production"
-    
+
     # Token 过期时间
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7天
-    
+
     # CORS 配置
     BACKEND_CORS_ORIGINS: list[str] = ["*"]
-    
+
     # 环境
     APP_ENV: str = "development"
     DEBUG: bool = True
@@ -72,7 +72,7 @@ class Settings(BaseSettings):
 
 #### Token 结构
 
-```
+```text
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.  <- Header
 eyJzdWIiOiIxIiwiZXhwIjoxNjc5NTk2ODAwfQ. <- Payload
 SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c  <- Signature
@@ -98,7 +98,7 @@ SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c  <- Signature
 
 #### 签名
 
-```
+```text
 HMACSHA256(
     base64UrlEncode(header) + "." + base64UrlEncode(payload),
     SECRET_KEY
@@ -124,7 +124,7 @@ def create_access_token(
         expire = datetime.now(UTC) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    
+
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -147,7 +147,7 @@ def verify_token(token: str) -> str | None:
 
 ### 认证流程
 
-```
+```text
 ┌─────────────┐         ┌─────────────┐         ┌─────────────┐
 │   Client    │         │   Server    │         │  Database   │
 └──────┬──────┘         └──────┬──────┘         └──────┬──────┘
@@ -199,14 +199,14 @@ async def get_current_user(
     user_id = verify_token(token)
     if user_id is None:
         raise UnauthorizedException("Could not validate credentials")
-    
+
     user = await user_crud.get(db, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
-    
+
     if user.is_active is False:
         raise UnauthorizedException("Inactive user")
-    
+
     return user
 ```
 
@@ -216,7 +216,7 @@ async def get_current_user(
 
 ### RBAC (基于角色的访问控制)
 
-```
+```text
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │      Users      │────>│      Roles      │────>│   Permissions   │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
@@ -230,20 +230,20 @@ async def get_current_user(
 
 ### 角色定义
 
-| 角色 | 说明 | 典型权限 |
-|------|------|----------|
-| admin | 超级管理员 | 所有权限 |
-| editor | 内容编辑 | 内容相关权限 |
-| viewer | 只读用户 | 查看权限 |
+| 角色   | 说明       | 典型权限     |
+| ------ | ---------- | ------------ |
+| admin  | 超级管理员 | 所有权限     |
+| editor | 内容编辑   | 内容相关权限 |
+| viewer | 只读用户   | 查看权限     |
 
 ### 权限定义
 
-| 权限代码 | 说明 |
-|----------|------|
-| user:read | 查看用户 |
-| user:write | 编辑用户 |
+| 权限代码    | 说明     |
+| ----------- | -------- |
+| user:read   | 查看用户 |
+| user:write  | 编辑用户 |
 | user:delete | 删除用户 |
-| order:read | 查看订单 |
+| order:read  | 查看订单 |
 | order:write | 编辑订单 |
 
 ### 权限检查实现
@@ -321,38 +321,38 @@ import re
 
 class UserCreate(UserBase):
     password: str
-    
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
         # 长度检查
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        
+
         # bcrypt 最大长度限制
         if len(v) > 72:
             v = v[:72]
-        
+
         # 必须包含字母
         if not re.search(r"[A-Za-z]", v):
             raise ValueError("Password must contain at least one letter")
-        
+
         # 必须包含数字
         if not re.search(r"\d", v):
             raise ValueError("Password must contain at least one digit")
-        
+
         return v
 ```
 
 ### 密码策略总结
 
-| 策略 | 要求 |
-|------|------|
-| 最小长度 | 8 字符 |
-| 最大长度 | 72 字符 (bcrypt 限制) |
-| 复杂度 | 至少包含字母和数字 |
-| 存储 | bcrypt 哈希 (自动加 salt) |
-| 验证 | 哈希比较 |
+| 策略     | 要求                      |
+| -------- | ------------------------- |
+| 最小长度 | 8 字符                    |
+| 最大长度 | 72 字符 (bcrypt 限制)     |
+| 复杂度   | 至少包含字母和数字        |
+| 存储     | bcrypt 哈希 (自动加 salt) |
+| 验证     | 哈希比较                  |
 
 ---
 
@@ -376,12 +376,12 @@ if settings.BACKEND_CORS_ORIGINS:
 
 ### CORS 配置选项
 
-| 配置项 | 说明 | 生产环境建议 |
-|--------|------|--------------|
-| allow_origins | 允许的源 | 具体域名，避免使用 "*" |
-| allow_credentials | 允许携带凭据 | true |
-| allow_methods | 允许的方法 | ["GET", "POST", "PUT", "DELETE"] |
-| allow_headers | 允许的 headers | ["Authorization", "Content-Type"] |
+| 配置项            | 说明           | 生产环境建议                      |
+| ----------------- | -------------- | --------------------------------- |
+| allow_origins     | 允许的源       | 具体域名，避免使用 "*"            |
+| allow_credentials | 允许携带凭据   | true                              |
+| allow_methods     | 允许的方法     | ["GET", "POST", "PUT", "DELETE"]  |
+| allow_headers     | 允许的 headers | ["Authorization", "Content-Type"] |
 
 ### 环境配置
 
@@ -408,7 +408,7 @@ class UserCreate(BaseModel):
     email: EmailStr           # 自动验证邮箱格式
     username: str             # 必填字符串
     password: str             # 必填字符串
-    
+
     @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
@@ -417,11 +417,11 @@ class UserCreate(BaseModel):
             raise ValueError("Username must be at least 3 characters")
         if len(v) > 50:
             raise ValueError("Username must be at most 50 characters")
-        
+
         # 用户名字符验证
         if not re.match(r"^[a-zA-Z0-9_]+$", v):
             raise ValueError("Username can only contain letters, numbers, and underscores")
-        
+
         return v
 ```
 
@@ -446,7 +446,7 @@ result = await db.execute(
 class ArticleCreate(BaseModel):
     title: str
     content: str
-    
+
     @field_validator("content")
     @classmethod
     def sanitize_content(cls, v: str) -> str:
@@ -530,7 +530,8 @@ add_header Content-Security-Policy "default-src 'self'" always;
 
 ### Q: Token 被盗怎么办？
 
-A: 
+A:
+
 1. 实现 Token 黑名单机制
 2. 缩短 Token 过期时间
 3. 使用 Refresh Token 机制
@@ -539,6 +540,7 @@ A:
 ### Q: 如何防止暴力破解？
 
 A:
+
 1. 实现登录尝试限制 (如 5次/分钟)
 2. 使用 CAPTCHA
 3. 账户锁定机制
@@ -547,6 +549,7 @@ A:
 ### Q: 敏感日志处理？
 
 A:
+
 ```python
 import logging
 

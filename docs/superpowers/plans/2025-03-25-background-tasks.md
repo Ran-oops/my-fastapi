@@ -14,46 +14,46 @@
 
 ### New Files
 
-| File | Responsibility |
-|------|----------------|
-| `app/tasks/__init__.py` | Package init, re-exports |
-| `app/tasks/celery_app.py` | Celery instance + configuration |
-| `app/tasks/beat_schedule.py` | Periodic task definitions |
-| `app/tasks/db.py` | Sync session factory for workers |
-| `app/tasks/dispatcher.py` | Transaction-safe task dispatch |
-| `app/tasks/signals.py` | Celery signal handlers for status sync |
-| `app/tasks/models.py` | TaskRecord model |
-| `app/tasks/schemas.py` | Pydantic schemas for tasks |
-| `app/tasks/repository.py` | Database access layer (sync) |
-| `app/tasks/service.py` | Business logic for task management |
-| `app/tasks/router.py` | Task monitoring API endpoints |
-| `app/modules/notifications/__init__.py` | Package init |
-| `app/modules/notifications/tasks.py` | send_notification task |
-| `app/modules/notifications/service.py` | Notification delivery logic |
-| `app/modules/notifications/schemas.py` | Notification schemas |
-| `app/modules/orders/tasks.py` | cancel_timeout task |
-| `app/modules/exports/__init__.py` | Package init |
-| `app/modules/exports/tasks.py` | export_order_data task |
-| `app/modules/audit/tasks.py` | write_audit_log task |
-| `tests/modules/tasks/conftest.py` | Shared test fixtures |
-| `tests/modules/tasks/test_task_api.py` | API endpoint tests |
-| `tests/modules/tasks/test_task_service.py` | Service layer tests |
-| `tests/modules/tasks/test_dispatcher.py` | Dispatcher tests |
-| `tests/modules/tasks/test_signals.py` | Signal handler tests |
-| `tests/modules/tasks/jobs/test_orders.py` | Order task tests |
-| `tests/modules/tasks/jobs/test_notifications.py` | Notification task tests |
-| `tests/modules/tasks/jobs/test_exports.py` | Export task tests |
-| `tests/modules/tasks/jobs/test_audit.py` | Audit task tests |
+| File                                             | Responsibility                         |
+| ------------------------------------------------ | -------------------------------------- |
+| `app/tasks/__init__.py`                          | Package init, re-exports               |
+| `app/tasks/celery_app.py`                        | Celery instance + configuration        |
+| `app/tasks/beat_schedule.py`                     | Periodic task definitions              |
+| `app/tasks/db.py`                                | Sync session factory for workers       |
+| `app/tasks/dispatcher.py`                        | Transaction-safe task dispatch         |
+| `app/tasks/signals.py`                           | Celery signal handlers for status sync |
+| `app/tasks/models.py`                            | TaskRecord model                       |
+| `app/tasks/schemas.py`                           | Pydantic schemas for tasks             |
+| `app/tasks/repository.py`                        | Database access layer (sync)           |
+| `app/tasks/service.py`                           | Business logic for task management     |
+| `app/tasks/router.py`                            | Task monitoring API endpoints          |
+| `app/modules/notifications/__init__.py`          | Package init                           |
+| `app/modules/notifications/tasks.py`             | send_notification task                 |
+| `app/modules/notifications/service.py`           | Notification delivery logic            |
+| `app/modules/notifications/schemas.py`           | Notification schemas                   |
+| `app/modules/orders/tasks.py`                    | cancel_timeout task                    |
+| `app/modules/exports/__init__.py`                | Package init                           |
+| `app/modules/exports/tasks.py`                   | export_order_data task                 |
+| `app/modules/audit/tasks.py`                     | write_audit_log task                   |
+| `tests/modules/tasks/conftest.py`                | Shared test fixtures                   |
+| `tests/modules/tasks/test_task_api.py`           | API endpoint tests                     |
+| `tests/modules/tasks/test_task_service.py`       | Service layer tests                    |
+| `tests/modules/tasks/test_dispatcher.py`         | Dispatcher tests                       |
+| `tests/modules/tasks/test_signals.py`            | Signal handler tests                   |
+| `tests/modules/tasks/jobs/test_orders.py`        | Order task tests                       |
+| `tests/modules/tasks/jobs/test_notifications.py` | Notification task tests                |
+| `tests/modules/tasks/jobs/test_exports.py`       | Export task tests                      |
+| `tests/modules/tasks/jobs/test_audit.py`         | Audit task tests                       |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `pyproject.toml` | Add celery + redis dependencies |
-| `app/core/config.py` | Add CELERY_BROKER_URL, CELERY_RESULT_BACKEND |
-| `app/api/v1/__init__.py` | Register tasks router |
-| `app/modules/orders/service.py` | Call cancel_timeout on order creation |
-| `justfile` | Add worker, beat commands |
+| File                            | Change                                       |
+| ------------------------------- | -------------------------------------------- |
+| `pyproject.toml`                | Add celery + redis dependencies              |
+| `app/core/config.py`            | Add CELERY_BROKER_URL, CELERY_RESULT_BACKEND |
+| `app/api/v1/__init__.py`        | Register tasks router                        |
+| `app/modules/orders/service.py` | Call cancel_timeout on order creation        |
+| `justfile`                      | Add worker, beat commands                    |
 
 ### Key Design Decision: Sync Queries for Celery Workers
 
@@ -64,6 +64,7 @@ The existing repositories (`order_repo`, `audit_log_repo`) are all async and exp
 ## Task 1: Install Dependencies + Configure Celery
 
 **Files:**
+
 - Modify: `pyproject.toml`
 - Create: `app/tasks/__init__.py`
 - Create: `app/tasks/celery_app.py`
@@ -92,7 +93,7 @@ CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 ORDER_CANCEL_TIMEOUT: int = 1800
 ```
 
-- [ ] **Step 4: Create app/tasks/__init__.py**
+- [ ] **Step 4: Create app/tasks/**init**.py**
 
 ```python
 ```
@@ -159,6 +160,7 @@ git commit -m "feat(tasks): add Celery dependencies and configuration"
 ## Task 2: Create Sync DB Bridge + TaskRecord Model
 
 **Files:**
+
 - Create: `app/tasks/db.py`
 - Create: `app/tasks/models.py`
 
@@ -250,6 +252,7 @@ git commit -m "feat(tasks): add sync DB bridge and TaskRecord model"
 ## Task 3: Create Repository + Service Layer
 
 **Files:**
+
 - Create: `app/tasks/repository.py`
 - Create: `app/tasks/service.py`
 - Create: `app/tasks/schemas.py`
@@ -417,6 +420,7 @@ git commit -m "feat(tasks): add repository, service, and schemas"
 ## Task 4: Create Dispatcher
 
 **Files:**
+
 - Create: `app/tasks/dispatcher.py`
 
 - [ ] **Step 1: Create app/tasks/dispatcher.py**
@@ -497,6 +501,7 @@ git commit -m "feat(tasks): add transaction-safe dispatcher"
 ## Task 5: Create Signal Handlers
 
 **Files:**
+
 - Create: `app/tasks/signals.py`
 
 - [ ] **Step 1: Create app/tasks/signals.py**
@@ -562,6 +567,7 @@ git commit -m "feat(tasks): add Celery signal handlers for status sync"
 ## Task 6: Create Task Query API
 
 **Files:**
+
 - Create: `app/tasks/router.py`
 - Modify: `app/api/v1/__init__.py`
 
@@ -663,14 +669,16 @@ def cancel_pending_task(
         session.close()
 ```
 
-- [ ] **Step 2: Register router in app/api/v1/__init__.py**
+- [ ] **Step 2: Register router in app/api/v1/**init**.py**
 
 Add imports:
+
 ```python
 from app.tasks.router import router as tasks_router
 ```
 
 Add router registration:
+
 ```python
 api_router.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
 ```
@@ -692,6 +700,7 @@ git commit -m "feat(tasks): add task monitoring API endpoints"
 ## Task 7: Create Order Timeout Task
 
 **Files:**
+
 - Create: `app/modules/orders/tasks.py`
 - Modify: `app/modules/orders/service.py`
 
@@ -729,6 +738,7 @@ def cancel_timeout(self, order_id: int):
 - [ ] **Step 2: Modify app/modules/orders/service.py**
 
 Add import at top:
+
 ```python
 from app.tasks.dispatcher import dispatch
 from app.modules.orders.tasks import cancel_timeout
@@ -736,6 +746,7 @@ from app.core.config import settings
 ```
 
 Add after `order_repo.create()` in `create_order` function:
+
 ```python
 dispatch(cancel_timeout, order.id, countdown=settings.ORDER_CANCEL_TIMEOUT)
 ```
@@ -757,12 +768,13 @@ git commit -m "feat(tasks): add order timeout cancellation task"
 ## Task 8: Create Notification Module + Task
 
 **Files:**
+
 - Create: `app/modules/notifications/__init__.py`
 - Create: `app/modules/notifications/schemas.py`
 - Create: `app/modules/notifications/service.py`
 - Create: `app/modules/notifications/tasks.py`
 
-- [ ] **Step 1: Create app/modules/notifications/__init__.py**
+- [ ] **Step 1: Create app/modules/notifications/**init**.py**
 
 ```python
 ```
@@ -810,6 +822,7 @@ def send_notification(self, user_id: int, template: str, context: dict):
 - [ ] **Step 5: Register autodiscover in celery_app.py**
 
 Update `app/tasks/celery_app.py`:
+
 ```python
 celery_app.autodiscover_tasks(["app.modules.orders", "app.modules.notifications", "app.modules.audit"])
 ```
@@ -831,11 +844,12 @@ git commit -m "feat(tasks): add notification module and task"
 ## Task 9: Create Export + Audit Tasks
 
 **Files:**
+
 - Create: `app/modules/exports/__init__.py`
 - Create: `app/modules/exports/tasks.py`
 - Create: `app/modules/audit/tasks.py`
 
-- [ ] **Step 1: Create app/modules/exports/__init__.py**
+- [ ] **Step 1: Create app/modules/exports/**init**.py**
 
 ```python
 ```
@@ -921,6 +935,7 @@ git commit -m "feat(tasks): add export and audit tasks"
 ## Task 10: Write Tests
 
 **Files:**
+
 - Create: `tests/modules/tasks/conftest.py`
 - Create: `tests/modules/tasks/test_task_service.py`
 - Create: `tests/modules/tasks/test_dispatcher.py`
@@ -1115,12 +1130,14 @@ git commit -m "test(tasks): add unit tests for task system"
 ## Task 11: Add Justfile Commands + Generate Migration
 
 **Files:**
+
 - Modify: `justfile`
 - Run: Alembic migration
 
 - [ ] **Step 1: Add worker and beat commands to justfile**
 
 Add to `justfile`:
+
 ```just
 # Start Celery worker
 worker:

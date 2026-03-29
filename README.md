@@ -65,11 +65,11 @@ app/
 
 项目支持三个独立数据库：
 
-| 数据库 | 类型 | 用途 | 访问模式 |
-|--------|------|------|----------|
-| 用户数据库 | PostgreSQL | 用户认证、角色、权限 | 读写 |
-| 业务数据库 | SQL Server | 订单、产品、业务数据 | 读写 |
-| 配置数据库 | MySQL | 系统配置、字典数据 | 只读 |
+| 数据库     | 类型       | 用途                 | 访问模式 |
+| ---------- | ---------- | -------------------- | -------- |
+| 用户数据库 | PostgreSQL | 用户认证、角色、权限 | 读写     |
+| 业务数据库 | SQL Server | 订单、产品、业务数据 | 读写     |
+| 配置数据库 | MySQL      | 系统配置、字典数据   | 只读     |
 
 ## 快速开始
 
@@ -299,11 +299,11 @@ uv run pytest tests -v --cov=app --cov-report=term-missing
 
 1. 在 `app/modules/` 创建新目录(如 `orders/`)
 2. 创建以下文件：
-   - `models.py` - SQLAlchemy 模型
-   - `schemas.py` - Pydantic schemas
-   - `repository.py` - 数据访问层
-   - `service.py` - 业务逻辑层
-   - `router.py` - API 路由
+    - `models.py` - SQLAlchemy 模型
+    - `schemas.py` - Pydantic schemas
+    - `repository.py` - 数据访问层
+    - `service.py` - 业务逻辑层
+    - `router.py` - API 路由
 3. 在 `app/api/v1/__init__.py` 注册路由
 
 ### 添加新的依赖
@@ -318,15 +318,15 @@ uv add --dev <package>
 
 ## 项目配置文件
 
-| 文件 | 用途 |
-|------|------|
-| `pyproject.toml` | 项目元数据、依赖、工具配置 (PEP 621) |
-| `ruff.toml` | Ruff linter和formatter配置 |
-| `ty.toml` | Ty类型检查器配置 |
-| `.rumdl.toml` | Markdown lint配置 |
-| `.pre-commit-config.yaml` | Pre-commit hooks配置 |
-| `justfile` | 常用命令快捷方式 |
-| `uv.toml` | UV包管理器配置 |
+| 文件                      | 用途                                 |
+| ------------------------- | ------------------------------------ |
+| `pyproject.toml`          | 项目元数据、依赖、工具配置 (PEP 621) |
+| `ruff.toml`               | Ruff linter和formatter配置           |
+| `ty.toml`                 | Ty类型检查器配置                     |
+| `.rumdl.toml`             | Markdown lint配置                    |
+| `.pre-commit-config.yaml` | Pre-commit hooks配置                 |
+| `justfile`                | 常用命令快捷方式                     |
+| `uv.toml`                 | UV包管理器配置                       |
 
 ## License
 

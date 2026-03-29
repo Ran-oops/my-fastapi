@@ -14,7 +14,7 @@
 
 ## File Structure
 
-```
+```text
 tests/modules/
 ├── orders/
 │   ├── __init__.py              # Create
@@ -40,16 +40,19 @@ tests/modules/
 ### Task 1: Orders Module Setup
 
 **Files:**
+
 - Create: `tests/modules/orders/__init__.py`
 - Create: `tests/modules/orders/conftest.py`
 
 - [ ] **Step 1: Create orders test directory**
+
 ```bash
 mkdir -p tests/modules/orders
 touch tests/modules/orders/__init__.py
 ```
 
 - [ ] **Step 2: Create orders conftest.py with fixtures**
+
 ```python
 import uuid
 from decimal import Decimal
@@ -104,6 +107,7 @@ async def user_headers(user_token):
 ```
 
 - [ ] **Step 3: Commit orders setup**
+
 ```bash
 git add tests/modules/orders/__init__.py tests/modules/orders/conftest.py
 git commit -m "test(orders): add test fixtures for orders module"
@@ -114,9 +118,11 @@ git commit -m "test(orders): add test fixtures for orders module"
 ### Task 2: Order Service Tests - Create Operations
 
 **Files:**
+
 - Create: `tests/modules/orders/test_order_service.py`
 
 - [ ] **Step 1: Create test file with imports and class**
+
 ```python
 import uuid
 from decimal import Decimal
@@ -138,6 +144,7 @@ class TestOrderServiceCreate:
 ```
 
 - [ ] **Step 2: Add test_create_order_success**
+
 ```python
     async def test_create_order_success(self, session, test_user, test_product_for_order):
         """Test successful order creation with multiple items."""
@@ -157,7 +164,7 @@ class TestOrderServiceCreate:
             ]
         )
         order = await order_service.create_order(session, order_in)
-        
+
         assert order.id is not None
         assert order.user_id == test_user.id
         assert order.status == OrderStatus.PENDING.value
@@ -166,6 +173,7 @@ class TestOrderServiceCreate:
 ```
 
 - [ ] **Step 3: Add test_create_order_single_item**
+
 ```python
     async def test_create_order_single_item(self, session, test_user, test_product_for_order):
         """Test order creation with single item."""
@@ -180,13 +188,14 @@ class TestOrderServiceCreate:
             ]
         )
         order = await order_service.create_order(session, order_in)
-        
+
         assert order.id is not None
         assert len(order.items) == 1
         assert order.total_amount == Decimal("99.99")
 ```
 
 - [ ] **Step 4: Add test_create_order_total_calculation**
+
 ```python
     async def test_create_order_total_calculation(self, session, test_user, test_product_for_order):
         """Test total amount is calculated correctly."""
@@ -198,11 +207,12 @@ class TestOrderServiceCreate:
             ]
         )
         order = await order_service.create_order(session, order_in)
-        
+
         assert order.total_amount == Decimal("41.00")  # 3*10 + 2*5.50
 ```
 
 - [ ] **Step 5: Add test_create_order_dispatches_timeout_task**
+
 ```python
     async def test_create_order_dispatches_timeout_task(self, session, test_user, test_product_for_order):
         """Test that timeout cancellation task is dispatched."""
@@ -218,7 +228,7 @@ class TestOrderServiceCreate:
                 ]
             )
             order = await order_service.create_order(session, order_in)
-            
+
             mock_dispatch.assert_called_once()
             call_args = mock_dispatch.call_args
             assert call_args[0][0].__name__ == "cancel_timeout"
@@ -231,6 +241,7 @@ Run: `uv run pytest tests/modules/orders/test_order_service.py::TestOrderService
 Expected: All tests PASS
 
 - [ ] **Step 7: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_service.py
 git commit -m "test(orders): add service tests for order creation"
@@ -241,9 +252,11 @@ git commit -m "test(orders): add service tests for order creation"
 ### Task 3: Order Service Tests - Get Operations
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_service.py`
 
 - [ ] **Step 1: Add TestOrderServiceGet class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderServiceGet:
@@ -251,42 +264,46 @@ class TestOrderServiceGet:
 ```
 
 - [ ] **Step 2: Add test_get_order_by_id_found**
+
 ```python
     async def test_get_order_by_id_found(self, session, test_order):
         """Test getting order by ID when it exists."""
         order = await order_service.get_order_by_id(session, test_order.id)
-        
+
         assert order is not None
         assert order.id == test_order.id
         assert order.user_id == test_order.user_id
 ```
 
 - [ ] **Step 3: Add test_get_order_by_id_not_found**
+
 ```python
     async def test_get_order_by_id_not_found(self, session):
         """Test getting order by ID when it doesn't exist."""
         order = await order_service.get_order_by_id(session, 99999)
-        
+
         assert order is None
 ```
 
 - [ ] **Step 4: Add test_get_order_with_items_found**
+
 ```python
     async def test_get_order_with_items_found(self, session, test_order):
         """Test getting order with items loaded."""
         order = await order_service.get_order_with_items(session, test_order.id)
-        
+
         assert order is not None
         assert order.id == test_order.id
         assert len(order.items) > 0
 ```
 
 - [ ] **Step 5: Add test_get_order_with_items_not_found**
+
 ```python
     async def test_get_order_with_items_not_found(self, session):
         """Test getting order with items when order doesn't exist."""
         order = await order_service.get_order_with_items(session, 99999)
-        
+
         assert order is None
 ```
 
@@ -295,6 +312,7 @@ Run: `uv run pytest tests/modules/orders/test_order_service.py::TestOrderService
 Expected: All tests PASS
 
 - [ ] **Step 7: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_service.py
 git commit -m "test(orders): add service tests for order retrieval"
@@ -305,9 +323,11 @@ git commit -m "test(orders): add service tests for order retrieval"
 ### Task 4: Order Service Tests - List Operations
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_service.py`
 
 - [ ] **Step 1: Add TestOrderServiceList class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderServiceList:
@@ -315,6 +335,7 @@ class TestOrderServiceList:
 ```
 
 - [ ] **Step 2: Add test_get_orders_pagination**
+
 ```python
     async def test_get_orders_pagination(self, session, test_user, test_product_for_order):
         """Test order listing with pagination."""
@@ -330,15 +351,16 @@ class TestOrderServiceList:
                 ]
             )
             await order_service.create_order(session, order_in)
-        
+
         page1 = await order_service.get_orders(session, skip=0, limit=2)
         page2 = await order_service.get_orders(session, skip=2, limit=2)
-        
+
         assert len(page1) == 2
         assert len(page2) == 2
 ```
 
 - [ ] **Step 3: Add test_get_orders_by_user**
+
 ```python
     async def test_get_orders_by_user(self, session, test_user, test_product_for_order):
         """Test filtering orders by user."""
@@ -353,14 +375,15 @@ class TestOrderServiceList:
             ]
         )
         await order_service.create_order(session, order_in)
-        
+
         orders = await order_service.get_orders_by_user(session, test_user.id)
-        
+
         assert len(orders) >= 1
         assert all(o.user_id == test_user.id for o in orders)
 ```
 
 - [ ] **Step 4: Add test_get_orders_by_status**
+
 ```python
     async def test_get_orders_by_status(self, session, test_user, test_product_for_order):
         """Test filtering orders by status."""
@@ -375,19 +398,20 @@ class TestOrderServiceList:
             ]
         )
         order = await order_service.create_order(session, order_in)
-        
+
         pending_orders = await order_service.get_orders_by_status(session, OrderStatus.PENDING)
-        
+
         assert len(pending_orders) >= 1
         assert all(o.status == OrderStatus.PENDING.value for o in pending_orders)
 ```
 
 - [ ] **Step 5: Add test_get_orders_count**
+
 ```python
     async def test_get_orders_count(self, session, test_user, test_product_for_order):
         """Test order count."""
         initial_count = await order_service.get_orders_count(session)
-        
+
         order_in = OrderCreate(
             user_id=test_user.id,
             items=[
@@ -399,7 +423,7 @@ class TestOrderServiceList:
             ]
         )
         await order_service.create_order(session, order_in)
-        
+
         new_count = await order_service.get_orders_count(session)
         assert new_count == initial_count + 1
 ```
@@ -409,6 +433,7 @@ Run: `uv run pytest tests/modules/orders/test_order_service.py::TestOrderService
 Expected: All tests PASS
 
 - [ ] **Step 7: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_service.py
 git commit -m "test(orders): add service tests for order listing"
@@ -419,9 +444,11 @@ git commit -m "test(orders): add service tests for order listing"
 ### Task 5: Order Service Tests - Status Transitions
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_service.py`
 
 - [ ] **Step 1: Add TestOrderServiceStatusTransitions class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderServiceStatusTransitions:
@@ -429,6 +456,7 @@ class TestOrderServiceStatusTransitions:
 ```
 
 - [ ] **Step 2: Add valid transition tests**
+
 ```python
     async def test_update_status_pending_to_confirmed(self, session, test_order):
         """Test valid transition: PENDING -> CONFIRMED."""
@@ -468,12 +496,13 @@ class TestOrderServiceStatusTransitions:
 ```
 
 - [ ] **Step 3: Add invalid transition tests**
+
 ```python
     async def test_update_status_completed_to_any_fails(self, session, test_order):
         """Test invalid transition: COMPLETED -> PENDING."""
         test_order.status = OrderStatus.COMPLETED.value
         await session.commit()
-        
+
         with pytest.raises(ValidationException) as exc_info:
             await order_service.update_order_status(
                 session, test_order.id, OrderUpdate(status=OrderStatus.PENDING)
@@ -484,7 +513,7 @@ class TestOrderServiceStatusTransitions:
         """Test invalid transition: CANCELLED -> PENDING."""
         test_order.status = OrderStatus.CANCELLED.value
         await session.commit()
-        
+
         with pytest.raises(ValidationException) as exc_info:
             await order_service.update_order_status(
                 session, test_order.id, OrderUpdate(status=OrderStatus.PENDING)
@@ -501,6 +530,7 @@ class TestOrderServiceStatusTransitions:
 ```
 
 - [ ] **Step 4: Add not found test**
+
 ```python
     async def test_update_status_order_not_found(self, session):
         """Test updating non-existent order."""
@@ -516,6 +546,7 @@ Run: `uv run pytest tests/modules/orders/test_order_service.py::TestOrderService
 Expected: All tests PASS
 
 - [ ] **Step 6: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_service.py
 git commit -m "test(orders): add service tests for status transitions"
@@ -526,9 +557,11 @@ git commit -m "test(orders): add service tests for status transitions"
 ### Task 6: Order Service Tests - Delete Operations
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_service.py`
 
 - [ ] **Step 1: Add TestOrderServiceDelete class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderServiceDelete:
@@ -536,6 +569,7 @@ class TestOrderServiceDelete:
 ```
 
 - [ ] **Step 2: Add test_delete_order_found**
+
 ```python
     async def test_delete_order_found(self, session, test_user, test_product_for_order):
         """Test deleting an existing order."""
@@ -550,17 +584,18 @@ class TestOrderServiceDelete:
             ]
         )
         order = await order_service.create_order(session, order_in)
-        
+
         deleted = await order_service.delete_order(session, order.id)
-        
+
         assert deleted.id == order.id
-        
+
         # Verify it's deleted
         result = await order_service.get_order_by_id(session, order.id)
         assert result is None
 ```
 
 - [ ] **Step 3: Add test_delete_order_not_found**
+
 ```python
     async def test_delete_order_not_found(self, session):
         """Test deleting non-existent order."""
@@ -574,6 +609,7 @@ Run: `uv run pytest tests/modules/orders/test_order_service.py::TestOrderService
 Expected: All tests PASS
 
 - [ ] **Step 5: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_service.py
 git commit -m "test(orders): add service tests for order deletion"
@@ -584,9 +620,11 @@ git commit -m "test(orders): add service tests for order deletion"
 ### Task 7: Order API Tests - Create Endpoint
 
 **Files:**
+
 - Create: `tests/modules/orders/test_order_api.py`
 
 - [ ] **Step 1: Create test file with imports**
+
 ```python
 from decimal import Decimal
 
@@ -600,6 +638,7 @@ class TestOrderAPICreate:
 ```
 
 - [ ] **Step 2: Add test_create_order_success**
+
 ```python
     async def test_create_order_success(self, client, user_headers, test_product_for_order):
         """Test successful order creation via API."""
@@ -617,7 +656,7 @@ class TestOrderAPICreate:
             },
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["success"] is True
@@ -626,6 +665,7 @@ class TestOrderAPICreate:
 ```
 
 - [ ] **Step 3: Add test_create_order_unauthorized**
+
 ```python
     async def test_create_order_unauthorized(self, client, test_product_for_order):
         """Test order creation without authentication."""
@@ -642,11 +682,12 @@ class TestOrderAPICreate:
                 ]
             }
         )
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
 - [ ] **Step 4: Add test_create_order_invalid_quantity**
+
 ```python
     async def test_create_order_invalid_quantity(self, client, user_headers, test_product_for_order):
         """Test order creation with invalid quantity."""
@@ -664,11 +705,12 @@ class TestOrderAPICreate:
             },
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 ```
 
 - [ ] **Step 5: Add test_create_order_invalid_price**
+
 ```python
     async def test_create_order_invalid_price(self, client, user_headers, test_product_for_order):
         """Test order creation with invalid price."""
@@ -686,7 +728,7 @@ class TestOrderAPICreate:
             },
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 ```
 
@@ -695,6 +737,7 @@ Run: `uv run pytest tests/modules/orders/test_order_api.py::TestOrderAPICreate -
 Expected: All tests PASS
 
 - [ ] **Step 7: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_api.py
 git commit -m "test(orders): add API tests for create endpoint"
@@ -705,9 +748,11 @@ git commit -m "test(orders): add API tests for create endpoint"
 ### Task 8: Order API Tests - List Endpoints
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_api.py`
 
 - [ ] **Step 1: Add TestOrderAPIList class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderAPIList:
@@ -715,11 +760,12 @@ class TestOrderAPIList:
 ```
 
 - [ ] **Step 2: Add test_get_orders_admin_success**
+
 ```python
     async def test_get_orders_admin_success(self, client, superuser_headers, test_order):
         """Test admin can list all orders."""
         response = await client.get("/api/v1/orders", headers=superuser_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
@@ -728,6 +774,7 @@ class TestOrderAPIList:
 ```
 
 - [ ] **Step 3: Add test_get_orders_pagination**
+
 ```python
     async def test_get_orders_pagination(self, client, superuser_headers, test_order):
         """Test order listing with pagination."""
@@ -735,7 +782,7 @@ class TestOrderAPIList:
             "/api/v1/orders?page=1&page_size=10",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "page" in data
@@ -744,6 +791,7 @@ class TestOrderAPIList:
 ```
 
 - [ ] **Step 4: Add test_get_orders_filter_by_user**
+
 ```python
     async def test_get_orders_filter_by_user(self, client, superuser_headers, test_order):
         """Test filtering orders by user_id."""
@@ -751,27 +799,29 @@ class TestOrderAPIList:
             f"/api/v1/orders?user_id={test_order.user_id}",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data["data"]) >= 1
 ```
 
 - [ ] **Step 5: Add test_get_orders_unauthorized**
+
 ```python
     async def test_get_orders_unauthorized(self, client):
         """Test listing orders without authentication."""
         response = await client.get("/api/v1/orders")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
 - [ ] **Step 6: Add test_get_orders_forbidden**
+
 ```python
     async def test_get_orders_forbidden(self, client, user_headers):
         """Test non-admin cannot list all orders."""
         response = await client.get("/api/v1/orders", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 ```
 
@@ -780,6 +830,7 @@ Run: `uv run pytest tests/modules/orders/test_order_api.py::TestOrderAPIList -v`
 Expected: All tests PASS
 
 - [ ] **Step 8: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_api.py
 git commit -m "test(orders): add API tests for list endpoint"
@@ -790,9 +841,11 @@ git commit -m "test(orders): add API tests for list endpoint"
 ### Task 9: Order API Tests - My Orders Endpoint
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_api.py`
 
 - [ ] **Step 1: Add TestOrderAPIMyOrders class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderAPIMyOrders:
@@ -800,11 +853,12 @@ class TestOrderAPIMyOrders:
 ```
 
 - [ ] **Step 2: Add test_get_my_orders_success**
+
 ```python
     async def test_get_my_orders_success(self, client, user_headers, test_order):
         """Test getting current user's orders."""
         response = await client.get("/api/v1/orders/my", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
@@ -812,11 +866,12 @@ class TestOrderAPIMyOrders:
 ```
 
 - [ ] **Step 3: Add test_get_my_orders_unauthorized**
+
 ```python
     async def test_get_my_orders_unauthorized(self, client):
         """Test getting my orders without authentication."""
         response = await client.get("/api/v1/orders/my")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
@@ -825,6 +880,7 @@ Run: `uv run pytest tests/modules/orders/test_order_api.py::TestOrderAPIMyOrders
 Expected: All tests PASS
 
 - [ ] **Step 5: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_api.py
 git commit -m "test(orders): add API tests for my orders endpoint"
@@ -835,9 +891,11 @@ git commit -m "test(orders): add API tests for my orders endpoint"
 ### Task 10: Order API Tests - Get/Update/Delete Endpoints
 
 **Files:**
+
 - Modify: `tests/modules/orders/test_order_api.py`
 
 - [ ] **Step 1: Add TestOrderAPIGetById class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderAPIGetById:
@@ -845,6 +903,7 @@ class TestOrderAPIGetById:
 ```
 
 - [ ] **Step 2: Add tests for get by ID**
+
 ```python
     async def test_get_order_by_id_found(self, client, user_headers, test_order):
         """Test getting order by ID."""
@@ -852,7 +911,7 @@ class TestOrderAPIGetById:
             f"/api/v1/orders/{test_order.id}",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["id"] == test_order.id
@@ -861,17 +920,18 @@ class TestOrderAPIGetById:
     async def test_get_order_by_id_not_found(self, client, user_headers):
         """Test getting non-existent order."""
         response = await client.get("/api/v1/orders/99999", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_order_by_id_unauthorized(self, client, test_order):
         """Test getting order without authentication."""
         response = await client.get(f"/api/v1/orders/{test_order.id}")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
 - [ ] **Step 3: Add TestOrderAPIUpdate class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderAPIUpdate:
@@ -879,6 +939,7 @@ class TestOrderAPIUpdate:
 ```
 
 - [ ] **Step 4: Add tests for update**
+
 ```python
     async def test_update_order_status_admin_success(self, client, superuser_headers, test_order):
         """Test admin can update order status."""
@@ -887,7 +948,7 @@ class TestOrderAPIUpdate:
             json={"status": "CONFIRMED"},
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["status"] == "CONFIRMED"
@@ -899,7 +960,7 @@ class TestOrderAPIUpdate:
             json={"status": "SHIPPED"},
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_update_order_forbidden(self, client, user_headers, test_order):
@@ -909,7 +970,7 @@ class TestOrderAPIUpdate:
             json={"status": "CONFIRMED"},
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_update_order_unauthorized(self, client, test_order):
@@ -918,11 +979,12 @@ class TestOrderAPIUpdate:
             f"/api/v1/orders/{test_order.id}",
             json={"status": "CONFIRMED"}
         )
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
 - [ ] **Step 5: Add TestOrderAPIDelete class**
+
 ```python
 @pytest.mark.asyncio
 class TestOrderAPIDelete:
@@ -930,12 +992,13 @@ class TestOrderAPIDelete:
 ```
 
 - [ ] **Step 6: Add tests for delete**
+
 ```python
     async def test_delete_order_admin_success(self, client, superuser_headers, test_user, test_product_for_order):
         """Test admin can delete order."""
         from app.modules.orders.schemas import OrderCreate, OrderItemCreate
         from app.modules.orders import service as order_service
-        
+
         order_in = OrderCreate(
             user_id=test_user.id,
             items=[
@@ -947,12 +1010,12 @@ class TestOrderAPIDelete:
             ]
         )
         order = await order_service.create_order(superuser_headers.get("session", None) or client._session, order_in)
-        
+
         response = await client.delete(
             f"/api/v1/orders/{order.id}",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_delete_order_forbidden(self, client, user_headers, test_order):
@@ -961,13 +1024,13 @@ class TestOrderAPIDelete:
             f"/api/v1/orders/{test_order.id}",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_delete_order_unauthorized(self, client, test_order):
         """Test deleting order without authentication."""
         response = await client.delete(f"/api/v1/orders/{test_order.id}")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
@@ -976,6 +1039,7 @@ Run: `uv run pytest tests/modules/orders/test_order_api.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 8: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_api.py
 git commit -m "test(orders): complete API tests for get/update/delete endpoints"
@@ -988,16 +1052,19 @@ git commit -m "test(orders): complete API tests for get/update/delete endpoints"
 ### Task 11: Products Module Setup
 
 **Files:**
+
 - Create: `tests/modules/products/__init__.py`
 - Create: `tests/modules/products/conftest.py`
 
 - [ ] **Step 1: Create products test directory**
+
 ```bash
 mkdir -p tests/modules/products
 touch tests/modules/products/__init__.py
 ```
 
 - [ ] **Step 2: Create products conftest.py**
+
 ```python
 import uuid
 from decimal import Decimal
@@ -1049,6 +1116,7 @@ async def user_headers(user_token):
 ```
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/products/__init__.py tests/modules/products/conftest.py
 git commit -m "test(products): add test fixtures for products module"
@@ -1059,9 +1127,11 @@ git commit -m "test(products): add test fixtures for products module"
 ### Task 12: Product Service Tests - Create Operations
 
 **Files:**
+
 - Create: `tests/modules/products/test_product_service.py`
 
 - [ ] **Step 1: Create test file with class**
+
 ```python
 import uuid
 from decimal import Decimal
@@ -1079,6 +1149,7 @@ class TestProductServiceCreate:
 ```
 
 - [ ] **Step 2: Add test_create_product_success**
+
 ```python
     async def test_create_product_success(self, session):
         """Test successful product creation."""
@@ -1089,7 +1160,7 @@ class TestProductServiceCreate:
             category="test"
         )
         product = await product_service.create_product(session, product_in)
-        
+
         assert product.id is not None
         assert product.name == product_in.name
         assert product.sku == product_in.sku
@@ -1097,30 +1168,32 @@ class TestProductServiceCreate:
 ```
 
 - [ ] **Step 3: Add test_create_product_duplicate_sku**
+
 ```python
     async def test_create_product_duplicate_sku(self, session):
         """Test creating product with duplicate SKU fails."""
         sku = f"TEST-{uuid.uuid4().hex[:8]}"
-        
+
         product_in = ProductCreate(
             name="First Product",
             sku=sku,
             price=Decimal("99.99")
         )
         await product_service.create_product(session, product_in)
-        
+
         duplicate = ProductCreate(
             name="Second Product",
             sku=sku,
             price=Decimal("49.99")
         )
-        
+
         with pytest.raises(ConflictException) as exc_info:
             await product_service.create_product(session, duplicate)
         assert "already exists" in str(exc_info.value)
 ```
 
 - [ ] **Step 4: Add test_create_product_negative_price**
+
 ```python
     async def test_create_product_negative_price(self, session):
         """Test creating product with negative price fails."""
@@ -1129,7 +1202,7 @@ class TestProductServiceCreate:
             sku=f"TEST-{uuid.uuid4().hex[:8]}",
             price=Decimal("-10.00")
         )
-        
+
         with pytest.raises(Exception):  # Pydantic validation error
             await product_service.create_product(session, product_in)
 ```
@@ -1139,6 +1212,7 @@ Run: `uv run pytest tests/modules/products/test_product_service.py::TestProductS
 Expected: Tests PASS
 
 - [ ] **Step 6: Commit**
+
 ```bash
 git add tests/modules/products/test_product_service.py
 git commit -m "test(products): add service tests for product creation"
@@ -1149,9 +1223,11 @@ git commit -m "test(products): add service tests for product creation"
 ### Task 13: Product Service Tests - Get Operations
 
 **Files:**
+
 - Modify: `tests/modules/products/test_product_service.py`
 
 - [ ] **Step 1: Add TestProductServiceGet class**
+
 ```python
 @pytest.mark.asyncio
 class TestProductServiceGet:
@@ -1159,31 +1235,32 @@ class TestProductServiceGet:
 ```
 
 - [ ] **Step 2: Add tests**
+
 ```python
     async def test_get_product_by_id_found(self, session, test_product):
         """Test getting product by ID when it exists."""
         product = await product_service.get_product_by_id(session, test_product.id)
-        
+
         assert product is not None
         assert product.id == test_product.id
 
     async def test_get_product_by_id_not_found(self, session):
         """Test getting product by ID when it doesn't exist."""
         product = await product_service.get_product_by_id(session, 99999)
-        
+
         assert product is None
 
     async def test_get_product_by_sku_found(self, session, test_product):
         """Test getting product by SKU when it exists."""
         product = await product_service.get_product_by_sku(session, test_product.sku)
-        
+
         assert product is not None
         assert product.sku == test_product.sku
 
     async def test_get_product_by_sku_not_found(self, session):
         """Test getting product by SKU when it doesn't exist."""
         product = await product_service.get_product_by_sku(session, "NONEXISTENT")
-        
+
         assert product is None
 ```
 
@@ -1192,6 +1269,7 @@ Run: `uv run pytest tests/modules/products/test_product_service.py::TestProductS
 Expected: Tests PASS
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add tests/modules/products/test_product_service.py
 git commit -m "test(products): add service tests for product retrieval"
@@ -1202,9 +1280,11 @@ git commit -m "test(products): add service tests for product retrieval"
 ### Task 14: Product Service Tests - List Operations
 
 **Files:**
+
 - Modify: `tests/modules/products/test_product_service.py`
 
 - [ ] **Step 1: Add TestProductServiceList class**
+
 ```python
 @pytest.mark.asyncio
 class TestProductServiceList:
@@ -1212,19 +1292,20 @@ class TestProductServiceList:
 ```
 
 - [ ] **Step 2: Add tests**
+
 ```python
     async def test_get_products_pagination(self, session, multiple_products):
         """Test product listing with pagination."""
         page1 = await product_service.get_products(session, skip=0, limit=2)
         page2 = await product_service.get_products(session, skip=2, limit=2)
-        
+
         assert len(page1) == 2
         assert len(page2) == 2
 
     async def test_get_products_by_category(self, session, multiple_products):
         """Test filtering products by category."""
         test_products = await product_service.get_products_by_category(session, "test")
-        
+
         assert len(test_products) >= 3
         assert all(p.category == "test" for p in test_products)
 
@@ -1239,6 +1320,7 @@ Run: `uv run pytest tests/modules/products/test_product_service.py::TestProductS
 Expected: Tests PASS
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add tests/modules/products/test_product_service.py
 git commit -m "test(products): add service tests for product listing"
@@ -1249,9 +1331,11 @@ git commit -m "test(products): add service tests for product listing"
 ### Task 15: Product Service Tests - Update/Delete Operations
 
 **Files:**
+
 - Modify: `tests/modules/products/test_product_service.py`
 
 - [ ] **Step 1: Add TestProductServiceUpdate class**
+
 ```python
 @pytest.mark.asyncio
 class TestProductServiceUpdate:
@@ -1259,6 +1343,7 @@ class TestProductServiceUpdate:
 ```
 
 - [ ] **Step 2: Add tests**
+
 ```python
     async def test_update_product_success(self, session, test_product):
         """Test successful product update."""
@@ -1267,7 +1352,7 @@ class TestProductServiceUpdate:
             price=Decimal("79.99")
         )
         product = await product_service.update_product(session, test_product.id, update)
-        
+
         assert product.name == "Updated Name"
         assert product.price == Decimal("79.99")
 
@@ -1275,20 +1360,21 @@ class TestProductServiceUpdate:
         """Test partial product update."""
         update = ProductUpdate(name="New Name")
         product = await product_service.update_product(session, test_product.id, update)
-        
+
         assert product.name == "New Name"
         assert product.price == test_product.price  # Unchanged
 
     async def test_update_product_not_found(self, session):
         """Test updating non-existent product."""
         update = ProductUpdate(name="New Name")
-        
+
         with pytest.raises(Exception) as exc_info:
             await product_service.update_product(session, 99999, update)
         assert "not found" in str(exc_info.value)
 ```
 
 - [ ] **Step 3: Add TestProductServiceDelete class**
+
 ```python
 @pytest.mark.asyncio
 class TestProductServiceDelete:
@@ -1296,13 +1382,14 @@ class TestProductServiceDelete:
 ```
 
 - [ ] **Step 4: Add tests**
+
 ```python
     async def test_delete_product_found(self, session, test_product):
         """Test deleting existing product."""
         deleted = await product_service.delete_product(session, test_product.id)
-        
+
         assert deleted.id == test_product.id
-        
+
         result = await product_service.get_product_by_id(session, test_product.id)
         assert result is None
 
@@ -1318,6 +1405,7 @@ Run: `uv run pytest tests/modules/products/test_product_service.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 6: Commit**
+
 ```bash
 git add tests/modules/products/test_product_service.py
 git commit -m "test(products): complete service tests for update/delete"
@@ -1328,9 +1416,11 @@ git commit -m "test(products): complete service tests for update/delete"
 ### Task 16: Product API Tests
 
 **Files:**
+
 - Create: `tests/modules/products/test_product_api.py`
 
 - [ ] **Step 1: Create test file with imports**
+
 ```python
 import uuid
 from decimal import Decimal
@@ -1345,6 +1435,7 @@ class TestProductAPICreate:
 ```
 
 - [ ] **Step 2: Add create tests**
+
 ```python
     async def test_create_product_admin_success(self, client, superuser_headers):
         """Test admin can create product."""
@@ -1358,7 +1449,7 @@ class TestProductAPICreate:
             },
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["success"] is True
@@ -1374,7 +1465,7 @@ class TestProductAPICreate:
             },
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_create_product_unauthorized(self, client):
@@ -1387,11 +1478,12 @@ class TestProductAPICreate:
                 "price": "99.99"
             }
         )
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
 - [ ] **Step 3: Add TestProductAPIList class**
+
 ```python
 @pytest.mark.asyncio
 class TestProductAPIList:
@@ -1399,11 +1491,12 @@ class TestProductAPIList:
 ```
 
 - [ ] **Step 4: Add list tests**
+
 ```python
     async def test_get_products_authenticated_success(self, client, user_headers, test_product):
         """Test authenticated user can list products."""
         response = await client.get("/api/v1/products", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
@@ -1415,17 +1508,18 @@ class TestProductAPIList:
             "/api/v1/products?category=test",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
 
     async def test_get_products_unauthorized(self, client):
         """Test listing products without auth."""
         response = await client.get("/api/v1/products")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 ```
 
 - [ ] **Step 5: Add TestProductAPIGetById class**
+
 ```python
 @pytest.mark.asyncio
 class TestProductAPIGetById:
@@ -1433,6 +1527,7 @@ class TestProductAPIGetById:
 ```
 
 - [ ] **Step 6: Add get by ID tests**
+
 ```python
     async def test_get_product_by_id_found(self, client, user_headers, test_product):
         """Test getting product by ID."""
@@ -1440,7 +1535,7 @@ class TestProductAPIGetById:
             f"/api/v1/products/{test_product.id}",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["id"] == test_product.id
@@ -1448,7 +1543,7 @@ class TestProductAPIGetById:
     async def test_get_product_by_id_not_found(self, client, user_headers):
         """Test getting non-existent product."""
         response = await client.get("/api/v1/products/99999", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_product_by_sku_found(self, client, user_headers, test_product):
@@ -1457,17 +1552,18 @@ class TestProductAPIGetById:
             f"/api/v1/products/sku/{test_product.sku}",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
 
     async def test_get_product_by_sku_not_found(self, client, user_headers):
         """Test getting non-existent product by SKU."""
         response = await client.get("/api/v1/products/sku/NONEXISTENT", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 ```
 
 - [ ] **Step 7: Add TestProductAPIUpdate and TestProductAPIDelete classes**
+
 ```python
 @pytest.mark.asyncio
 class TestProductAPIUpdate:
@@ -1480,7 +1576,7 @@ class TestProductAPIUpdate:
             json={"name": "Updated Name"},
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
 
     async def test_update_product_forbidden(self, client, user_headers, test_product):
@@ -1490,7 +1586,7 @@ class TestProductAPIUpdate:
             json={"name": "Updated"},
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -1504,7 +1600,7 @@ class TestProductAPIDelete:
             f"/api/v1/products/{test_product.id}",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_delete_product_forbidden(self, client, user_headers, test_product):
@@ -1513,7 +1609,7 @@ class TestProductAPIDelete:
             f"/api/v1/products/{test_product.id}",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 ```
 
@@ -1522,6 +1618,7 @@ Run: `uv run pytest tests/modules/products/test_product_api.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 9: Commit**
+
 ```bash
 git add tests/modules/products/test_product_api.py
 git commit -m "test(products): add comprehensive API tests"
@@ -1534,16 +1631,19 @@ git commit -m "test(products): add comprehensive API tests"
 ### Task 17: Audit Module Setup
 
 **Files:**
+
 - Create: `tests/modules/audit/__init__.py`
 - Create: `tests/modules/audit/conftest.py`
 
 - [ ] **Step 1: Create audit test directory**
+
 ```bash
 mkdir -p tests/modules/audit
 touch tests/modules/audit/__init__.py
 ```
 
 - [ ] **Step 2: Create audit conftest.py**
+
 ```python
 import pytest
 import pytest_asyncio
@@ -1572,7 +1672,7 @@ async def multiple_audit_logs(session, test_user):
     """Create multiple audit logs for pagination tests."""
     from app.modules.audit.schemas import AuditLogCreate
     from app.modules.audit import service as audit_service
-    
+
     logs = []
     for i in range(5):
         log_in = AuditLogCreate(
@@ -1598,6 +1698,7 @@ async def user_headers(user_token):
 ```
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/audit/__init__.py tests/modules/audit/conftest.py
 git commit -m "test(audit): add test fixtures for audit module"
@@ -1608,9 +1709,11 @@ git commit -m "test(audit): add test fixtures for audit module"
 ### Task 18: Audit Service Tests
 
 **Files:**
+
 - Create: `tests/modules/audit/test_audit_service.py`
 
 - [ ] **Step 1: Create test file**
+
 ```python
 import pytest
 
@@ -1633,7 +1736,7 @@ class TestAuditServiceCreate:
             ip_address="127.0.0.1"
         )
         log = await audit_service.create_audit_log(session, log_in)
-        
+
         assert log.id is not None
         assert log.user_id == test_user.id
         assert log.action == "CREATE"
@@ -1647,7 +1750,7 @@ class TestAuditServiceCreate:
             resource_id=1
         )
         log = await audit_service.create_audit_log(session, log_in)
-        
+
         assert log.user_id is None
 
     async def test_create_audit_log_minimal(self, session):
@@ -1658,7 +1761,7 @@ class TestAuditServiceCreate:
             resource_id=1
         )
         log = await audit_service.create_audit_log(session, log_in)
-        
+
         assert log.action == "VIEW"
 
 
@@ -1669,14 +1772,14 @@ class TestAuditServiceGet:
     async def test_get_audit_log_by_id_found(self, session, test_audit_log):
         """Test getting audit log by ID."""
         log = await audit_service.get_audit_log_by_id(session, test_audit_log.id)
-        
+
         assert log is not None
         assert log.id == test_audit_log.id
 
     async def test_get_audit_log_by_id_not_found(self, session):
         """Test getting non-existent audit log."""
         log = await audit_service.get_audit_log_by_id(session, 99999)
-        
+
         assert log is None
 
 
@@ -1687,19 +1790,19 @@ class TestAuditServiceList:
     async def test_get_audit_logs_pagination(self, session, multiple_audit_logs):
         """Test audit log listing with pagination."""
         page1 = await audit_service.get_audit_logs(session, skip=0, limit=2)
-        
+
         assert len(page1) == 2
 
     async def test_get_audit_logs_by_user(self, session, test_user, multiple_audit_logs):
         """Test filtering audit logs by user."""
         logs = await audit_service.get_audit_logs_by_user(session, test_user.id)
-        
+
         assert len(logs) >= 5
 
     async def test_get_audit_logs_by_resource(self, session, multiple_audit_logs):
         """Test filtering audit logs by resource."""
         logs = await audit_service.get_audit_logs_by_resource(session, "order", 1)
-        
+
         assert all(l.resource_type == "order" and l.resource_id == 1 for l in logs)
 
     async def test_get_audit_logs_count(self, session, multiple_audit_logs):
@@ -1713,6 +1816,7 @@ Run: `uv run pytest tests/modules/audit/test_audit_service.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/audit/test_audit_service.py
 git commit -m "test(audit): add comprehensive service tests"
@@ -1723,9 +1827,11 @@ git commit -m "test(audit): add comprehensive service tests"
 ### Task 19: Audit API Tests
 
 **Files:**
+
 - Create: `tests/modules/audit/test_audit_api.py`
 
 - [ ] **Step 1: Create test file**
+
 ```python
 import pytest
 from fastapi import status
@@ -1738,7 +1844,7 @@ class TestAuditAPIList:
     async def test_get_audit_logs_admin_success(self, client, superuser_headers, test_audit_log):
         """Test admin can list audit logs."""
         response = await client.get("/api/v1/audit", headers=superuser_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
@@ -1750,7 +1856,7 @@ class TestAuditAPIList:
             f"/api/v1/audit?user_id={test_audit_log.user_id}",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
 
     async def test_get_audit_logs_filter_by_resource(self, client, superuser_headers, test_audit_log):
@@ -1759,19 +1865,19 @@ class TestAuditAPIList:
             f"/api/v1/audit?resource_type=order&resource_id={test_audit_log.resource_id}",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
 
     async def test_get_audit_logs_unauthorized(self, client):
         """Test listing audit logs without auth."""
         response = await client.get("/api/v1/audit")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     async def test_get_audit_logs_forbidden(self, client, user_headers):
         """Test non-admin cannot list audit logs."""
         response = await client.get("/api/v1/audit", headers=user_headers)
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -1785,7 +1891,7 @@ class TestAuditAPIGetById:
             f"/api/v1/audit/{test_audit_log.id}",
             headers=superuser_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["id"] == test_audit_log.id
@@ -1793,13 +1899,13 @@ class TestAuditAPIGetById:
     async def test_get_audit_log_by_id_not_found(self, client, superuser_headers):
         """Test getting non-existent audit log."""
         response = await client.get("/api/v1/audit/99999", headers=superuser_headers)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_audit_log_by_id_unauthorized(self, client, test_audit_log):
         """Test getting audit log without auth."""
         response = await client.get(f"/api/v1/audit/{test_audit_log.id}")
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     async def test_get_audit_log_by_id_forbidden(self, client, user_headers, test_audit_log):
@@ -1808,7 +1914,7 @@ class TestAuditAPIGetById:
             f"/api/v1/audit/{test_audit_log.id}",
             headers=user_headers
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 ```
 
@@ -1817,6 +1923,7 @@ Run: `uv run pytest tests/modules/audit/test_audit_api.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/audit/test_audit_api.py
 git commit -m "test(audit): add comprehensive API tests"
@@ -1841,6 +1948,7 @@ Run: `uv run pytest tests/modules/orders tests/modules/products tests/modules/au
 Expected: 90%+ coverage on service layers
 
 - [ ] **Step 4: Final commit**
+
 ```bash
 git add -A
 git commit -m "test: complete comprehensive test coverage for orders, products, and audit modules"
@@ -1851,11 +1959,13 @@ git commit -m "test: complete comprehensive test coverage for orders, products, 
 ## Summary
 
 **Total Test Cases:** 110+
+
 - Orders: ~45 tests (25 service + 20 API)
 - Products: ~38 tests (20 service + 18 API)
 - Audit: ~27 tests (15 service + 12 API)
 
 **Files Created:** 12 files
+
 - 3 `__init__.py`
 - 3 `conftest.py`
 - 3 `test_*_service.py`

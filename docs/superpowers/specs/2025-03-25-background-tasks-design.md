@@ -16,6 +16,7 @@ Implement a background task system using Celery + Redis for the Enterprise FastA
 ## Technology Choice: Celery + Redis
 
 **Why Celery over ARQ:**
+
 - Mature community, extensive documentation
 - Built-in retry, task routing, rate limiting
 - celery-beat for periodic tasks (industry standard)
@@ -66,23 +67,23 @@ class TaskRecord(UserBase):
 
 ### Field Reference
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | int | Primary key |
-| task_name | str | Business identifier (e.g. `orders.cancel_timeout`) |
-| celery_task_id | str | Celery task ID for correlation |
-| status | enum | PENDING / RUNNING / SUCCESS / FAILED / DEAD / CANCELLED |
-| params | JSON | Task parameters (per-task schema, see Section 7) |
-| error | text | Error message (empty on success) |
-| retry_count | int | Number of retries attempted |
-| scheduled_at | datetime | Planned execution time |
-| created_at | datetime | Inherited from TimestampMixin |
-| updated_at | datetime | Inherited from TimestampMixin |
-| completed_at | datetime | Completion time |
+| Field          | Type     | Description                                             |
+| -------------- | -------- | ------------------------------------------------------- |
+| id             | int      | Primary key                                             |
+| task_name      | str      | Business identifier (e.g. `orders.cancel_timeout`)      |
+| celery_task_id | str      | Celery task ID for correlation                          |
+| status         | enum     | PENDING / RUNNING / SUCCESS / FAILED / DEAD / CANCELLED |
+| params         | JSON     | Task parameters (per-task schema, see Section 7)        |
+| error          | text     | Error message (empty on success)                        |
+| retry_count    | int      | Number of retries attempted                             |
+| scheduled_at   | datetime | Planned execution time                                  |
+| created_at     | datetime | Inherited from TimestampMixin                           |
+| updated_at     | datetime | Inherited from TimestampMixin                           |
+| completed_at   | datetime | Completion time                                         |
 
 ### Status Flow
 
-```
+```text
 PENDING → RUNNING → SUCCESS/FAILED → (retry) → DEAD
 PENDING → CANCELLED (manual cancel)
 ```
@@ -99,7 +100,7 @@ Static periodic tasks are configured in `celery-beat` configuration file. No sep
 
 Located at `app/tasks/` (not `app/modules/tasks/`) because it provides cross-cutting infrastructure consumed by all modules. This is similar to how `app/db/` and `app/common/` are structured outside `app/modules/`.
 
-```
+```text
 app/tasks/
 ├── __init__.py
 ├── celery_app.py       # Celery instance configuration
@@ -118,7 +119,7 @@ app/tasks/
 
 Each business module owns its tasks:
 
-```
+```text
 app/modules/orders/tasks.py       # cancel_timeout
 app/modules/notifications/         # New module: notification tasks + basic service
 ├── __init__.py
@@ -162,6 +163,7 @@ def get_sync_session():
 ```
 
 This is used by:
+
 - Signal handlers (Section 4)
 - Task functions (Section 7)
 - Repository layer for tasks
@@ -202,6 +204,7 @@ def dispatch(task, *args, **kwargs):
 ```
 
 Business code calls:
+
 ```python
 from app.tasks.dispatcher import dispatch
 from app.modules.orders.tasks import cancel_timeout
@@ -280,7 +283,7 @@ def task_failed(sender, task_id, exception, **kwargs):
 
 All task endpoints require authentication, following existing pattern `Depends(get_current_active_superuser)`.
 
-```
+```text
 GET    /api/v1/tasks                    # Task list (pagination, filters)
 GET    /api/v1/tasks/{task_id}          # Task detail
 POST   /api/v1/tasks/{task_id}/retry    # Manual retry failed task
@@ -290,12 +293,12 @@ DELETE /api/v1/tasks/{task_id}          # Cancel pending task
 
 ### Query Parameters
 
-| Param | Type | Description |
-|-------|------|-------------|
-| status | str | Filter by status |
-| task_name | str | Filter by task name |
-| page | int | Page number |
-| page_size | int | Items per page |
+| Param     | Type | Description         |
+| --------- | ---- | ------------------- |
+| status    | str  | Filter by status    |
+| task_name | str  | Filter by task name |
+| page      | int  | Page number         |
+| page_size | int  | Items per page      |
 
 ### Response Schemas
 
@@ -519,6 +522,7 @@ def write_audit_log(user_id: int, action: str, resource_type: str, resource_id: 
 ### Task Cancellation
 
 - When order is paid, cancel pending timeout task with `terminate=True`:
+
 ```python
 task_record = await get_pending_task("orders.cancel_timeout", order_id)
 if task_record:
@@ -532,15 +536,15 @@ if task_record:
 
 ### Test Layers
 
-| Layer | Tool | Scope |
-|-------|------|-------|
-| Unit | pytest + mock | Task logic, dispatcher |
+| Layer       | Tool                    | Scope                         |
+| ----------- | ----------------------- | ----------------------------- |
+| Unit        | pytest + mock           | Task logic, dispatcher        |
 | Integration | pytest + testcontainers | Celery + Redis real execution |
-| API | httpx + TestClient | Task endpoints |
+| API         | httpx + TestClient      | Task endpoints                |
 
 ### Test Structure
 
-```
+```text
 tests/modules/tasks/
 ├── conftest.py              # Shared fixtures
 ├── test_task_api.py         # API tests
@@ -580,24 +584,25 @@ def eager_celery():
 
 ## Section 10: Implementation Order
 
-| Step | Content | Risk |
-|------|---------|------|
-| 1 | Install Celery + Redis dependencies | Low |
-| 2 | Create TaskRecord model + sync DB session + migration | Low |
-| 3 | Implement dispatcher + signals | Medium |
-| 4 | Implement service + repository | Low |
-| 5 | Implement task query API | Low |
-| 6 | Implement orders/tasks.py | Medium |
-| 7 | Implement notifications module + tasks.py | Low |
-| 8 | Implement exports/tasks.py | Low |
-| 9 | Implement audit/tasks.py | Low |
-| 10 | Integration tests + Flower | Medium |
+| Step | Content                                               | Risk   |
+| ---- | ----------------------------------------------------- | ------ |
+| 1    | Install Celery + Redis dependencies                   | Low    |
+| 2    | Create TaskRecord model + sync DB session + migration | Low    |
+| 3    | Implement dispatcher + signals                        | Medium |
+| 4    | Implement service + repository                        | Low    |
+| 5    | Implement task query API                              | Low    |
+| 6    | Implement orders/tasks.py                             | Medium |
+| 7    | Implement notifications module + tasks.py             | Low    |
+| 8    | Implement exports/tasks.py                            | Low    |
+| 9    | Implement audit/tasks.py                              | Low    |
+| 10   | Integration tests + Flower                            | Medium |
 
 ### Verification
 
 Each step: `just lint && just test`
 
 Final:
+
 ```bash
 just db-migrate "add tasks module"
 just db-upgrade

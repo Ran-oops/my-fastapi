@@ -19,7 +19,7 @@
 
 ### 开发环境架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Development Environment                    │
 ├─────────────────────────────────────────────────────────────────┤
@@ -37,7 +37,7 @@
 
 ### 生产环境架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Production Environment                     │
 ├─────────────────────────────────────────────────────────────────┤
@@ -73,20 +73,20 @@
 
 ### 系统要求
 
-| 组件 | 最低要求 | 推荐配置 |
-|------|----------|----------|
-| Python | 3.13+ | 3.13 |
-| 内存 | 512MB | 2GB+ |
-| 磁盘 | 1GB | 10GB+ |
-| CPU | 1核 | 2核+ |
+| 组件   | 最低要求 | 推荐配置 |
+| ------ | -------- | -------- |
+| Python | 3.13+    | 3.13     |
+| 内存   | 512MB    | 2GB+     |
+| 磁盘   | 1GB      | 10GB+    |
+| CPU    | 1核      | 2核+     |
 
 ### 数据库要求
 
-| 数据库 | 版本要求 |
-|--------|----------|
-| PostgreSQL | 14+ |
-| SQL Server | 2019+ |
-| MySQL | 8.0+ |
+| 数据库     | 版本要求 |
+| ---------- | -------- |
+| PostgreSQL | 14+      |
+| SQL Server | 2019+    |
+| MySQL      | 8.0+     |
 
 ### 安装 Python
 
@@ -391,7 +391,7 @@ sudo systemctl status enterprise-fastapi
 server {
     listen 80;
     server_name api.example.com;
-    
+
     # 重定向到 HTTPS
     return 301 https://$server_name$request_uri;
 }
@@ -399,16 +399,16 @@ server {
 server {
     listen 443 ssl http2;
     server_name api.example.com;
-    
+
     # SSL 配置
     ssl_certificate /etc/letsencrypt/live/api.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/api.example.com/privkey.pem;
-    
+
     # 安全头
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
-    
+
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -416,7 +416,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-    
+
     location /health {
         proxy_pass http://127.0.0.1:8000/health;
         access_log off;
@@ -430,21 +430,21 @@ server {
 
 ### 环境变量
 
-| 变量名 | 说明 | 默认值 | 必填 |
-|--------|------|--------|------|
-| APP_ENV | 运行环境 | development | 否 |
-| DEBUG | 调试模式 | true | 否 |
-| SECRET_KEY | 密钥 | - | 是 |
-| API_V1_STR | API 前缀 | /api/v1 | 否 |
-| USER_DATABASE_URL | 用户数据库连接 | - | 是 |
-| BUSINESS_DATABASE_URL | 业务数据库连接 | - | 是 |
-| CONFIG_DATABASE_URL | 配置数据库连接 | - | 是 |
-| ACCESS_TOKEN_EXPIRE_MINUTES | Token 过期时间 | 30 | 否 |
-| BACKEND_CORS_ORIGINS | CORS 允许源 | ["*"] | 否 |
+| 变量名                      | 说明           | 默认值      | 必填 |
+| --------------------------- | -------------- | ----------- | ---- |
+| APP_ENV                     | 运行环境       | development | 否   |
+| DEBUG                       | 调试模式       | true        | 否   |
+| SECRET_KEY                  | 密钥           | -           | 是   |
+| API_V1_STR                  | API 前缀       | /api/v1     | 否   |
+| USER_DATABASE_URL           | 用户数据库连接 | -           | 是   |
+| BUSINESS_DATABASE_URL       | 业务数据库连接 | -           | 是   |
+| CONFIG_DATABASE_URL         | 配置数据库连接 | -           | 是   |
+| ACCESS_TOKEN_EXPIRE_MINUTES | Token 过期时间 | 30          | 否   |
+| BACKEND_CORS_ORIGINS        | CORS 允许源    | ["*"]       | 否   |
 
 ### 配置文件位置
 
-```
+```text
 项目根目录/
 ├── .env                    # 本地开发配置 (不提交)
 ├── .env.example            # 配置示例
@@ -495,11 +495,11 @@ def setup_logging():
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-    
+
     # 控制台输出
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
-    
+
     # 文件输出
     file_handler = RotatingFileHandler(
         "logs/app.log",
@@ -507,7 +507,7 @@ def setup_logging():
         backupCount=5
     )
     file_handler.setFormatter(formatter)
-    
+
     # 配置根日志
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
@@ -517,13 +517,13 @@ def setup_logging():
 
 ### 日志级别
 
-| 级别 | 使用场景 |
-|------|----------|
-| DEBUG | 开发调试信息 |
-| INFO | 正常操作日志 |
-| WARNING | 警告信息 |
-| ERROR | 错误信息 |
-| CRITICAL | 严重错误 |
+| 级别     | 使用场景     |
+| -------- | ------------ |
+| DEBUG    | 开发调试信息 |
+| INFO     | 正常操作日志 |
+| WARNING  | 警告信息     |
+| ERROR    | 错误信息     |
+| CRITICAL | 严重错误     |
 
 ### 监控指标
 
@@ -633,34 +633,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      
+
       - name: Install UV
         uses: astral-sh/setup-uv@v4
-      
+
       - name: Install dependencies
         run: uv sync --dev
-      
+
       - name: Run linter
         run: uv run ruff check app tests
-      
+
       - name: Run type checker
         run: uv run ty check app
-      
+
       - name: Run tests
         run: uv run pytest tests -v --cov=app
-      
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Deploy to production
         run: |
           # 部署脚本

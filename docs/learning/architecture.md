@@ -22,7 +22,7 @@
 
 本项目采用 **领域驱动设计 (Domain-Driven Design, DDD)** 结合 **依赖注入 (Dependency Injection)** 模式：
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         客户端 (Client)                              │
 │                   Web / Mobile / Third-party                         │
@@ -60,12 +60,12 @@
 
 ### 核心设计原则
 
-| 原则 | 描述 | 实现方式 |
-|------|------|----------|
-| **单一职责** | 每个模块只负责一个领域 | users/, roles/ 独立模块 |
-| **依赖倒置** | 高层不依赖低层，都依赖抽象 | 依赖注入、接口抽象 |
-| **开闭原则** | 对扩展开放，对修改关闭 | 泛型CRUD基类、可配置中间件 |
-| **接口隔离** | 客户端不应依赖不需要的接口 | 精细的Schema定义 |
+| 原则         | 描述                       | 实现方式                   |
+| ------------ | -------------------------- | -------------------------- |
+| **单一职责** | 每个模块只负责一个领域     | users/, roles/ 独立模块    |
+| **依赖倒置** | 高层不依赖低层，都依赖抽象 | 依赖注入、接口抽象         |
+| **开闭原则** | 对扩展开放，对修改关闭     | 泛型CRUD基类、可配置中间件 |
+| **接口隔离** | 客户端不应依赖不需要的接口 | 精细的Schema定义           |
 
 ---
 
@@ -75,7 +75,7 @@
 
 每个领域模块包含完整的垂直切片：
 
-```
+```text
 app/modules/users/
 ├── models.py      # SQLAlchemy 模型 (数据结构)
 ├── schemas.py     # Pydantic schemas (数据验证)
@@ -86,7 +86,7 @@ app/modules/users/
 
 ### 依赖关系
 
-```
+```text
 router.py → service.py → repository.py → models.py
                 ↓
             schemas.py
@@ -110,7 +110,7 @@ router.py → service.py → repository.py → models.py
 
 ### 数据库分区策略
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────┐
 │                        应用层 (FastAPI)                        │
 └────────────────────────────────────────────────────────────────┘
@@ -134,6 +134,7 @@ router.py → service.py → repository.py → models.py
 ### 数据库独立性设计
 
 每个数据库有独立的：
+
 1. **连接引擎** (AsyncEngine)
 2. **会话工厂** (async_sessionmaker)
 3. **依赖注入函数** (get_xxx_db)
@@ -213,7 +214,7 @@ class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
 
 ### API 请求处理流程
 
-```
+```text
 HTTP Request
     │
     ▼
@@ -244,7 +245,7 @@ Repository 层处理 (repository.py)
 
 ### 异常层次结构
 
-```
+```text
 HTTPException (FastAPI)
     │
     └── BaseAPIException (app/core/exceptions.py)
@@ -262,7 +263,7 @@ HTTPException (FastAPI)
 
 ### 配置层次
 
-```
+```text
 环境变量 (.env 文件)
     │
     ▼
@@ -300,11 +301,11 @@ class PaginationParams(BaseModel):
 
 1. 在 `app/modules/` 创建新目录(如 `orders/`)
 2. 创建以下文件：
-   - `models.py` - SQLAlchemy 模型
-   - `schemas.py` - Pydantic schemas
-   - `repository.py` - 数据访问层
-   - `service.py` - 业务逻辑层
-   - `router.py` - API 路由
+    - `models.py` - SQLAlchemy 模型
+    - `schemas.py` - Pydantic schemas
+    - `repository.py` - 数据访问层
+    - `service.py` - 业务逻辑层
+    - `router.py` - API 路由
 3. 在 `app/api/v1/__init__.py` 注册路由
 
 ### 添加新数据库

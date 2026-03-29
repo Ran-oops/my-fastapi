@@ -4,13 +4,15 @@
 
 **Goal:** 创建一个企业级FastAPI项目，包含清晰的目录结构(apis, core, models, crud, schemas, services, tests)，全部使用异步操作，数据库使用SQL Server。
 
-**Architecture:** 
+**Architecture:**
+
 - 采用分层架构：API层 → Service层 → CRUD层 → Model层
 - 使用SQLAlchemy 2.0 + aiosqlite/asyncpg进行异步数据库操作
 - 通过pymssql或pyodbc支持SQL Server连接
 - 使用Pydantic V2进行数据验证和序列化
 
 **Tech Stack:**
+
 - FastAPI + Uvicorn (异步ASGI服务器)
 - SQLAlchemy 2.0 + async/await
 - SQL Server (通过aiomssql或异步驱动)
@@ -22,7 +24,7 @@
 
 ## 目录结构
 
-```
+```text
 .
 ├── alembic/                    # 数据库迁移目录
 │   ├── versions/               # 迁移版本文件
@@ -79,6 +81,7 @@
 ## Task 1: 创建项目基础结构和依赖配置
 
 **Files:**
+
 - Create: `.env.example`
 - Create: `requirements.txt`
 - Create: `pytest.ini`
@@ -288,6 +291,7 @@ git commit -m "chore: initialize project structure with dependencies"
 ## Task 2: 创建核心配置模块 (core/)
 
 **Files:**
+
 - Create: `app/__init__.py`
 - Create: `app/core/__init__.py`
 - Create: `app/core/config.py`
@@ -309,18 +313,18 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore"
     )
-    
+
     # Application
     APP_ENV: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str = "your-secret-key-change-in-production"
-    
+
     # Database
     DATABASE_URL: str
-    
+
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
-    
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
@@ -329,14 +333,14 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
-    
+
     # Logging
     LOG_LEVEL: str = "INFO"
-    
+
     # API
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Enterprise FastAPI Project"
-    
+
     # Token
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
@@ -413,7 +417,7 @@ def create_access_token(
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    
+
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -450,6 +454,7 @@ git commit -m "feat: add core configuration, security, and exceptions"
 ## Task 3: 创建数据库基础模块 (db/)
 
 **Files:**
+
 - Create: `app/db/__init__.py`
 - Create: `app/db/base.py`
 - Create: `app/db/session.py`
@@ -465,12 +470,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
     """Base class for all database models"""
-    
+
     # Generate __tablename__ automatically from class name
     @classmethod
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
-    
+
     # Common columns for all tables
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -534,7 +539,7 @@ async def init_db():
     """Initialize database - create tables"""
     from app.db.base import Base
     from app.models import user  # Import all models
-    
+
     async with engine.begin() as conn:
         # In production, use Alembic migrations instead
         if settings.DEBUG:
@@ -553,6 +558,7 @@ git commit -m "feat: add async database base classes and session management"
 ## Task 4: 创建数据模型 (models/)
 
 **Files:**
+
 - Create: `app/models/__init__.py`
 - Create: `app/models/user.py`
 
@@ -568,10 +574,10 @@ from app.db.base import Base
 
 class User(Base):
     """User database model"""
-    
+
     # Override table name
     __tablename__ = "users"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(
         String(255), 
@@ -589,12 +595,12 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"
 ```
 
-**Step 2: 更新模型模块 app/models/__init__.py**
+**Step 2: 更新模型模块 app/models/**init**.py**
 
 ```python
 from app.models.user import User
@@ -614,6 +620,7 @@ git commit -m "feat: add User database model"
 ## Task 5: 创建Pydantic Schema (schemas/)
 
 **Files:**
+
 - Create: `app/schemas/__init__.py`
 - Create: `app/schemas/common.py`
 - Create: `app/schemas/user.py`
@@ -647,11 +654,11 @@ class PaginationParams(BaseModel):
     """Pagination parameters"""
     page: int = 1
     page_size: int = 10
-    
+
     @property
     def skip(self) -> int:
         return (self.page - 1) * self.page_size
-    
+
     @property
     def limit(self) -> int:
         return self.page_size
@@ -702,7 +709,7 @@ class UserInDB(UserBase):
     is_superuser: bool
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -712,7 +719,7 @@ class UserResponse(UserBase):
     is_superuser: bool
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -731,7 +738,7 @@ class TokenPayload(BaseModel):
     sub: Optional[str] = None
 ```
 
-**Step 3: 更新Schema模块 app/schemas/__init__.py**
+**Step 3: 更新Schema模块 app/schemas/**init**.py**
 
 ```python
 from app.schemas.common import (
@@ -783,6 +790,7 @@ git commit -m "feat: add Pydantic schemas for validation and serialization"
 ## Task 6: 创建CRUD基础层 (crud/)
 
 **Files:**
+
 - Create: `app/crud/__init__.py`
 - Create: `app/crud/base.py`
 - Create: `app/crud/user.py`
@@ -804,21 +812,21 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """Base CRUD class with async operations"""
-    
+
     def __init__(self, model: type[ModelType]):
         """
         CRUD object with default async methods to Create, Read, Update, Delete
-        
+
         Args:
             model: A SQLAlchemy model class
         """
         self.model = model
-    
+
     async def get(self, db: AsyncSession, id: Any) -> Optional[ModelType]:
         """Get single item by ID"""
         result = await db.execute(select(self.model).where(self.model.id == id))
         return result.scalar_one_or_none()
-    
+
     async def get_multi(
         self, 
         db: AsyncSession, 
@@ -833,12 +841,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             .limit(limit)
         )
         return result.scalars().all()
-    
+
     async def count(self, db: AsyncSession) -> int:
         """Get total count"""
         result = await db.execute(select(func.count()).select_from(self.model))
         return result.scalar()
-    
+
     async def create(self, db: AsyncSession, *, obj_in: CreateSchemaType) -> ModelType:
         """Create new item"""
         obj_in_data = obj_in.model_dump()
@@ -847,7 +855,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    
+
     async def update(
         self, 
         db: AsyncSession, 
@@ -860,15 +868,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             update_data = obj_in
         else:
             update_data = obj_in.model_dump(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             if hasattr(db_obj, field):
                 setattr(db_obj, field, value)
-        
+
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    
+
     async def delete(self, db: AsyncSession, *, id: int) -> Optional[ModelType]:
         """Delete item"""
         obj = await self.get(db, id)
@@ -896,12 +904,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """Get user by email"""
         result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
-    
+
     async def get_by_username(self, db: AsyncSession, *, username: str) -> Optional[User]:
         """Get user by username"""
         result = await db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
-    
+
     async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
         """Create user with hashed password"""
         db_obj = User(
@@ -915,7 +923,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    
+
     async def authenticate(
         self, 
         db: AsyncSession, 
@@ -930,11 +938,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if not verify_password(password, user.hashed_password):
             return None
         return user
-    
+
     async def is_active(self, user: User) -> bool:
         """Check if user is active"""
         return user.is_active
-    
+
     async def is_superuser(self, user: User) -> bool:
         """Check if user is superuser"""
         return user.is_superuser
@@ -943,7 +951,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 user = CRUDUser(User)
 ```
 
-**Step 3: 更新CRUD模块 app/crud/__init__.py**
+**Step 3: 更新CRUD模块 app/crud/**init**.py**
 
 ```python
 from app.crud.user import user
@@ -964,6 +972,7 @@ git commit -m "feat: add async CRUD base class and User CRUD operations"
 ## Task 7: 创建业务服务层 (services/)
 
 **Files:**
+
 - Create: `app/services/__init__.py`
 - Create: `app/services/user.py`
 
@@ -987,29 +996,29 @@ from app.schemas.user import (
 
 class UserService:
     """User business logic service"""
-    
+
     @staticmethod
     async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         """Get user by ID"""
         user = await user_crud.get(db, id=user_id)
         return user
-    
+
     @staticmethod
     async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
         """Get user by email"""
         return await user_crud.get_by_email(db, email=email)
-    
+
     @staticmethod
     async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[User]:
         """Get users list"""
         users = await user_crud.get_multi(db, skip=skip, limit=limit)
         return list(users)
-    
+
     @staticmethod
     async def get_users_count(db: AsyncSession) -> int:
         """Get total users count"""
         return await user_crud.count(db)
-    
+
     @staticmethod
     async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         """Create new user"""
@@ -1017,14 +1026,14 @@ class UserService:
         existing_user = await user_crud.get_by_email(db, email=user_in.email)
         if existing_user:
             raise ConflictException(f"Email {user_in.email} already registered")
-        
+
         # Check if username already exists
         existing_user = await user_crud.get_by_username(db, username=user_in.username)
         if existing_user:
             raise ConflictException(f"Username {user_in.username} already taken")
-        
+
         return await user_crud.create(db, obj_in=user_in)
-    
+
     @staticmethod
     async def update_user(
         db: AsyncSession, 
@@ -1035,30 +1044,30 @@ class UserService:
         user = await user_crud.get(db, id=user_id)
         if not user:
             raise NotFoundException(f"User with id {user_id} not found")
-        
+
         # Check email uniqueness if being updated
         if user_in.email and user_in.email != user.email:
             existing_user = await user_crud.get_by_email(db, email=user_in.email)
             if existing_user:
                 raise ConflictException(f"Email {user_in.email} already registered")
-        
+
         # Check username uniqueness if being updated
         if user_in.username and user_in.username != user.username:
             existing_user = await user_crud.get_by_username(db, username=user_in.username)
             if existing_user:
                 raise ConflictException(f"Username {user_in.username} already taken")
-        
+
         return await user_crud.update(db, db_obj=user, obj_in=user_in)
-    
+
     @staticmethod
     async def delete_user(db: AsyncSession, user_id: int) -> User:
         """Delete user"""
         user = await user_crud.get(db, id=user_id)
         if not user:
             raise NotFoundException(f"User with id {user_id} not found")
-        
+
         return await user_crud.delete(db, id=user_id)
-    
+
     @staticmethod
     async def authenticate_user(
         db: AsyncSession, 
@@ -1067,7 +1076,7 @@ class UserService:
     ) -> Optional[User]:
         """Authenticate user"""
         return await user_crud.authenticate(db, username=username, password=password)
-    
+
     @staticmethod
     async def login_user(db: AsyncSession, username: str, password: str) -> Token:
         """Login user and return token"""
@@ -1076,7 +1085,7 @@ class UserService:
             raise NotFoundException("Invalid credentials")
         if not user.is_active:
             raise NotFoundException("Inactive user")
-        
+
         access_token = create_access_token(subject=str(user.id))
         return Token(access_token=access_token)
 
@@ -1084,7 +1093,7 @@ class UserService:
 user_service = UserService()
 ```
 
-**Step 2: 更新服务模块 app/services/__init__.py**
+**Step 2: 更新服务模块 app/services/**init**.py**
 
 ```python
 from app.services.user import UserService, user_service
@@ -1104,6 +1113,7 @@ git commit -m "feat: add User service layer with business logic"
 ## Task 8: 创建API路由层 (api/)
 
 **Files:**
+
 - Create: `app/api/__init__.py`
 - Create: `app/api/v1/__init__.py`
 - Create: `app/api/v1/endpoints/__init__.py`
@@ -1148,13 +1158,13 @@ async def get_current_user(
     user_id = verify_token(token)
     if user_id is None:
         raise UnauthorizedException("Could not validate credentials")
-    
+
     user = await user_crud.get(db, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
     if not user.is_active:
         raise UnauthorizedException("Inactive user")
-    
+
     return user
 
 
@@ -1252,7 +1262,7 @@ async def get_users(
     )
     total = await user_service.get_users_count(db)
     total_pages = (total + pagination.page_size - 1) // pagination.page_size
-    
+
     return PaginatedResponse(
         data=list(users),
         total=total,
@@ -1277,7 +1287,7 @@ async def update_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    
+
     user = await user_service.update_user(db, user_id, user_in)
     return DataResponse(data=user, message="User updated successfully")
 
@@ -1293,7 +1303,7 @@ async def delete_user(
     return None
 ```
 
-**Step 3: 创建API路由模块 app/api/v1/__init__.py**
+**Step 3: 创建API路由模块 app/api/v1/**init**.py**
 
 ```python
 from fastapi import APIRouter
@@ -1317,6 +1327,7 @@ git commit -m "feat: add API endpoints with authentication and authorization"
 ## Task 9: 创建FastAPI主应用 (main.py)
 
 **Files:**
+
 - Create: `app/main.py`
 
 **Step 1: 创建主应用文件 app/main.py**
@@ -1395,6 +1406,7 @@ git commit -m "feat: add FastAPI main application with lifespan and CORS"
 ## Task 10: 创建Alembic迁移配置
 
 **Files:**
+
 - Create: `alembic/__init__.py`
 - Create: `alembic/env.py`
 - Create: `alembic/script.py.mako`
@@ -1524,6 +1536,7 @@ git commit -m "chore: add Alembic async migration configuration"
 ## Task 11: 创建测试基础设施
 
 **Files:**
+
 - Create: `tests/__init__.py`
 - Create: `tests/conftest.py`
 - Create: `tests/test_api/__init__.py`
@@ -1594,12 +1607,12 @@ async def client(db_session):
     """Get test client"""
     async def override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
-    
+
     app.dependency_overrides.clear()
 ```
 
@@ -1615,6 +1628,7 @@ git commit -m "test: add pytest configuration with async test support"
 ## Task 12: 创建API测试
 
 **Files:**
+
 - Create: `tests/test_api/test_users.py`
 
 **Step 1: 创建用户API测试 tests/test_api/test_users.py**
@@ -1627,7 +1641,7 @@ from fastapi import status
 @pytest.mark.asyncio
 class TestUserRegistration:
     """Test user registration endpoints"""
-    
+
     async def test_register_success(self, client):
         """Test successful user registration"""
         response = await client.post(
@@ -1640,14 +1654,14 @@ class TestUserRegistration:
                 "is_active": True
             }
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["success"] is True
         assert data["data"]["email"] == "test@example.com"
         assert data["data"]["username"] == "testuser"
         assert "password" not in data["data"]
-    
+
     async def test_register_duplicate_email(self, client):
         """Test registration with duplicate email"""
         # Create first user
@@ -1659,7 +1673,7 @@ class TestUserRegistration:
                 "password": "testpassword123",
             }
         )
-        
+
         # Try to create second user with same email
         response = await client.post(
             "/api/v1/users/register",
@@ -1669,14 +1683,14 @@ class TestUserRegistration:
                 "password": "testpassword123",
             }
         )
-        
+
         assert response.status_code == status.HTTP_409_CONFLICT
 
 
 @pytest.mark.asyncio
 class TestUserLogin:
     """Test user login endpoints"""
-    
+
     async def test_login_success(self, client):
         """Test successful login"""
         # Create user first
@@ -1688,7 +1702,7 @@ class TestUserLogin:
                 "password": "testpassword123",
             }
         )
-        
+
         # Login
         response = await client.post(
             "/api/v1/auth/login",
@@ -1697,13 +1711,13 @@ class TestUserLogin:
                 "password": "testpassword123"
             }
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["success"] is True
         assert "access_token" in data["data"]
         assert data["data"]["token_type"] == "bearer"
-    
+
     async def test_login_invalid_credentials(self, client):
         """Test login with invalid credentials"""
         response = await client.post(
@@ -1713,14 +1727,14 @@ class TestUserLogin:
                 "password": "wrongpassword"
             }
         )
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
 class TestGetCurrentUser:
     """Test getting current user"""
-    
+
     async def test_get_me_authenticated(self, client):
         """Test get current user when authenticated"""
         # Create and login user
@@ -1732,7 +1746,7 @@ class TestGetCurrentUser:
                 "password": "testpassword123",
             }
         )
-        
+
         login_response = await client.post(
             "/api/v1/auth/login",
             json={
@@ -1740,15 +1754,15 @@ class TestGetCurrentUser:
                 "password": "testpassword123"
             }
         )
-        
+
         token = login_response.json()["data"]["access_token"]
-        
+
         # Get current user
         response = await client.get(
             "/api/v1/users/me",
             headers={"Authorization": f"Bearer {token}"}
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["email"] == "me@example.com"
@@ -1756,11 +1770,11 @@ class TestGetCurrentUser:
 
 class TestHealthCheck:
     """Test health check endpoint"""
-    
+
     async def test_health_check(self, client):
         """Test health check returns healthy"""
         response = await client.get("/health")
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["status"] == "healthy"
@@ -1778,6 +1792,7 @@ git commit -m "test: add user API tests with async support"
 ## Task 13: 创建启动脚本和文档
 
 **Files:**
+
 - Create: `run.py`
 - Create: `README.md`
 
@@ -1808,21 +1823,23 @@ if __name__ == "__main__":
 ## 项目结构
 
 ```
+
 .
-├── alembic/              # 数据库迁移
-├── app/                  # 主应用目录
-│   ├── api/              # API路由层
-│   ├── core/             # 核心配置
-│   ├── crud/             # CRUD操作层
-│   ├── db/               # 数据库配置
-│   ├── models/           # 数据库模型
-│   ├── schemas/          # Pydantic模型
-│   ├── services/         # 业务逻辑层
-│   └── main.py           # 应用入口
+├── alembic/ # 数据库迁移
+├── app/ # 主应用目录
+│ ├── api/ # API路由层
+│ ├── core/ # 核心配置
+│ ├── crud/ # CRUD操作层
+│ ├── db/ # 数据库配置
+│ ├── models/ # 数据库模型
+│ ├── schemas/ # Pydantic模型
+│ ├── services/ # 业务逻辑层
+│ └── main.py # 应用入口
 ├── tests/                # 测试目录
-├── requirements.txt      # 依赖
+├── requirements.txt # 依赖
 └── README.md            # 项目文档
-```
+
+```text
 
 ## 技术栈
 
@@ -1876,6 +1893,7 @@ uvicorn app.main:app --reload
 ## API文档
 
 启动后访问：
+
 - Swagger UI: http://localhost:8000/api/v1/docs
 - ReDoc: http://localhost:8000/api/v1/redoc
 
@@ -1898,6 +1916,7 @@ pytest
 ### 异步支持
 
 所有数据库操作使用异步SQLAlchemy：
+
 - 异步引擎创建: `create_async_engine`
 - 异步会话: `AsyncSession`
 - 异步CRUD: `await crud.get()`, `await crud.create()`
@@ -1930,7 +1949,8 @@ alembic downgrade -1
 ## License
 
 MIT
-```
+
+```text
 
 **Step 3: Commit**
 
@@ -1944,11 +1964,13 @@ git commit -m "docs: add README and run script"
 ## Task 14: 创建空白__init__.py文件
 
 **Files:**
+
 - Create: All missing `__init__.py` files
 
 **Step 1: 创建所有空的__init__.py文件**
 
 需要创建的文件：
+
 - `app/__init__.py`
 - `app/api/__init__.py`
 - `app/api/v1/__init__.py`
@@ -1992,9 +2014,11 @@ git commit -m "chore: add __init__.py files for all modules"
 **Plan complete and saved to `docs/plans/2025-03-22-enterprise-fastapi-setup.md`. Two execution options:**
 
 **1. Subagent-Driven (this session)**
+
 - I dispatch fresh subagent per task, review between tasks, fast iteration
 
 **2. Parallel Session (separate)**
+
 - Open new session with executing-plans, batch execution with checkpoints
 
 **Which approach would you like to use?**

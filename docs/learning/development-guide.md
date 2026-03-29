@@ -19,13 +19,13 @@
 
 ### 前置要求
 
-| 工具 | 版本要求 | 用途 |
-|------|----------|------|
-| Python | 3.13+ | 运行环境 |
-| UV | 最新版 | 包管理 |
-| just | 最新版 | 命令运行器 |
-| Git | 2.x | 版本控制 |
-| Docker | 24+ | 数据库服务 |
+| 工具   | 版本要求 | 用途       |
+| ------ | -------- | ---------- |
+| Python | 3.13+    | 运行环境   |
+| UV     | 最新版   | 包管理     |
+| just   | 最新版   | 命令运行器 |
+| Git    | 2.x      | 版本控制   |
+| Docker | 24+      | 数据库服务 |
 
 ### 快速开始
 
@@ -100,15 +100,15 @@ ModelType = TypeVar("ModelType")
 
 class UserService:
     """用户服务类 - 处理用户相关业务逻辑."""
-    
+
     @staticmethod
     async def get_user(db: AsyncSession, user_id: int) -> User | None:
         """获取单个用户.
-        
+
         Args:
             db: 数据库会话
             user_id: 用户ID
-            
+
         Returns:
             用户对象或None
         """
@@ -120,14 +120,14 @@ user_service = UserService()
 
 ### 命名规范
 
-| 类型 | 命名规范 | 示例 |
-|------|----------|------|
-| 模块 | snake_case | `user_service.py` |
-| 类 | PascalCase | `UserService` |
-| 函数/方法 | snake_case | `get_user_by_id` |
-| 常量 | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
-| 变量 | snake_case | `user_count` |
-| 私有变量 | _leading_underscore | `_cache` |
+| 类型      | 命名规范            | 示例              |
+| --------- | ------------------- | ----------------- |
+| 模块      | snake_case          | `user_service.py` |
+| 类        | PascalCase          | `UserService`     |
+| 函数/方法 | snake_case          | `get_user_by_id`  |
+| 常量      | UPPER_SNAKE_CASE    | `MAX_RETRY_COUNT` |
+| 变量      | snake_case          | `user_count`      |
+| 私有变量  | _leading_underscore | `_cache`          |
 
 ### Import 顺序
 
@@ -167,7 +167,7 @@ async def bad_example():
 
 在 `app/modules/` 下创建新模块目录：
 
-```
+```text
 app/modules/
 ├── users/                  # 用户领域
 │   ├── __init__.py
@@ -199,9 +199,9 @@ from app.modules.shared.db import UserDBBase
 
 class User(UserDBBase):
     """用户模型."""
-    
+
     __tablename__ = "users"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     username: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
@@ -318,7 +318,7 @@ api_router.include_router(orders_router, prefix="/orders", tags=["orders"])  # �
 
 ### 分支策略
 
-```
+```text
 main (生产)
   │
   ├── develop (开发)
@@ -332,7 +332,7 @@ main (生产)
 
 使用 Conventional Commits：
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -341,6 +341,7 @@ main (生产)
 ```
 
 **类型**:
+
 - `feat`: 新功能
 - `fix`: Bug 修复
 - `docs`: 文档更新
@@ -350,6 +351,7 @@ main (生产)
 - `chore`: 构建/工具
 
 **示例**:
+
 ```bash
 git commit -m "feat(users): add user registration endpoint"
 git commit -m "fix(auth): handle expired tokens correctly"
@@ -362,7 +364,7 @@ git commit -m "docs: update API documentation"
 
 ### 测试结构
 
-```
+```text
 tests/
 ├── test_api/           # API 端点测试
 │   ├── test_users.py
@@ -415,7 +417,7 @@ class TestUserService:
 
 ### 文档结构
 
-```
+```text
 docs/
 ├── learning/           # 学习文档
 │   ├── architecture.md
@@ -488,10 +490,10 @@ just db-downgrade
 - 所有 PR 需要至少 1 人审核
 - 关键变更需要 2 人审核
 - 审核关注点：
-  - 代码质量
-  - 测试覆盖
-  - 文档完整性
-  - 安全性
+    - 代码质量
+    - 测试覆盖
+    - 文档完整性
+    - 安全性
 
 ---
 

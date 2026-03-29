@@ -12,7 +12,7 @@
 
 ## 文件结构
 
-```
+```text
 app/
 ├── modules/
 │   ├── search/
@@ -47,6 +47,7 @@ tests/
 ## Task 1: 数据库迁移和扩展安装
 
 **Files:**
+
 - Create: `alembic/versions/xxx_add_search_functionality.py`
 - Modify: `app/modules/products/models.py`
 - Modify: `app/modules/orders/models.py`
@@ -157,7 +158,7 @@ def upgrade():
     op.add_column('products', sa.Column('search_vector', sa.Text, nullable=True))
     op.add_column('orders', sa.Column('search_vector', sa.Text, nullable=True))
     op.add_column('users', sa.Column('search_vector', sa.Text, nullable=True))
-    
+
     # 2. 创建search_history表
     op.create_table(
         'search_history',
@@ -172,7 +173,7 @@ def upgrade():
     )
     op.create_index('ix_search_history_user_id', 'search_history', ['user_id'])
     op.create_index('ix_search_history_created_at', 'search_history', ['created_at'])
-    
+
     # 3. 创建通用索引(SQLite和PostgreSQL都支持)
     op.create_index('ix_products_name', 'products', ['name'])
     op.create_index('ix_products_sku', 'products', ['sku'])
@@ -186,11 +187,11 @@ def downgrade():
     op.drop_index('ix_orders_status', table_name='orders')
     op.drop_index('ix_products_sku', table_name='products')
     op.drop_index('ix_products_name', table_name='products')
-    
+
     op.drop_index('ix_search_history_created_at', table_name='search_history')
     op.drop_index('ix_search_history_user_id', table_name='search_history')
     op.drop_table('search_history')
-    
+
     op.drop_column('users', 'search_vector')
     op.drop_column('orders', 'search_vector')
     op.drop_column('products', 'search_vector')
@@ -217,22 +218,22 @@ def upgrade():
     bind = op.get_bind()
     if bind.dialect.name != 'postgresql':
         return
-    
+
     # 1. 安装pg_trgm扩展
     op.execute('CREATE EXTENSION IF NOT EXISTS pg_trgm')
-    
+
     # 2. 创建GIN索引
     op.execute('CREATE INDEX ix_products_search_vector ON products USING GIN(search_vector)')
     op.execute('CREATE INDEX ix_products_name_trgm ON products USING GIN(name gin_trgm_ops)')
     op.execute('CREATE INDEX ix_products_sku_trgm ON products USING GIN(sku gin_trgm_ops)')
-    
+
     op.execute('CREATE INDEX ix_orders_search_vector ON orders USING GIN(search_vector)')
     op.execute('CREATE INDEX ix_orders_status_trgm ON orders USING GIN(status gin_trgm_ops)')
-    
+
     op.execute('CREATE INDEX ix_users_search_vector ON users USING GIN(search_vector)')
     op.execute('CREATE INDEX ix_users_username_trgm ON users USING GIN(username gin_trgm_ops)')
     op.execute('CREATE INDEX ix_users_email_trgm ON users USING GIN(email gin_trgm_ops)')
-    
+
     # 3. 创建触发器函数
     op.execute('''
         CREATE OR REPLACE FUNCTION product_search_vector_update() RETURNS trigger AS $$
@@ -246,7 +247,7 @@ def upgrade():
         END;
         $$ LANGUAGE plpgsql
     ''')
-    
+
     op.execute('''
         CREATE OR REPLACE FUNCTION order_search_vector_update() RETURNS trigger AS $$
         BEGIN
@@ -257,7 +258,7 @@ def upgrade():
         END;
         $$ LANGUAGE plpgsql
     ''')
-    
+
     op.execute('''
         CREATE OR REPLACE FUNCTION user_search_vector_update() RETURNS trigger AS $$
         BEGIN
@@ -269,26 +270,26 @@ def upgrade():
         END;
         $$ LANGUAGE plpgsql
     ''')
-    
+
     # 4. 创建触发器
     op.execute('''
         CREATE TRIGGER product_search_vector_trigger
             BEFORE INSERT OR UPDATE ON products
             FOR EACH ROW EXECUTE FUNCTION product_search_vector_update()
     ''')
-    
+
     op.execute('''
         CREATE TRIGGER order_search_vector_trigger
             BEFORE INSERT OR UPDATE ON orders
             FOR EACH ROW EXECUTE FUNCTION order_search_vector_update()
     ''')
-    
+
     op.execute('''
         CREATE TRIGGER user_search_vector_trigger
             BEFORE INSERT OR UPDATE ON users
             FOR EACH ROW EXECUTE FUNCTION user_search_vector_update()
     ''')
-    
+
     # 5. 回填现有数据的search_vector
     op.execute('''
         UPDATE products SET search_vector = 
@@ -297,13 +298,13 @@ def upgrade():
             setweight(to_tsvector('simple', COALESCE(category, '')), 'C') ||
             setweight(to_tsvector('simple', COALESCE(description, '')), 'D')
     ''')
-    
+
     op.execute('''
         UPDATE orders SET search_vector = 
             setweight(to_tsvector('simple', COALESCE(status, '')), 'A') ||
             setweight(to_tsvector('simple', COALESCE(user_id::text, '')), 'B')
     ''')
-    
+
     op.execute('''
         UPDATE users SET search_vector = 
             setweight(to_tsvector('simple', COALESCE(username, '')), 'A') ||
@@ -315,26 +316,26 @@ def downgrade():
     bind = op.get_bind()
     if bind.dialect.name != 'postgresql':
         return
-    
+
     op.execute('DROP TRIGGER IF EXISTS user_search_vector_trigger ON users')
     op.execute('DROP TRIGGER IF EXISTS order_search_vector_trigger ON orders')
     op.execute('DROP TRIGGER IF EXISTS product_search_vector_trigger ON products')
-    
+
     op.execute('DROP FUNCTION IF EXISTS user_search_vector_update()')
     op.execute('DROP FUNCTION IF EXISTS order_search_vector_update()')
     op.execute('DROP FUNCTION IF EXISTS product_search_vector_update()')
-    
+
     op.drop_index('ix_users_email_trgm', table_name='users')
     op.drop_index('ix_users_username_trgm', table_name='users')
     op.drop_index('ix_users_search_vector', table_name='users')
-    
+
     op.drop_index('ix_orders_status_trgm', table_name='orders')
     op.drop_index('ix_orders_search_vector', table_name='orders')
-    
+
     op.drop_index('ix_products_sku_trgm', table_name='products')
     op.drop_index('ix_products_name_trgm', table_name='products')
     op.drop_index('ix_products_search_vector', table_name='products')
-    
+
     op.execute('DROP EXTENSION IF EXISTS pg_trgm')
 ```
 
@@ -356,6 +357,7 @@ git commit -m "feat(search): add database models, migration, and pg_trgm extensi
 ## Task 2: 搜索Schema定义
 
 **Files:**
+
 - Create: `app/modules/search/schemas.py`
 
 ### Step 1: 创建搜索Schema
@@ -372,7 +374,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class SearchHighlight(BaseModel):
     """搜索结果高亮"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     field_name: str
     highlighted: str
 
@@ -380,7 +382,7 @@ class SearchHighlight(BaseModel):
 class SearchResultItem(BaseModel):
     """搜索结果项"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     type: str  # products/orders/users
     score: float
@@ -401,7 +403,7 @@ class SearchMeta(BaseModel):
 class SearchResponse(BaseModel):
     """统一搜索响应"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     data: dict[str, list[SearchResultItem]]
     meta: SearchMeta
 
@@ -409,7 +411,7 @@ class SearchResponse(BaseModel):
 class SearchSuggestion(BaseModel):
     """搜索建议"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     text: str
     type: str
     score: float
@@ -423,7 +425,7 @@ class SearchSuggestionResponse(BaseModel):
 class SearchHistoryRead(BaseModel):
     """搜索历史读取"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     query: str
     search_type: str
@@ -458,6 +460,7 @@ git commit -m "feat(search): add search schemas and response models"
 ## Task 3: 搜索适配器和Repository实现
 
 **Files:**
+
 - Create: `app/modules/search/adapters/__init__.py`
 - Create: `app/modules/search/adapters/base.py`
 - Create: `app/modules/search/adapters/postgresql.py`
@@ -477,7 +480,7 @@ from app.modules.search.adapters.sqlite import SQLiteSearchAdapter
 def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
     """根据数据库类型创建对应的搜索适配器"""
     dialect = session.bind.dialect.name
-    
+
     if dialect == 'postgresql':
         return PostgreSQLSearchAdapter(session)
     elif dialect == 'sqlite':
@@ -507,10 +510,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 class BaseSearchAdapter(ABC):
     """搜索适配器抽象基类"""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-    
+
     @abstractmethod
     async def search_products(
         self, 
@@ -521,7 +524,7 @@ class BaseSearchAdapter(ABC):
     ) -> tuple[list, int]:
         """搜索产品，返回 (结果列表, 总数)"""
         pass
-    
+
     @abstractmethod
     async def search_orders(
         self, 
@@ -532,7 +535,7 @@ class BaseSearchAdapter(ABC):
     ) -> tuple[list, int]:
         """搜索订单"""
         pass
-    
+
     @abstractmethod
     async def search_users(
         self, 
@@ -543,7 +546,7 @@ class BaseSearchAdapter(ABC):
     ) -> tuple[list, int]:
         """搜索用户"""
         pass
-    
+
     @abstractmethod
     async def get_suggestions(
         self, 
@@ -572,10 +575,10 @@ from app.modules.search.adapters.base import BaseSearchAdapter
 
 class PostgreSQLSearchAdapter(BaseSearchAdapter):
     """PostgreSQL 搜索适配器，使用 pg_trgm 全文搜索"""
-    
+
     def __init__(self, session: AsyncSession):
         super().__init__(session)
-    
+
     def _get_sort_column(self, model, sort_by: str, similarity):
         """获取排序列"""
         if sort_by == 'relevance':
@@ -585,7 +588,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
         elif sort_by == 'created_at' and hasattr(model, 'created_at'):
             return model.created_at
         return similarity.desc()
-    
+
     async def search_products(
         self, 
         query: str, 
@@ -595,7 +598,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
     ) -> tuple[list[Product], int]:
         """搜索产品 - PostgreSQL 实现"""
         stmt = select(Product)
-        
+
         # 应用过滤条件
         if filters:
             if 'category' in filters:
@@ -606,7 +609,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.where(Product.price <= filters['price_max'])
             if 'is_active' in filters:
                 stmt = stmt.where(Product.is_active == filters['is_active'])
-        
+
         # 搜索条件：使用trigram相似度
         similarity = func.similarity(Product.name, query)
         stmt = stmt.where(
@@ -615,28 +618,28 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
             Product.sku.ilike(f'%{query}%') |
             Product.description.ilike(f'%{query}%')
         )
-        
+
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = await self.session.scalar(count_stmt)
-        
+
         # 排序和分页
         sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
         sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
-        
+
         sort_column = self._get_sort_column(Product, sort_by, similarity)
         if sort_order == 'asc':
             stmt = stmt.order_by(asc(sort_column))
         else:
             stmt = stmt.order_by(desc(sort_column))
-        
+
         stmt = stmt.offset(skip).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         products = result.scalars().all()
-        
+
         return products, total or 0
-    
+
     async def search_orders(
         self, 
         query: str, 
@@ -646,7 +649,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
     ) -> tuple[list[Order], int]:
         """搜索订单 - PostgreSQL 实现"""
         stmt = select(Order)
-        
+
         # 应用过滤条件
         if filters:
             if 'status' in filters:
@@ -657,7 +660,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.where(Order.created_at >= filters['date_from'])
             if 'date_to' in filters:
                 stmt = stmt.where(Order.created_at <= filters['date_to'])
-        
+
         # 搜索条件：使用trigram相似度
         similarity = func.similarity(Order.status, query)
         stmt = stmt.where(
@@ -665,28 +668,28 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
             Order.status.ilike(f'%{query}%') |
             func.cast(Order.user_id, text('text')).ilike(f'%{query}%')
         )
-        
+
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = await self.session.scalar(count_stmt)
-        
+
         # 排序和分页
         sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
         sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
-        
+
         sort_column = self._get_sort_column(Order, sort_by, similarity)
         if sort_order == 'asc':
             stmt = stmt.order_by(asc(sort_column))
         else:
             stmt = stmt.order_by(desc(sort_column))
-        
+
         stmt = stmt.offset(skip).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         orders = result.scalars().all()
-        
+
         return orders, total or 0
-    
+
     async def search_users(
         self, 
         query: str, 
@@ -696,12 +699,12 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
     ) -> tuple[list[User], int]:
         """搜索用户 - PostgreSQL 实现"""
         stmt = select(User)
-        
+
         # 应用过滤条件
         if filters:
             if 'is_active' in filters:
                 stmt = stmt.where(User.is_active == filters['is_active'])
-        
+
         # 搜索条件：使用trigram相似度
         similarity = func.similarity(User.username, query)
         stmt = stmt.where(
@@ -710,28 +713,28 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
             User.email.ilike(f'%{query}%') |
             User.full_name.ilike(f'%{query}%')
         )
-        
+
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = await self.session.scalar(count_stmt)
-        
+
         # 排序和分页
         sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
         sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
-        
+
         sort_column = self._get_sort_column(User, sort_by, similarity)
         if sort_order == 'asc':
             stmt = stmt.order_by(asc(sort_column))
         else:
             stmt = stmt.order_by(desc(sort_column))
-        
+
         stmt = stmt.offset(skip).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         users = result.scalars().all()
-        
+
         return users, total or 0
-    
+
     async def get_suggestions(
         self, 
         query: str, 
@@ -740,7 +743,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
     ) -> list[tuple[str, str, float]]:
         """获取搜索建议 - PostgreSQL 实现"""
         suggestions = []
-        
+
         if search_type in ('all', 'products'):
             # 产品名称建议
             stmt = (
@@ -755,7 +758,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
             result = await self.session.execute(stmt)
             for name, score in result:
                 suggestions.append((name, 'products', score))
-        
+
         if search_type in ('all', 'users'):
             # 用户名建议
             stmt = (
@@ -770,7 +773,7 @@ class PostgreSQLSearchAdapter(BaseSearchAdapter):
             result = await self.session.execute(stmt)
             for username, score in result:
                 suggestions.append((username, 'users', score))
-        
+
         # 按分数排序并返回前N个
         suggestions.sort(key=lambda x: x[2], reverse=True)
         return suggestions[:limit]
@@ -794,30 +797,30 @@ from app.modules.search.adapters.base import BaseSearchAdapter
 
 class SQLiteSearchAdapter(BaseSearchAdapter):
     """SQLite 搜索适配器，使用 LIKE 模糊匹配"""
-    
+
     def __init__(self, session: AsyncSession):
         super().__init__(session)
-    
+
     def _calculate_similarity(self, text: str, query: str) -> float:
         """计算相似度得分(应用层实现)"""
         if not text or not query:
             return 0.0
-        
+
         text_lower = text.lower()
         query_lower = query.lower()
-        
+
         # 精确匹配
         if text_lower == query_lower:
             return 1.0
-        
+
         # 包含匹配
         if query_lower in text_lower:
             return 0.8
-        
+
         # 前缀匹配
         if text_lower.startswith(query_lower):
             return 0.6
-        
+
         # 模糊匹配(简单实现)
         # 计算公共子序列长度
         common_len = 0
@@ -826,12 +829,12 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
                 common_len += 1
             else:
                 break
-        
+
         if common_len > 0:
             return 0.3 + (common_len / max(len(text_lower), len(query_lower))) * 0.3
-        
+
         return 0.0
-    
+
     def _get_sort_column(self, model, sort_by: str):
         """获取排序列"""
         if sort_by == 'price' and hasattr(model, 'price'):
@@ -839,7 +842,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
         elif sort_by == 'created_at' and hasattr(model, 'created_at'):
             return model.created_at
         return model.id  # 默认按ID排序
-    
+
     async def search_products(
         self, 
         query: str, 
@@ -849,7 +852,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
     ) -> tuple[list[Product], int]:
         """搜索产品 - SQLite 实现"""
         stmt = select(Product)
-        
+
         # 应用过滤条件
         if filters:
             if 'category' in filters:
@@ -860,7 +863,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.where(Product.price <= filters['price_max'])
             if 'is_active' in filters:
                 stmt = stmt.where(Product.is_active == filters['is_active'])
-        
+
         # 搜索条件：使用 LIKE 模糊匹配
         search_pattern = f'%{query}%'
         stmt = stmt.where(
@@ -869,15 +872,15 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
             Product.description.ilike(search_pattern) |
             Product.category.ilike(search_pattern)
         )
-        
+
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = await self.session.scalar(count_stmt)
-        
+
         # 排序和分页
         sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
         sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
-        
+
         if sort_by == 'relevance':
             # SQLite 不支持 trigram，按创建时间排序
             stmt = stmt.order_by(desc(Product.created_at))
@@ -887,14 +890,14 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.order_by(asc(sort_column))
             else:
                 stmt = stmt.order_by(desc(sort_column))
-        
+
         stmt = stmt.offset(skip).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         products = result.scalars().all()
-        
+
         return products, total or 0
-    
+
     async def search_orders(
         self, 
         query: str, 
@@ -904,7 +907,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
     ) -> tuple[list[Order], int]:
         """搜索订单 - SQLite 实现"""
         stmt = select(Order)
-        
+
         # 应用过滤条件
         if filters:
             if 'status' in filters:
@@ -915,22 +918,22 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.where(Order.created_at >= filters['date_from'])
             if 'date_to' in filters:
                 stmt = stmt.where(Order.created_at <= filters['date_to'])
-        
+
         # 搜索条件：使用 LIKE 模糊匹配
         search_pattern = f'%{query}%'
         stmt = stmt.where(
             Order.status.ilike(search_pattern) |
             func.cast(Order.user_id, func.text()).ilike(search_pattern)
         )
-        
+
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = await self.session.scalar(count_stmt)
-        
+
         # 排序和分页
         sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
         sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
-        
+
         if sort_by == 'relevance':
             stmt = stmt.order_by(desc(Order.created_at))
         else:
@@ -939,14 +942,14 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.order_by(asc(sort_column))
             else:
                 stmt = stmt.order_by(desc(sort_column))
-        
+
         stmt = stmt.offset(skip).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         orders = result.scalars().all()
-        
+
         return orders, total or 0
-    
+
     async def search_users(
         self, 
         query: str, 
@@ -956,12 +959,12 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
     ) -> tuple[list[User], int]:
         """搜索用户 - SQLite 实现"""
         stmt = select(User)
-        
+
         # 应用过滤条件
         if filters:
             if 'is_active' in filters:
                 stmt = stmt.where(User.is_active == filters['is_active'])
-        
+
         # 搜索条件：使用 LIKE 模糊匹配
         search_pattern = f'%{query}%'
         stmt = stmt.where(
@@ -969,15 +972,15 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
             User.email.ilike(search_pattern) |
             User.full_name.ilike(search_pattern)
         )
-        
+
         # 计算总数
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = await self.session.scalar(count_stmt)
-        
+
         # 排序和分页
         sort_by = filters.get('sort_by', 'relevance') if filters else 'relevance'
         sort_order = filters.get('sort_order', 'desc') if filters else 'desc'
-        
+
         if sort_by == 'relevance':
             stmt = stmt.order_by(desc(User.created_at))
         else:
@@ -986,14 +989,14 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
                 stmt = stmt.order_by(asc(sort_column))
             else:
                 stmt = stmt.order_by(desc(sort_column))
-        
+
         stmt = stmt.offset(skip).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         users = result.scalars().all()
-        
+
         return users, total or 0
-    
+
     async def get_suggestions(
         self, 
         query: str, 
@@ -1002,7 +1005,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
     ) -> list[tuple[str, str, float]]:
         """获取搜索建议 - SQLite 实现"""
         suggestions = []
-        
+
         if search_type in ('all', 'products'):
             # 产品名称建议
             stmt = (
@@ -1014,7 +1017,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
             for (name,) in result:
                 score = self._calculate_similarity(name, query)
                 suggestions.append((name, 'products', score))
-        
+
         if search_type in ('all', 'users'):
             # 用户名建议
             stmt = (
@@ -1026,7 +1029,7 @@ class SQLiteSearchAdapter(BaseSearchAdapter):
             for (username,) in result:
                 score = self._calculate_similarity(username, query)
                 suggestions.append((username, 'users', score))
-        
+
         # 按分数排序并返回前N个
         suggestions.sort(key=lambda x: x[2], reverse=True)
         return suggestions[:limit]
@@ -1047,11 +1050,11 @@ from app.modules.search.adapters import create_search_adapter, BaseSearchAdapter
 
 class SearchRepository:
     """搜索数据访问层，使用适配器模式支持多数据库"""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
         self.adapter: BaseSearchAdapter = create_search_adapter(session)
-    
+
     async def search_products(
         self, 
         query: str, 
@@ -1061,7 +1064,7 @@ class SearchRepository:
     ) -> tuple[list, int]:
         """搜索产品(委托给适配器)"""
         return await self.adapter.search_products(query, skip, limit, filters)
-    
+
     async def search_orders(
         self, 
         query: str, 
@@ -1071,7 +1074,7 @@ class SearchRepository:
     ) -> tuple[list, int]:
         """搜索订单(委托给适配器)"""
         return await self.adapter.search_orders(query, skip, limit, filters)
-    
+
     async def search_users(
         self, 
         query: str, 
@@ -1081,7 +1084,7 @@ class SearchRepository:
     ) -> tuple[list, int]:
         """搜索用户(委托给适配器)"""
         return await self.adapter.search_users(query, skip, limit, filters)
-    
+
     async def get_suggestions(
         self, 
         query: str, 
@@ -1090,7 +1093,7 @@ class SearchRepository:
     ) -> list[tuple[str, str, float]]:
         """获取搜索建议(委托给适配器)"""
         return await self.adapter.get_suggestions(query, search_type, limit)
-    
+
     async def save_search_history(
         self, 
         user_id: int, 
@@ -1108,7 +1111,7 @@ class SearchRepository:
         )
         self.session.add(history)
         await self.session.flush()  # 先flush获取ID
-        
+
         # 检查并删除超过100条的旧记录
         count_stmt = (
             select(func.count())
@@ -1116,7 +1119,7 @@ class SearchRepository:
             .where(SearchHistory.user_id == user_id)
         )
         total = await self.session.scalar(count_stmt)
-        
+
         if total and total > 100:
             # 删除最旧的记录，保留100条
             delete_stmt = (
@@ -1129,11 +1132,11 @@ class SearchRepository:
             old_records = result.scalars().all()
             for record in old_records:
                 await self.session.delete(record)
-        
+
         await self.session.commit()
         await self.session.refresh(history)
         return history
-    
+
     async def get_search_history(
         self, 
         user_id: int, 
@@ -1150,7 +1153,7 @@ class SearchRepository:
         )
         result = await self.session.execute(stmt)
         histories = result.scalars().all()
-        
+
         # 计算总数
         count_stmt = (
             select(func.count())
@@ -1158,9 +1161,9 @@ class SearchRepository:
             .where(SearchHistory.user_id == user_id)
         )
         total = await self.session.scalar(count_stmt)
-        
+
         return histories, total or 0
-    
+
     async def delete_search_history(
         self, 
         user_id: int, 
@@ -1174,17 +1177,17 @@ class SearchRepository:
         )
         result = await self.session.execute(stmt)
         history = result.scalar_one_or_none()
-        
+
         if history:
             await self.session.delete(history)
             await self.session.commit()
             return True
         return False
-    
+
     async def clear_search_history(self, user_id: int) -> int:
         """清空用户搜索历史"""
         from sqlalchemy import delete
-        
+
         # 先获取数量
         count_stmt = (
             select(func.count())
@@ -1192,12 +1195,12 @@ class SearchRepository:
             .where(SearchHistory.user_id == user_id)
         )
         count = await self.session.scalar(count_stmt) or 0
-        
+
         # 使用DELETE语句直接删除
         delete_stmt = delete(SearchHistory).where(SearchHistory.user_id == user_id)
         await self.session.execute(delete_stmt)
         await self.session.commit()
-        
+
         return count
 ```
 
@@ -1222,6 +1225,7 @@ git commit -m "feat(search): add search adapters and repository with multi-datab
 **说明:** 在创建/更新产品、订单、用户时，需要填充search_vector字段(SQLite兼容)
 
 **Files:**
+
 - Modify: `app/modules/products/service.py`
 - Modify: `app/modules/orders/service.py`
 - Modify: `app/modules/users/service.py`
@@ -1371,6 +1375,7 @@ git commit -m "feat(search): add search vector update to existing services"
 ## Task 5: 搜索Service实现
 
 **Files:**
+
 - Create: `app/modules/search/service.py`
 
 ### Step 1: 创建搜索Service
@@ -1398,31 +1403,31 @@ from app.modules.search.schemas import (
 
 class SearchService:
     """搜索业务逻辑层"""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
         self.repository = SearchRepository(session)
-    
+
     def _highlight_text(self, text: str, query: str) -> str:
         """高亮匹配文本"""
         if not text or not query:
             return text
-        
+
         # 使用正则表达式匹配(不区分大小写)
         pattern = re.compile(re.escape(query), re.IGNORECASE)
         return pattern.sub(f'<mark>{query}</mark>', text)
-    
+
     def _calculate_score(self, item: dict, query: str, weights: dict) -> float:
         """计算相关性得分"""
         score = 0.0
-        
+
         for field, weight in weights.items():
             value = str(getattr(item, field, '') or '')
             if query.lower() in value.lower():
                 score += weight
-        
+
         return min(score, 1.0)
-    
+
     async def search(
         self,
         query: str,
@@ -1434,13 +1439,13 @@ class SearchService:
         """统一搜索"""
         if not query or not query.strip():
             raise ValueError("搜索关键词不能为空")
-        
+
         if search_type not in ('all', 'products', 'orders', 'users'):
             raise ValueError("无效的搜索类型，可选值: products, orders, users, all")
-        
+
         data = {}
         total = 0
-        
+
         # 搜索产品
         if search_type in ('all', 'products'):
             products, product_total = await self.repository.search_products(
@@ -1449,21 +1454,21 @@ class SearchService:
                 limit=pagination.limit,
                 filters=filters
             )
-            
+
             product_items = []
             product_weights = {'name': 1.0, 'sku': 0.8, 'category': 0.5, 'description': 0.3}
-            
+
             for product in products:
                 score = self._calculate_score(product, query, product_weights)
                 highlight = {}
-                
+
                 if query.lower() in (product.name or '').lower():
                     highlight['name'] = self._highlight_text(product.name, query)
                 if query.lower() in (product.sku or '').lower():
                     highlight['sku'] = self._highlight_text(product.sku, query)
                 if query.lower() in (product.description or '').lower():
                     highlight['description'] = self._highlight_text(product.description, query)
-                
+
                 product_items.append(SearchResultItem(
                     id=product.id,
                     type='products',
@@ -1478,10 +1483,10 @@ class SearchService:
                     },
                     highlight=highlight if highlight else None
                 ))
-            
+
             data['products'] = product_items
             total += product_total
-        
+
         # 搜索订单
         if search_type in ('all', 'orders'):
             orders, order_total = await self.repository.search_orders(
@@ -1490,16 +1495,16 @@ class SearchService:
                 limit=pagination.limit,
                 filters=filters
             )
-            
+
             order_items = []
-            
+
             for order in orders:
                 score = 0.8 if query.lower() in (order.status or '').lower() else 0.3
                 highlight = {}
-                
+
                 if query.lower() in (order.status or '').lower():
                     highlight['status'] = self._highlight_text(order.status, query)
-                
+
                 order_items.append(SearchResultItem(
                     id=order.id,
                     type='orders',
@@ -1513,10 +1518,10 @@ class SearchService:
                     },
                     highlight=highlight if highlight else None
                 ))
-            
+
             data['orders'] = order_items
             total += order_total
-        
+
         # 搜索用户
         if search_type in ('all', 'users'):
             users, user_total = await self.repository.search_users(
@@ -1525,21 +1530,21 @@ class SearchService:
                 limit=pagination.limit,
                 filters=filters
             )
-            
+
             user_items = []
             user_weights = {'username': 1.0, 'email': 0.9, 'full_name': 0.7}
-            
+
             for user in users:
                 score = self._calculate_score(user, query, user_weights)
                 highlight = {}
-                
+
                 if query.lower() in (user.username or '').lower():
                     highlight['username'] = self._highlight_text(user.username, query)
                 if query.lower() in (user.email or '').lower():
                     highlight['email'] = self._highlight_text(user.email, query)
                 if query.lower() in (user.full_name or '').lower():
                     highlight['full_name'] = self._highlight_text(user.full_name, query)
-                
+
                 user_items.append(SearchResultItem(
                     id=user.id,
                     type='users',
@@ -1553,13 +1558,13 @@ class SearchService:
                     },
                     highlight=highlight if highlight else None
                 ))
-            
+
             data['users'] = user_items
             total += user_total
-        
+
         # 计算总页数
         total_pages = (total + pagination.page_size - 1) // pagination.page_size
-        
+
         # 保存搜索历史
         await self.repository.save_search_history(
             user_id=user_id,
@@ -1567,7 +1572,7 @@ class SearchService:
             search_type=search_type,
             result_count=total
         )
-        
+
         return SearchResponse(
             data=data,
             meta=SearchMeta(
@@ -1579,7 +1584,7 @@ class SearchService:
                 search_type=search_type
             )
         )
-    
+
     async def suggest(
         self,
         query: str,
@@ -1589,20 +1594,20 @@ class SearchService:
         """获取搜索建议"""
         if len(query) < 2:
             return SearchSuggestionResponse(data=[])
-        
+
         suggestions = await self.repository.get_suggestions(
             query=query,
             search_type=search_type,
             limit=limit
         )
-        
+
         return SearchSuggestionResponse(
             data=[
                 SearchSuggestion(text=text, type=s_type, score=score)
                 for text, s_type, score in suggestions
             ]
         )
-    
+
     async def get_history(
         self,
         user_id: int,
@@ -1614,9 +1619,9 @@ class SearchService:
             skip=pagination.skip,
             limit=pagination.limit
         )
-        
+
         total_pages = (total + pagination.page_size - 1) // pagination.page_size
-        
+
         return {
             'data': [
                 SearchHistoryRead(
@@ -1633,7 +1638,7 @@ class SearchService:
             'page_size': pagination.page_size,
             'total_pages': total_pages
         }
-    
+
     async def delete_history(
         self,
         user_id: int,
@@ -1641,7 +1646,7 @@ class SearchService:
     ) -> bool:
         """删除搜索历史"""
         return await self.repository.delete_search_history(user_id, history_id)
-    
+
     async def clear_history(
         self,
         user_id: int
@@ -1668,6 +1673,7 @@ git commit -m "feat(search): add search service with highlighting and history"
 ## Task 6: 搜索API路由实现
 
 **Files:**
+
 - Create: `app/modules/search/router.py`
 
 ### Step 1: 创建搜索API路由
@@ -1718,7 +1724,7 @@ async def search(
     try:
         service = SearchService(session)
         pagination = PaginationParams(page=page, page_size=page_size)
-        
+
         # 构建过滤条件
         filters = {}
         if category:
@@ -1749,11 +1755,11 @@ async def search(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="date_to格式无效，请使用YYYY-MM-DD格式"
                 )
-        
+
         # 添加排序参数
         filters['sort_by'] = sort_by
         filters['sort_order'] = sort_order
-        
+
         # 使用asyncio.wait_for实现超时保护
         try:
             return await asyncio.wait_for(
@@ -1860,6 +1866,7 @@ git commit -m "feat(search): add search API endpoints with filtering and history
 ## Task 7: 注册搜索路由
 
 **Files:**
+
 - Modify: `app/api/v1/__init__.py`
 
 ### Step 1: 添加搜索路由导入
@@ -1913,6 +1920,7 @@ git commit -m "feat(search): register search router in API v1"
 ## Task 8: 扩展PaginationParams
 
 **Files:**
+
 - Modify: `app/common/pagination.py`
 
 ### Step 1: 添加page_size最大值验证
@@ -1969,6 +1977,7 @@ git commit -m "feat(search): add page_size max validation to PaginationParams"
 ## Task 9: 搜索Service测试
 
 **Files:**
+
 - Create: `tests/modules/search/__init__.py`
 - Create: `tests/modules/search/conftest.py`
 - Create: `tests/modules/search/test_search_service.py`
@@ -2021,14 +2030,14 @@ async def sample_products(session: AsyncSession):
             is_active=True
         ),
     ]
-    
+
     for product in products:
         session.add(product)
     await session.commit()
-    
+
     for product in products:
         await session.refresh(product)
-    
+
     return products
 
 
@@ -2051,14 +2060,14 @@ async def sample_users(session: AsyncSession):
             is_active=True
         ),
     ]
-    
+
     for user in users:
         session.add(user)
     await session.commit()
-    
+
     for user in users:
         await session.refresh(user)
-    
+
     return users
 ```
 
@@ -2076,7 +2085,7 @@ from app.modules.search.service import SearchService
 @pytest.mark.asyncio
 class TestSearchService:
     """搜索服务测试"""
-    
+
     async def test_search_products(
         self, 
         session: AsyncSession, 
@@ -2085,19 +2094,19 @@ class TestSearchService:
         """测试产品搜索"""
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
-        
+
         result = await service.search(
             query="手机",
             search_type="products",
             user_id=1,
             pagination=pagination
         )
-        
+
         assert "products" in result.data
         assert len(result.data["products"]) > 0
         assert result.meta.query == "手机"
         assert result.meta.search_type == "products"
-    
+
     async def test_search_empty_query(
         self, 
         session: AsyncSession
@@ -2105,7 +2114,7 @@ class TestSearchService:
         """测试空查询"""
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
-        
+
         with pytest.raises(ValueError, match="搜索关键词不能为空"):
             await service.search(
                 query="",
@@ -2113,7 +2122,7 @@ class TestSearchService:
                 user_id=1,
                 pagination=pagination
             )
-    
+
     async def test_search_invalid_type(
         self, 
         session: AsyncSession
@@ -2121,7 +2130,7 @@ class TestSearchService:
         """测试无效搜索类型"""
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
-        
+
         with pytest.raises(ValueError, match="无效的搜索类型"):
             await service.search(
                 query="test",
@@ -2129,7 +2138,7 @@ class TestSearchService:
                 user_id=1,
                 pagination=pagination
             )
-    
+
     async def test_suggest(
         self, 
         session: AsyncSession, 
@@ -2137,32 +2146,32 @@ class TestSearchService:
     ):
         """测试搜索建议"""
         service = SearchService(session)
-        
+
         result = await service.suggest(
             query="手机",
             search_type="products",
             limit=5
         )
-        
+
         assert len(result.data) <= 5
         for suggestion in result.data:
             assert suggestion.text
             assert suggestion.type in ("products", "users")
             assert 0 <= suggestion.score <= 1
-    
+
     async def test_suggest_min_length(
         self, 
         session: AsyncSession
     ):
         """测试搜索建议最小长度"""
         service = SearchService(session)
-        
+
         result = await service.suggest(
             query="a",  # 只有1个字符
             search_type="all",
             limit=5
         )
-        
+
         assert len(result.data) == 0
 ```
 
@@ -2184,6 +2193,7 @@ git commit -m "test(search): add search service unit tests"
 ## Task 10: 搜索API测试
 
 **Files:**
+
 - Create: `tests/modules/search/test_search_api.py`
 
 ### Step 1: 创建API测试
@@ -2197,7 +2207,7 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 class TestSearchAPI:
     """搜索API测试"""
-    
+
     async def test_search_endpoint(
         self, 
         client: AsyncClient, 
@@ -2210,13 +2220,13 @@ class TestSearchAPI:
             params={"q": "手机", "type": "products"},
             headers=user_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "data" in data
         assert "meta" in data
         assert data["meta"]["query"] == "手机"
-    
+
     async def test_search_without_auth(
         self, 
         client: AsyncClient
@@ -2226,9 +2236,9 @@ class TestSearchAPI:
             "/api/v1/search",
             params={"q": "手机"}
         )
-        
+
         assert response.status_code == 401
-    
+
     async def test_search_empty_query(
         self, 
         client: AsyncClient, 
@@ -2240,9 +2250,9 @@ class TestSearchAPI:
             params={"q": ""},
             headers=user_headers
         )
-        
+
         assert response.status_code == 400
-    
+
     async def test_suggest_endpoint(
         self, 
         client: AsyncClient, 
@@ -2255,12 +2265,12 @@ class TestSearchAPI:
             params={"q": "手机", "limit": 3},
             headers=user_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "data" in data
         assert len(data["data"]) <= 3
-    
+
     async def test_suggest_min_length(
         self, 
         client: AsyncClient, 
@@ -2272,9 +2282,9 @@ class TestSearchAPI:
             params={"q": "a"},  # 只有1个字符
             headers=user_headers
         )
-        
+
         assert response.status_code == 422  # 验证错误
-    
+
     async def test_history_endpoint(
         self, 
         client: AsyncClient, 
@@ -2285,11 +2295,11 @@ class TestSearchAPI:
             "/api/v1/search/history",
             headers=user_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "data" in data
-    
+
     async def test_delete_history(
         self, 
         client: AsyncClient, 
@@ -2300,9 +2310,9 @@ class TestSearchAPI:
             "/api/v1/search/history/1",
             headers=user_headers
         )
-        
+
         assert response.status_code == 204
-    
+
     async def test_clear_history(
         self, 
         client: AsyncClient, 
@@ -2313,7 +2323,7 @@ class TestSearchAPI:
             "/api/v1/search/history",
             headers=user_headers
         )
-        
+
         assert response.status_code == 204
 ```
 
@@ -2335,6 +2345,7 @@ git commit -m "test(search): add search API integration tests"
 ## Task 11: 搜索历史测试
 
 **Files:**
+
 - Create: `tests/modules/search/test_search_history.py`
 
 ### Step 1: 创建搜索历史测试
@@ -2351,7 +2362,7 @@ from app.modules.search.service import SearchService
 @pytest.mark.asyncio
 class TestSearchHistory:
     """搜索历史测试"""
-    
+
     async def test_save_search_history(
         self, 
         session: AsyncSession, 
@@ -2360,7 +2371,7 @@ class TestSearchHistory:
         """测试保存搜索历史"""
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
-        
+
         # 执行搜索会自动保存历史
         await service.search(
             query="手机",
@@ -2368,17 +2379,17 @@ class TestSearchHistory:
             user_id=1,
             pagination=pagination
         )
-        
+
         # 获取历史
         history = await service.get_history(
             user_id=1,
             pagination=pagination
         )
-        
+
         assert history["total"] > 0
         assert len(history["data"]) > 0
         assert history["data"][0].query == "手机"
-    
+
     async def test_get_history_pagination(
         self, 
         session: AsyncSession, 
@@ -2386,7 +2397,7 @@ class TestSearchHistory:
     ):
         """测试搜索历史分页"""
         service = SearchService(session)
-        
+
         # 执行多次搜索
         for i in range(5):
             pagination = PaginationParams(page=1, page_size=10)
@@ -2396,19 +2407,19 @@ class TestSearchHistory:
                 user_id=1,
                 pagination=pagination
             )
-        
+
         # 获取第一页
         pagination = PaginationParams(page=1, page_size=2)
         history = await service.get_history(
             user_id=1,
             pagination=pagination
         )
-        
+
         assert history["total"] == 5
         assert len(history["data"]) == 2
         assert history["page"] == 1
         assert history["page_size"] == 2
-    
+
     async def test_delete_history(
         self, 
         session: AsyncSession, 
@@ -2417,7 +2428,7 @@ class TestSearchHistory:
         """测试删除搜索历史"""
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
-        
+
         # 执行搜索
         await service.search(
             query="手机",
@@ -2425,19 +2436,19 @@ class TestSearchHistory:
             user_id=1,
             pagination=pagination
         )
-        
+
         # 获取历史ID
         history = await service.get_history(user_id=1, pagination=pagination)
         history_id = history["data"][0].id
-        
+
         # 删除历史
         deleted = await service.delete_history(user_id=1, history_id=history_id)
         assert deleted is True
-        
+
         # 验证已删除
         history_after = await service.get_history(user_id=1, pagination=pagination)
         assert history_after["total"] == 0
-    
+
     async def test_clear_history(
         self, 
         session: AsyncSession, 
@@ -2445,7 +2456,7 @@ class TestSearchHistory:
     ):
         """测试清空搜索历史"""
         service = SearchService(session)
-        
+
         # 执行多次搜索
         for i in range(3):
             pagination = PaginationParams(page=1, page_size=10)
@@ -2455,11 +2466,11 @@ class TestSearchHistory:
                 user_id=1,
                 pagination=pagination
             )
-        
+
         # 清空历史
         count = await service.clear_history(user_id=1)
         assert count == 3
-        
+
         # 验证已清空
         pagination = PaginationParams(page=1, page_size=10)
         history = await service.get_history(user_id=1, pagination=pagination)
@@ -2484,6 +2495,7 @@ git commit -m "test(search): add search history tests"
 ## Task 12: 集成测试和验证
 
 **Files:**
+
 - Modify: `tests/modules/search/conftest.py`
 
 ### Step 1: 运行所有搜索测试

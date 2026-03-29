@@ -18,7 +18,7 @@
 
 ### 整体架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              客户端 (Clients)                                    │
 │    ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
@@ -99,7 +99,7 @@
 
 ### 分层架构详图
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              表现层 (Presentation Layer)                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
@@ -158,7 +158,7 @@
 
 ### 开发环境
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                          开发环境 (Development)                                  │
 │                                                                                  │
@@ -206,7 +206,7 @@
 
 ### 生产环境
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                          生产环境 (Production)                                   │
 │                                                                                  │
@@ -272,7 +272,7 @@
 
 ### 用户注册数据流
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            用户注册数据流                                        │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -334,7 +334,7 @@
 
 ### JWT 认证数据流
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            JWT 认证数据流                                        │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -433,37 +433,37 @@ sequenceDiagram
 
     C->>A: POST /auth/login {username, password}
     activate A
-    
+
     A->>A: Pydantic Validation
     Note over A: 验证请求数据格式
-    
+
     A->>S: login_user(db, username, password)
     activate S
-    
+
     S->>DB: SELECT * FROM users WHERE username = ?
     activate DB
     DB-->>S: User record
     deactivate DB
-    
+
     alt User not found
         S-->>A: raise NotFoundException
         A-->>C: 404 {detail: "Invalid credentials"}
     end
-    
+
     S->>S: verify_password(password, hashed)
     Note over S: bcrypt.checkpw()
-    
+
     alt Password invalid
         S-->>A: raise NotFoundException
         A-->>C: 404 {detail: "Invalid credentials"}
     end
-    
+
     S->>S: create_access_token(user_id)
     Note over S: JWT encode with SECRET_KEY
-    
+
     S-->>A: Token(access_token, token_type)
     deactivate S
-    
+
     A-->>C: 200 {access_token, token_type}
     deactivate A
 ```
@@ -480,40 +480,40 @@ sequenceDiagram
 
     C->>A: POST /auth/register {email, username, password}
     activate A
-    
+
     A->>A: Validate email format
     A->>A: Validate password strength
-    
+
     A->>S: create_user(db, user_in)
     activate S
-    
+
     S->>CR: get_by_email(db, email)
     activate CR
     CR->>DB: SELECT * FROM users WHERE email = ?
     DB-->>CR: None (not exists)
     CR-->>S: None
     deactivate CR
-    
+
     S->>CR: get_by_username(db, username)
     activate CR
     CR->>DB: SELECT * FROM users WHERE username = ?
     DB-->>CR: None (not exists)
     CR-->>S: None
     deactivate CR
-    
+
     S->>S: get_password_hash(password)
     Note over S: bcrypt.hashpw()
-    
+
     S->>CR: create(db, obj_in)
     activate CR
     CR->>DB: INSERT INTO users ...
     DB-->>CR: New User
     CR-->>S: User
     deactivate CR
-    
+
     S-->>A: User
     deactivate S
-    
+
     A->>A: UserResponse.from_orm(user)
     A-->>C: 201 {user data}
     deactivate A
@@ -525,7 +525,7 @@ sequenceDiagram
 
 ### CRUD 层类图
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              CRUD Layer 类关系图                                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -568,7 +568,7 @@ sequenceDiagram
 
 ### Service 层类图
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              Service Layer 类关系图                               │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -598,7 +598,7 @@ sequenceDiagram
 
 ### API 层类图
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              API Layer 类关系图                                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -635,7 +635,7 @@ sequenceDiagram
 
 ### 用户数据库 ER 图
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              用户数据库关系图                                     │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -685,7 +685,7 @@ sequenceDiagram
 
 ### 业务数据库 ER 图
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              业务数据库关系图                                     │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -730,7 +730,7 @@ sequenceDiagram
 
 ### 用户状态流转
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              用户状态流转图                                       │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -778,7 +778,7 @@ sequenceDiagram
 
 ### 订单状态流转
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              订单状态流转图                                       │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -810,7 +810,7 @@ sequenceDiagram
     │  Cancelled  │     │   Pending   │
     │  (已取消)   │     │  (待处理)   │
     └─────────────┘     └─────────────┘
-    
+
            │
            │ 备货完成
            ▼
@@ -859,13 +859,13 @@ graph TD
 
 ### 绘图工具推荐
 
-| 工具 | 类型 | 特点 |
-|------|------|------|
-| draw.io | 在线/桌面 | 免费，功能强大 |
-| Excalidraw | 在线 | 手绘风格，简单易用 |
-| PlantUML | 文本 | 代码生成图表 |
-| Mermaid | 文本 | Markdown 集成 |
-| Lucidchart | 在线 | 专业，协作功能 |
+| 工具       | 类型      | 特点               |
+| ---------- | --------- | ------------------ |
+| draw.io    | 在线/桌面 | 免费，功能强大     |
+| Excalidraw | 在线      | 手绘风格，简单易用 |
+| PlantUML   | 文本      | 代码生成图表       |
+| Mermaid    | 文本      | Markdown 集成      |
+| Lucidchart | 在线      | 专业，协作功能     |
 
 ---
 

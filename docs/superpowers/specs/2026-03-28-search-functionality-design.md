@@ -7,7 +7,7 @@
 
 ### 整体架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    统一搜索API                           │
 │                    /api/v1/search                        │
@@ -39,7 +39,7 @@
 
 ### 统一搜索端点
 
-```
+```text
 GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 ```
 
@@ -47,12 +47,12 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 
 **参数说明:**
 
-| 参数 | 必填 | 类型 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| q | 是 | string | - | 搜索关键词 |
-| type | 否 | string | all | 搜索模块: products/orders/users/all |
-| page | 否 | int | 1 | 页码 |
-| page_size | 否 | int | 10 | 每页数量(最大100) |
+| 参数      | 必填 | 类型   | 默认值 | 说明                                |
+| --------- | ---- | ------ | ------ | ----------------------------------- |
+| q         | 是   | string | -      | 搜索关键词                          |
+| type      | 否   | string | all    | 搜索模块: products/orders/users/all |
+| page      | 否   | int    | 1      | 页码                                |
+| page_size | 否   | int    | 10     | 每页数量(最大100)                   |
 
 **分页规则:**
 
@@ -114,7 +114,7 @@ GET /api/v1/search?q={query}&type={module}&page={page}&page_size={size}
 
 ### 搜索建议端点
 
-```
+```text
 GET /api/v1/search/suggest?q={query}&type={module}&limit={limit}
 ```
 
@@ -122,11 +122,11 @@ GET /api/v1/search/suggest?q={query}&type={module}&limit={limit}
 
 **参数说明:**
 
-| 参数 | 必填 | 类型 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| q | 是 | string | - | 搜索关键词(至少2字符) |
-| type | 否 | string | all | 搜索模块 |
-| limit | 否 | int | 5 | 返回建议数量 |
+| 参数  | 必填 | 类型   | 默认值 | 说明                  |
+| ----- | ---- | ------ | ------ | --------------------- |
+| q     | 是   | string | -      | 搜索关键词(至少2字符) |
+| type  | 否   | string | all    | 搜索模块              |
+| limit | 否   | int    | 5      | 返回建议数量          |
 
 **响应结构:**
 
@@ -149,7 +149,7 @@ GET /api/v1/search/suggest?q={query}&type={module}&limit={limit}
 
 ### 搜索历史端点
 
-```
+```text
 GET    /api/v1/search/history
 DELETE /api/v1/search/history/{id}
 DELETE /api/v1/search/history
@@ -163,7 +163,7 @@ DELETE /api/v1/search/history
 
 搜索功能需支持两种数据库，通过适配器层实现：
 
-```
+```text
 app/modules/search/
 ├── adapters/
 │   ├── __init__.py
@@ -182,10 +182,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 class BaseSearchAdapter(ABC):
     """搜索适配器抽象基类"""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-    
+
     @abstractmethod
     async def search_products(
         self, 
@@ -196,7 +196,7 @@ class BaseSearchAdapter(ABC):
     ) -> tuple[list, int]:
         """搜索产品，返回 (结果列表, 总数)"""
         pass
-    
+
     @abstractmethod
     async def search_orders(
         self, 
@@ -207,7 +207,7 @@ class BaseSearchAdapter(ABC):
     ) -> tuple[list, int]:
         """搜索订单"""
         pass
-    
+
     @abstractmethod
     async def search_users(
         self, 
@@ -218,7 +218,7 @@ class BaseSearchAdapter(ABC):
     ) -> tuple[list, int]:
         """搜索用户"""
         pass
-    
+
     @abstractmethod
     async def get_suggestions(
         self, 
@@ -249,11 +249,13 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 **适配器实现细节:**
 
 PostgreSQL 适配器：
+
 - 使用 `func.similarity()` 进行 trigram 相似度搜索
 - 使用 GIN 索引加速查询
 - 使用 `to_tsvector` 和 `to_tsquery` 进行全文搜索
 
 SQLite 适配器：
+
 - 使用 `LIKE` 或 `ILIKE` 进行模糊匹配
 - 使用普通 B-tree 索引
 - 应用层计算相似度得分
@@ -453,7 +455,7 @@ from app.db.base import UserBase
 
 class SearchHistory(UserBase):
     __tablename__ = "search_history"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     query: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -477,7 +479,7 @@ class SearchService:
         user_id: int,
         pagination: PaginationParams
     ) -> SearchResponse
-    
+
     async def suggest(
         self, 
         session: AsyncSession, 
@@ -485,21 +487,21 @@ class SearchService:
         search_type: str,
         limit: int = 5
     ) -> list[SearchSuggestion]
-    
+
     async def get_history(
         self,
         session: AsyncSession,
         user_id: int,
         pagination: PaginationParams
     ) -> PaginatedResponse[SearchHistoryRead]
-    
+
     async def delete_history(
         self,
         session: AsyncSession,
         user_id: int,
         history_id: int
     ) -> None
-    
+
     async def clear_history(
         self,
         session: AsyncSession,
@@ -510,6 +512,7 @@ class SearchService:
 ### 响应结构说明
 
 **当 `type=all` 时:**
+
 ```json
 {
   "data": {
@@ -522,6 +525,7 @@ class SearchService:
 ```
 
 **当 `type=products` 时:**
+
 ```json
 {
   "data": {
@@ -536,11 +540,13 @@ class SearchService:
 ### 搜索策略(适配器实现)
 
 **PostgreSQL 适配器策略(三级降级):**
+
 1. **精确匹配**: 查询与字段完全一致时优先返回
 2. **Trigram相似度**: 使用 `similarity()` 函数，阈值 > 0.3
 3. **ILIKE模糊匹配**: 最后降级方案
 
 **SQLite 适配器策略(两级降级):**
+
 1. **精确匹配**: 查询与字段完全一致时优先返回
 2. **LIKE模糊匹配**: 使用 `LIKE` 进行模糊匹配
 
@@ -556,7 +562,7 @@ from app.modules.search.adapters.sqlite import SQLiteSearchAdapter
 def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
     """根据数据库类型创建对应的搜索适配器"""
     dialect = session.bind.dialect.name
-    
+
     if dialect == 'postgresql':
         return PostgreSQLSearchAdapter(session)
     elif dialect == 'sqlite':
@@ -568,11 +574,11 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
 
 ### 搜索字段权重
 
-| 模块 | 高权重字段 | 低权重字段 | 说明 |
-|------|-----------|-----------|------|
-| 产品 | name (1.0), sku (0.8) | description (0.3), category (0.5) | 支持完整文本搜索 |
-| 订单 | status (0.8) | user_id (0.5) | 仅支持状态和用户ID搜索 |
-| 用户 | username (1.0), email (0.9) | full_name (0.7) | 支持用户名/邮箱搜索 |
+| 模块 | 高权重字段                  | 低权重字段                        | 说明                   |
+| ---- | --------------------------- | --------------------------------- | ---------------------- |
+| 产品 | name (1.0), sku (0.8)       | description (0.3), category (0.5) | 支持完整文本搜索       |
+| 订单 | status (0.8)                | user_id (0.5)                     | 仅支持状态和用户ID搜索 |
+| 用户 | username (1.0), email (0.9) | full_name (0.7)                   | 支持用户名/邮箱搜索    |
 
 **订单搜索限制说明:** 当前Order模型仅包含status和user_id字段，搜索能力有限。如需扩展订单搜索(如按产品名称、收货地址搜索)，需要在Order模型中添加相关字段或关联OrderItem表。
 
@@ -622,7 +628,8 @@ def create_search_adapter(session: AsyncSession) -> BaseSearchAdapter:
 所有过滤和排序参数都是 `/api/v1/search` 端点的查询参数。
 
 **产品过滤参数(type=products时可用):**
-```
+
+```text
 GET /api/v1/search?q=手机&type=products
   &category=配件
   &price_min=10&price_max=100
@@ -632,7 +639,8 @@ GET /api/v1/search?q=手机&type=products
 ```
 
 **订单过滤参数(type=orders时可用):**
-```
+
+```text
 GET /api/v1/search?q=待发货&type=orders
   &status=PENDING|CONFIRMED|SHIPPED|COMPLETED|CANCELLED
   &user_id=123
@@ -640,10 +648,12 @@ GET /api/v1/search?q=待发货&type=orders
   &sort_by=relevance|created_at
   &sort_order=asc|desc
 ```
+
 **说明:** `date_from` 和 `date_to` 过滤的是 `created_at` 字段(来自 `TimestampMixin`)。
 
 **用户过滤参数(type=users时可用):**
-```
+
+```text
 GET /api/v1/search?q=admin&type=users
   &is_active=true
   &sort_by=relevance|created_at
@@ -658,11 +668,11 @@ GET /api/v1/search?q=admin&type=users
 
 ### 错误处理
 
-| 错误场景 | HTTP状态码 | 错误信息 |
-|----------|-----------|----------|
-| 空查询 | 400 | "搜索关键词不能为空" |
-| 无效type参数 | 400 | "无效的搜索类型，可选值: products, orders, users, all" |
-| 搜索超时(>3秒) | 504 | "搜索请求超时，请稍后重试" |
+| 错误场景       | HTTP状态码 | 错误信息                                               |
+| -------------- | ---------- | ------------------------------------------------------ |
+| 空查询         | 400        | "搜索关键词不能为空"                                   |
+| 无效type参数   | 400        | "无效的搜索类型，可选值: products, orders, users, all" |
+| 搜索超时(>3秒) | 504        | "搜索请求超时，请稍后重试"                             |
 
 ## 6. 测试策略
 
@@ -709,7 +719,7 @@ async def test_search_empty_query():
 
 ## 7. 文件结构
 
-```
+```text
 app/
 ├── modules/
 │   └── search/

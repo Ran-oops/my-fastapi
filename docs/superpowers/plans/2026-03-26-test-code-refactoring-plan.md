@@ -14,7 +14,7 @@
 
 ## File Structure
 
-```
+```text
 tests/
 ├── conftest.py                    # Modify: add superuser_headers, user_headers
 ├── helpers.py                     # Create: factory functions
@@ -41,6 +41,7 @@ tests/
 ## Task 1: Root conftest.py + helpers.py
 
 **Files:**
+
 - Modify: `tests/conftest.py`
 - Create: `tests/helpers.py`
 
@@ -122,6 +123,7 @@ Run: `uv run pytest tests -v --tb=short`
 Expected: All existing tests PASS (new fixtures don't conflict)
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add tests/conftest.py tests/helpers.py
 git commit -m "test: add shared fixtures and factory helpers"
@@ -132,6 +134,7 @@ git commit -m "test: add shared fixtures and factory helpers"
 ## Task 2: Orders conftest.py Rewrite
 
 **Files:**
+
 - Rewrite: `tests/modules/orders/conftest.py`
 
 - [ ] **Step 1: Rewrite orders conftest.py**
@@ -207,6 +210,7 @@ Run: `uv run pytest tests/modules/orders -v --tb=short`
 Expected: All existing tests PASS
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add tests/modules/orders/conftest.py
 git commit -m "test(orders): add patch_dispatch and fresh_order fixtures"
@@ -217,6 +221,7 @@ git commit -m "test(orders): add patch_dispatch and fresh_order fixtures"
 ## Task 3: Orders Service Tests Rewrite
 
 **Files:**
+
 - Rewrite: `tests/modules/orders/test_order_service.py`
 
 - [ ] **Step 1: Rewrite the file**
@@ -400,6 +405,7 @@ Run: `uv run pytest tests/modules/orders/test_order_service.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_service.py
 git commit -m "test(orders): rewrite service tests with parametrize and fixtures"
@@ -410,6 +416,7 @@ git commit -m "test(orders): rewrite service tests with parametrize and fixtures
 ## Task 4: Orders API Tests Rewrite
 
 **Files:**
+
 - Rewrite: `tests/modules/orders/test_order_api.py`
 
 - [ ] **Step 1: Rewrite the file**
@@ -585,6 +592,7 @@ Run: `uv run pytest tests/modules/orders/test_order_api.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/orders/test_order_api.py
 git commit -m "test(orders): rewrite API tests with patch_dispatch and cleaner assertions"
@@ -595,6 +603,7 @@ git commit -m "test(orders): rewrite API tests with patch_dispatch and cleaner a
 ## Task 5: Products conftest.py Cleanup
 
 **Files:**
+
 - Modify: `tests/modules/products/conftest.py`
 
 - [ ] **Step 1: Remove duplicated fixtures**
@@ -644,6 +653,7 @@ Run: `uv run pytest tests/modules/products -v`
 Expected: All tests PASS (fixtures resolved from root conftest)
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/products/conftest.py
 git commit -m "test(products): remove duplicated fixtures, use root conftest"
@@ -654,11 +664,13 @@ git commit -m "test(products): remove duplicated fixtures, use root conftest"
 ## Task 6: Products Service Tests Cleanup
 
 **Files:**
+
 - Modify: `tests/modules/products/test_product_service.py`
 
 - [ ] **Step 1: Fix imports and clean up**
 
 Changes:
+
 1. Add `session: AsyncSession` type hints
 2. Add `import uuid` at file top (already there, verify)
 3. Remove unused `ValidationError` import (keep only if used)
@@ -796,6 +808,7 @@ Run: `uv run pytest tests/modules/products/test_product_service.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/products/test_product_service.py
 git commit -m "test(products): add type hints and clean up service tests"
@@ -806,11 +819,13 @@ git commit -m "test(products): add type hints and clean up service tests"
 ## Task 7: Products API Tests Cleanup
 
 **Files:**
+
 - Modify: `tests/modules/products/test_product_api.py`
 
 - [ ] **Step 1: Fix status code assertions**
 
 Key changes:
+
 1. Remove unused `ProductCreate` import
 2. Remove unused `uuid` import (only used in test data)
 3. Verify status codes are specific (not lists)
@@ -941,6 +956,7 @@ Run: `uv run pytest tests/modules/products/test_product_api.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/products/test_product_api.py
 git commit -m "test(products): clean up API tests, fix unused imports"
@@ -951,6 +967,7 @@ git commit -m "test(products): clean up API tests, fix unused imports"
 ## Task 8: Audit conftest.py Cleanup
 
 **Files:**
+
 - Modify: `tests/modules/audit/conftest.py`
 
 - [ ] **Step 1: Remove duplicated fixtures**
@@ -1001,6 +1018,7 @@ Run: `uv run pytest tests/modules/audit -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add tests/modules/audit/conftest.py
 git commit -m "test(audit): remove duplicated fixtures, use root conftest"
@@ -1011,6 +1029,7 @@ git commit -m "test(audit): remove duplicated fixtures, use root conftest"
 ## Task 9: Audit Tests Cleanup
 
 **Files:**
+
 - Modify: `tests/modules/audit/test_audit_service.py`
 - Modify: `tests/modules/audit/test_audit_api.py`
 
@@ -1175,6 +1194,7 @@ Run: `uv run pytest tests/modules/audit -v`
 Expected: All tests PASS
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add tests/modules/audit/test_audit_service.py tests/modules/audit/test_audit_api.py
 git commit -m "test(audit): add async markers, type hints, and clean up assertions"
@@ -1185,6 +1205,7 @@ git commit -m "test(audit): add async markers, type hints, and clean up assertio
 ## Task 10: Roles Tests - Fix import uuid
 
 **Files:**
+
 - Modify: `tests/modules/roles/test_role_service.py`
 - Modify: `tests/modules/roles/test_permission_service.py`
 
@@ -1223,6 +1244,7 @@ Run: `uv run pytest tests/modules/roles -v`
 Expected: All tests PASS
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add tests/modules/roles/test_role_service.py tests/modules/roles/test_permission_service.py
 git commit -m "test(roles): move import uuid to file top level"
@@ -1245,6 +1267,7 @@ Run: `uv run ruff format tests/`
 Expected: Clean formatting
 
 - [ ] **Step 4: Final commit**
+
 ```bash
 git add -A
 git commit -m "test: complete test code refactoring with consistent patterns"

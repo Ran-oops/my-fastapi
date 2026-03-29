@@ -14,7 +14,7 @@
 
 ## File Structure
 
-```
+```text
 app/
 ├── core/
 │   ├── eventbus.py          # 新增：事件总线
@@ -50,6 +50,7 @@ alembic/
 ## Task 1: EventBus 核心实现
 
 **Files:**
+
 - Create: `app/core/eventbus.py`
 - Create: `app/core/events.py`
 - Create: `tests/modules/notifications/__init__.py`
@@ -208,6 +209,7 @@ git commit -m "feat(core): add EventBus for event-driven architecture"
 ## Task 2: Notification 数据模型
 
 **Files:**
+
 - Create: `app/modules/notifications/models.py`
 - Create: `alembic/versions/2026_03_27_0000-001_add_notifications.py`
 
@@ -365,6 +367,7 @@ git commit -m "feat(notifications): add data models and migration"
 ## Task 3: Notification Schemas
 
 **Files:**
+
 - Create: `app/modules/notifications/schemas.py`
 
 - [ ] **Step 1: 创建 Pydantic schemas**
@@ -453,6 +456,7 @@ git commit -m "feat(notifications): add Pydantic schemas"
 ## Task 4: Repository 层
 
 **Files:**
+
 - Create: `app/modules/notifications/repository.py`
 
 - [ ] **Step 1: 创建 Repository**
@@ -587,6 +591,7 @@ git commit -m "feat(notifications): add repository layer"
 ## Task 5: 通知渠道实现
 
 **Files:**
+
 - Create: `app/modules/notifications/channels.py`
 - Create: `tests/modules/notifications/test_channels.py`
 
@@ -608,7 +613,7 @@ class NotificationChannel(ABC):
     ) -> tuple[bool, Optional[str]]:
         """
         发送通知
-        
+
         Returns:
             (success, error_message)
         """
@@ -714,6 +719,7 @@ git commit -m "feat(notifications): add notification channels"
 ## Task 6: 事件处理器
 
 **Files:**
+
 - Create: `app/modules/notifications/handlers.py`
 
 - [ ] **Step 1: 创建事件处理器**
@@ -827,6 +833,7 @@ git commit -m "feat(notifications): add event handler"
 ## Task 7: Service 层
 
 **Files:**
+
 - Rewrite: `app/modules/notifications/service.py`
 - Create: `tests/modules/notifications/conftest.py`
 - Create: `tests/modules/notifications/test_service.py`
@@ -1049,6 +1056,7 @@ git commit -m "feat(notifications): add service layer with tests"
 ## Task 8: API 路由
 
 **Files:**
+
 - Create: `app/modules/notifications/router.py`
 - Create: `tests/modules/notifications/test_api.py`
 
@@ -1252,6 +1260,7 @@ git commit -m "feat(notifications): add API routes with tests"
 ## Task 9: 订单模块集成
 
 **Files:**
+
 - Modify: `app/modules/orders/service.py`
 
 - [ ] **Step 1: 集成事件发布**
@@ -1259,6 +1268,7 @@ git commit -m "feat(notifications): add API routes with tests"
 Modify `app/modules/orders/service.py`:
 
 Add imports at top:
+
 ```python
 from app.core.eventbus import eventbus, Event
 from app.core.events import ORDER_CONFIRMED, ORDER_SHIPPED, ORDER_CANCELLED
@@ -1279,7 +1289,7 @@ if data.status:
         event_type = ORDER_SHIPPED
     elif data.status == OrderStatus.CANCELLED:
         event_type = ORDER_CANCELLED
-    
+
     if event_type:
         eventbus.publish(Event(
             event_type=event_type,
@@ -1299,6 +1309,7 @@ git commit -m "feat(orders): integrate with notification events"
 ## Task 10: 订阅事件处理器
 
 **Files:**
+
 - Modify: `app/modules/notifications/__init__.py`
 - Modify: `app/main.py`
 
@@ -1339,6 +1350,7 @@ __all__ = [
 Modify `app/main.py`:
 
 Add imports:
+
 ```python
 from app.core.eventbus import eventbus
 from app.modules.notifications.handlers import notification_handler
@@ -1407,7 +1419,8 @@ git commit -m "feat(notifications): complete event-driven notification system"
 **Tasks:** 11
 **Files Created:** 14
 **Files Modified:** 4
-**Expected Result:** 
+**Expected Result:**
+
 - EventBus 可发布和订阅事件
 - 订单状态变更触发通知
 - 通知记录存储到数据库

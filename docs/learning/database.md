@@ -21,7 +21,7 @@
 
 本项目使用 **多数据库架构**，将不同业务域的数据存储在不同的数据库中：
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           应用层 (FastAPI)                               │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -46,11 +46,11 @@
 
 ### 分区原因
 
-| 数据库 | 分区理由 |
-|--------|----------|
-| User DB | 用户数据敏感，需要独立的安全策略和备份方案 |
-| Business DB | 业务数据量大，需要独立的性能优化 |
-| Config DB | 配置数据只读，可被多个服务共享 |
+| 数据库      | 分区理由                                   |
+| ----------- | ------------------------------------------ |
+| User DB     | 用户数据敏感，需要独立的安全策略和备份方案 |
+| Business DB | 业务数据量大，需要独立的性能优化           |
+| Config DB   | 配置数据只读，可被多个服务共享             |
 
 ---
 
@@ -58,7 +58,7 @@
 
 ### 连接配置
 
-```
+```text
 数据库类型: PostgreSQL 14+
 驱动: asyncpg
 访问模式: Read/Write
@@ -90,17 +90,17 @@ CREATE INDEX ix_users_username ON users(username);
 
 **字段说明**:
 
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| id | INTEGER | PK, AUTO | 主键，自增 |
-| email | VARCHAR(255) | UNIQUE, NOT NULL | 邮箱，唯一 |
-| username | VARCHAR(100) | UNIQUE, NOT NULL | 用户名，唯一 |
-| full_name | VARCHAR(200) | NULL | 全名，可选 |
-| hashed_password | VARCHAR(255) | NOT NULL | bcrypt 哈希密码 |
-| is_active | BOOLEAN | NOT NULL, DEFAULT true | 是否激活 |
-| is_superuser | BOOLEAN | NOT NULL, DEFAULT false | 是否超级管理员 |
-| created_at | TIMESTAMP | NOT NULL | 创建时间 |
-| updated_at | TIMESTAMP | NOT NULL | 更新时间 |
+| 字段            | 类型         | 约束                    | 说明            |
+| --------------- | ------------ | ----------------------- | --------------- |
+| id              | INTEGER      | PK, AUTO                | 主键，自增      |
+| email           | VARCHAR(255) | UNIQUE, NOT NULL        | 邮箱，唯一      |
+| username        | VARCHAR(100) | UNIQUE, NOT NULL        | 用户名，唯一    |
+| full_name       | VARCHAR(200) | NULL                    | 全名，可选      |
+| hashed_password | VARCHAR(255) | NOT NULL                | bcrypt 哈希密码 |
+| is_active       | BOOLEAN      | NOT NULL, DEFAULT true  | 是否激活        |
+| is_superuser    | BOOLEAN      | NOT NULL, DEFAULT false | 是否超级管理员  |
+| created_at      | TIMESTAMP    | NOT NULL                | 创建时间        |
+| updated_at      | TIMESTAMP    | NOT NULL                | 更新时间        |
 
 #### roles 表
 
@@ -120,11 +120,11 @@ CREATE INDEX ix_roles_name ON roles(name);
 
 **字段说明**:
 
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| id | INTEGER | PK, AUTO | 主键 |
-| name | VARCHAR(100) | UNIQUE, NOT NULL | 角色名称 |
-| description | VARCHAR(255) | NULL | 角色描述 |
+| 字段        | 类型         | 约束             | 说明     |
+| ----------- | ------------ | ---------------- | -------- |
+| id          | INTEGER      | PK, AUTO         | 主键     |
+| name        | VARCHAR(100) | UNIQUE, NOT NULL | 角色名称 |
+| description | VARCHAR(255) | NULL             | 角色描述 |
 
 #### permissions 表
 
@@ -146,12 +146,12 @@ CREATE INDEX ix_permissions_code ON permissions(code);
 
 **字段说明**:
 
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| id | INTEGER | PK, AUTO | 主键 |
-| name | VARCHAR(100) | UNIQUE, NOT NULL | 权限名称 |
-| code | VARCHAR(100) | UNIQUE, NOT NULL | 权限代码 |
-| description | VARCHAR(255) | NULL | 权限描述 |
+| 字段        | 类型         | 约束             | 说明     |
+| ----------- | ------------ | ---------------- | -------- |
+| id          | INTEGER      | PK, AUTO         | 主键     |
+| name        | VARCHAR(100) | UNIQUE, NOT NULL | 权限名称 |
+| code        | VARCHAR(100) | UNIQUE, NOT NULL | 权限代码 |
+| description | VARCHAR(255) | NULL             | 权限描述 |
 
 #### user_roles 关联表
 
@@ -181,7 +181,7 @@ CREATE TABLE role_permissions (
 
 ### 连接配置
 
-```
+```text
 数据库类型: SQL Server 2019+
 驱动: aioodbc (ODBC Driver 17 for SQL Server)
 访问模式: Read/Write
@@ -213,25 +213,25 @@ CREATE INDEX ix_orders_status ON orders(status);
 
 **字段说明**:
 
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| id | INT | PK, IDENTITY | 主键，自增 |
-| order_no | VARCHAR(50) | UNIQUE, NOT NULL | 订单编号 |
-| user_id | INT | NOT NULL | 用户ID(外部引用) |
-| total_amount | DECIMAL(10,2) | NOT NULL | 订单总金额 |
-| status | VARCHAR(20) | NOT NULL, DEFAULT 'pending' | 订单状态 |
-| remark | NVARCHAR(MAX) | NULL | 备注 |
-| created_at | DATETIME2 | NOT NULL | 创建时间 |
-| updated_at | DATETIME2 | NOT NULL | 更新时间 |
+| 字段         | 类型          | 约束                        | 说明             |
+| ------------ | ------------- | --------------------------- | ---------------- |
+| id           | INT           | PK, IDENTITY                | 主键，自增       |
+| order_no     | VARCHAR(50)   | UNIQUE, NOT NULL            | 订单编号         |
+| user_id      | INT           | NOT NULL                    | 用户ID(外部引用) |
+| total_amount | DECIMAL(10,2) | NOT NULL                    | 订单总金额       |
+| status       | VARCHAR(20)   | NOT NULL, DEFAULT 'pending' | 订单状态         |
+| remark       | NVARCHAR(MAX) | NULL                        | 备注             |
+| created_at   | DATETIME2     | NOT NULL                    | 创建时间         |
+| updated_at   | DATETIME2     | NOT NULL                    | 更新时间         |
 
 **订单状态枚举**:
 
-| 状态 | 说明 |
-|------|------|
-| pending | 待处理 |
+| 状态       | 说明   |
+| ---------- | ------ |
+| pending    | 待处理 |
 | processing | 处理中 |
-| completed | 已完成 |
-| cancelled | 已取消 |
+| completed  | 已完成 |
+| cancelled  | 已取消 |
 
 #### order_items 表
 
@@ -255,14 +255,14 @@ CREATE INDEX ix_order_items_product_id ON order_items(product_id);
 
 **字段说明**:
 
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| id | INT | PK, IDENTITY | 主键 |
-| order_id | INT | NOT NULL | 订单ID |
-| product_id | INT | NOT NULL | 产品ID |
-| quantity | INT | NOT NULL | 数量 |
-| unit_price | DECIMAL(10,2) | NOT NULL | 单价 |
-| total_price | DECIMAL(10,2) | NOT NULL | 小计金额 |
+| 字段        | 类型          | 约束         | 说明     |
+| ----------- | ------------- | ------------ | -------- |
+| id          | INT           | PK, IDENTITY | 主键     |
+| order_id    | INT           | NOT NULL     | 订单ID   |
+| product_id  | INT           | NOT NULL     | 产品ID   |
+| quantity    | INT           | NOT NULL     | 数量     |
+| unit_price  | DECIMAL(10,2) | NOT NULL     | 单价     |
+| total_price | DECIMAL(10,2) | NOT NULL     | 小计金额 |
 
 #### products 表
 
@@ -286,14 +286,14 @@ CREATE INDEX ix_products_name ON products(name);
 
 **字段说明**:
 
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| id | INT | PK, IDENTITY | 主键 |
-| name | NVARCHAR(200) | NOT NULL | 产品名称 |
-| sku | VARCHAR(50) | UNIQUE, NOT NULL | SKU编码 |
-| price | DECIMAL(10,2) | NOT NULL | 价格 |
-| stock | INT | NOT NULL, DEFAULT 0 | 库存数量 |
-| is_active | BIT | NOT NULL, DEFAULT 1 | 是否上架 |
+| 字段      | 类型          | 约束                | 说明     |
+| --------- | ------------- | ------------------- | -------- |
+| id        | INT           | PK, IDENTITY        | 主键     |
+| name      | NVARCHAR(200) | NOT NULL            | 产品名称 |
+| sku       | VARCHAR(50)   | UNIQUE, NOT NULL    | SKU编码  |
+| price     | DECIMAL(10,2) | NOT NULL            | 价格     |
+| stock     | INT           | NOT NULL, DEFAULT 0 | 库存数量 |
+| is_active | BIT           | NOT NULL, DEFAULT 1 | 是否上架 |
 
 ---
 
@@ -301,7 +301,7 @@ CREATE INDEX ix_products_name ON products(name);
 
 ### 连接配置
 
-```
+```text
 数据库类型: MySQL 8.0+
 驱动: aiomysql
 访问模式: Read Only(只读)
@@ -314,11 +314,11 @@ CREATE INDEX ix_products_name ON products(name);
 
 **预设计表**:
 
-| 表名 | 用途 |
-|------|------|
-| system_config | 系统配置项 |
-| data_dictionary | 数据字典 |
-| enum_values | 枚举值表 |
+| 表名            | 用途       |
+| --------------- | ---------- |
+| system_config   | 系统配置项 |
+| data_dictionary | 数据字典   |
+| enum_values     | 枚举值表   |
 
 ---
 
@@ -326,7 +326,7 @@ CREATE INDEX ix_products_name ON products(name);
 
 ### 用户数据库关系图
 
-```
+```text
 ┌─────────────────┐         ┌─────────────────┐
 │      users      │         │      roles      │
 ├─────────────────┤         ├─────────────────┤
@@ -359,7 +359,7 @@ CREATE INDEX ix_products_name ON products(name);
 
 ### 业务数据库关系图
 
-```
+```text
 ┌─────────────────┐         ┌─────────────────┐
 │     orders      │         │   order_items   │
 ├─────────────────┤         ├─────────────────┤
@@ -397,7 +397,7 @@ CREATE INDEX ix_products_name ON products(name);
 
 ### 迁移目录结构
 
-```
+```text
 alembic/
 ├── versions/                    # 迁移脚本
 │   └── 001_initial.py          # 初始迁移
@@ -464,11 +464,11 @@ CONFIG_DATABASE_URL=mysql+aiomysql://root:password@localhost:3306/config_db
 
 ### 连接字符串格式
 
-| 数据库 | 格式 |
-|--------|------|
-| PostgreSQL | `postgresql+asyncpg://user:password@host:port/database` |
+| 数据库     | 格式                                                                                    |
+| ---------- | --------------------------------------------------------------------------------------- |
+| PostgreSQL | `postgresql+asyncpg://user:password@host:port/database`                                 |
 | SQL Server | `mssql+aioodbc://user:password@host:port/database?driver=ODBC+Driver+17+for+SQL+Server` |
-| MySQL | `mysql+aiomysql://user:password@host:port/database` |
+| MySQL      | `mysql+aiomysql://user:password@host:port/database`                                     |
 
 ### 连接池配置
 
@@ -547,11 +547,11 @@ FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
 
 ### 5. 备份策略
 
-| 数据库 | 备份频率 | 保留期限 |
-|--------|----------|----------|
-| PostgreSQL | 每日全量 + 实时WAL | 30天 |
-| SQL Server | 每日全量 + 每小时差异 | 14天 |
-| MySQL | 每日全量 | 7天 |
+| 数据库     | 备份频率              | 保留期限 |
+| ---------- | --------------------- | -------- |
+| PostgreSQL | 每日全量 + 实时WAL    | 30天     |
+| SQL Server | 每日全量 + 每小时差异 | 14天     |
+| MySQL      | 每日全量              | 7天      |
 
 ---
 

@@ -6,26 +6,26 @@
 
 ### 核心文档
 
-| 文档 | 说明 |
-|------|------|
-| [README.md](README.md) | 项目概览和快速入门 (本页) |
-| [architecture.md](architecture.md) | 架构设计文档 - 系统架构、设计模式、数据流 |
-| [api-reference.md](api-reference.md) | API 接口文档 - 所有 RESTful API 详细说明 |
-| [database.md](database.md) | 数据库设计文档 - 表结构、关系图、迁移管理 |
-| [security.md](security.md) | 安全设计文档 - 认证授权、加密、安全最佳实践 |
-| [deployment.md](deployment.md) | 部署运维文档 - 环境配置、部署流程、监控 |
-| [development-guide.md](development-guide.md) | 开发指南 - 代码规范、贡献指南、常见问题 |
+| 文档                                         | 说明                                        |
+| -------------------------------------------- | ------------------------------------------- |
+| [README.md](README.md)                       | 项目概览和快速入门 (本页)                   |
+| [architecture.md](architecture.md)           | 架构设计文档 - 系统架构、设计模式、数据流   |
+| [api-reference.md](api-reference.md)         | API 接口文档 - 所有 RESTful API 详细说明    |
+| [database.md](database.md)                   | 数据库设计文档 - 表结构、关系图、迁移管理   |
+| [security.md](security.md)                   | 安全设计文档 - 认证授权、加密、安全最佳实践 |
+| [deployment.md](deployment.md)               | 部署运维文档 - 环境配置、部署流程、监控     |
+| [development-guide.md](development-guide.md) | 开发指南 - 代码规范、贡献指南、常见问题     |
 
 ### 辅助文档
 
-| 文档 | 说明 |
-|------|------|
-| [diagrams.md](diagrams.md) | 架构图与流程图 - 系统架构图、时序图、类图 |
-| [examples.md](examples.md) | 代码示例 - API、Service、CRUD、测试代码模板 |
-| [faq.md](faq.md) | FAQ 常见问题 - 开发中常见问题解答 |
-| [glossary.md](glossary.md) | 术语表 - 项目专业术语解释 |
-| [cheat-sheet.md](cheat-sheet.md) | 快速参考卡片 - API/命令/代码速查表 |
-| [troubleshooting.md](troubleshooting.md) | 故障排查指南 - 常见错误诊断和解决方案 |
+| 文档                                     | 说明                                        |
+| ---------------------------------------- | ------------------------------------------- |
+| [diagrams.md](diagrams.md)               | 架构图与流程图 - 系统架构图、时序图、类图   |
+| [examples.md](examples.md)               | 代码示例 - API、Service、CRUD、测试代码模板 |
+| [faq.md](faq.md)                         | FAQ 常见问题 - 开发中常见问题解答           |
+| [glossary.md](glossary.md)               | 术语表 - 项目专业术语解释                   |
+| [cheat-sheet.md](cheat-sheet.md)         | 快速参考卡片 - API/命令/代码速查表          |
+| [troubleshooting.md](troubleshooting.md) | 故障排查指南 - 常见错误诊断和解决方案       |
 
 ---
 
@@ -57,14 +57,14 @@
 
 ### 核心特性
 
-| 特性 | 说明 |
-|------|------|
-| RESTful API | 符合规范的 API 设计 |
-| JWT 认证 | 支持 Access Token 和 Refresh Token |
-| 多数据库 | 3 个独立数据库，支持读写分离 |
-| 数据库迁移 | Alembic 多数据库迁移支持 |
-| 自动化测试 | pytest + pytest-asyncio |
-| 代码质量 | Ruff lint + Ty 类型检查 |
+| 特性        | 说明                               |
+| ----------- | ---------------------------------- |
+| RESTful API | 符合规范的 API 设计                |
+| JWT 认证    | 支持 Access Token 和 Refresh Token |
+| 多数据库    | 3 个独立数据库，支持读写分离       |
+| 数据库迁移  | Alembic 多数据库迁移支持           |
+| 自动化测试  | pytest + pytest-asyncio            |
+| 代码质量    | Ruff lint + Ty 类型检查            |
 
 ---
 
@@ -72,7 +72,7 @@
 
 ### 核心框架
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      FastAPI Framework                       │
 │                    (异步 Web 框架)                           │
@@ -89,15 +89,15 @@
 
 ### 数据库驱动
 
-| 数据库 | 驱动 | 用途 |
-|--------|------|------|
-| PostgreSQL | asyncpg | 用户认证、角色、权限 |
-| SQL Server | aioodbc | 订单、产品、业务数据 |
-| MySQL | aiomysql | 系统配置、字典数据(只读) |
+| 数据库     | 驱动     | 用途                     |
+| ---------- | -------- | ------------------------ |
+| PostgreSQL | asyncpg  | 用户认证、角色、权限     |
+| SQL Server | aioodbc  | 订单、产品、业务数据     |
+| MySQL      | aiomysql | 系统配置、字典数据(只读) |
 
 ### 开发工具
 
-```
+```text
 项目工具链:
 ├── uv          - 极速包管理器 (替代 pip)
 ├── ruff        - 代码检查和格式化 (替代 black+flake8)
@@ -110,7 +110,7 @@
 
 ## 项目结构详解
 
-```
+```text
 mock_beige_fastapi_project/
 ├── app/                          # 主应用目录
 │   ├── api/                      # API 路由层 (最外层)
@@ -165,7 +165,7 @@ mock_beige_fastapi_project/
 
 ### 分层架构数据流
 
-```
+```text
 请求 → API Endpoint → Service → CRUD → Model → Database
                  ↓           ↓        ↓       ↓
 响应 ← Schema验证    异常处理   会话管理  数据库连接
@@ -179,7 +179,7 @@ mock_beige_fastapi_project/
 
 项目支持 **三个独立数据库**，每个数据库有明确的职责和访问模式：
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                         应用层 (FastAPI)                         │
 └──────────────────────────────────────────────────────────────────┘
@@ -244,7 +244,7 @@ async def get_config(db: AsyncSession = Depends(get_config_db)):
 
 每个领域模块包含完整的垂直切片：
 
-```
+```text
 app/modules/users/
 ├── models.py      # SQLAlchemy 模型
 ├── schemas.py     # Pydantic schemas
@@ -255,7 +255,7 @@ app/modules/users/
 
 ### 依赖关系
 
-```
+```text
 router.py → service.py → repository.py → models.py
                 ↓
             schemas.py
@@ -292,7 +292,7 @@ class UserService:
         existing = await user_repository.get_by_email(db, email=user_in.email)
         if existing:
             raise ConflictException(f"Email {user_in.email} already registered")
-        
+
         # 调用 Repository 层
         return await user_repository.create(db, obj_in=user_in)
 ```
@@ -308,7 +308,7 @@ class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
     async def get_by_username(self, db: AsyncSession, username: str) -> User | None:
         result = await db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
-    
+
     async def authenticate(self, db: AsyncSession, username: str, password: str) -> User | None:
         # 密码验证
         user = await self.get_by_username(db, username=username)
@@ -328,14 +328,14 @@ class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
 ```python
 class User(UserDBBase):
     __tablename__ = "users"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     username: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
     # 关系定义
     roles: Mapped[list["Role"]] = relationship("Role", secondary="user_roles", ...)
 ```
@@ -351,7 +351,7 @@ class UserCreate(UserBase):
     email: EmailStr
     username: str
     password: str
-    
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
@@ -405,12 +405,12 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True,
     )
-    
+
     # 应用配置
     APP_ENV: str = "development"
     SECRET_KEY: str = "change-this-secret-key-in-production"
     API_V1_STR: str = "/api/v1"
-    
+
     # 数据库配置
     USER_DATABASE_URL: str = "postgresql+asyncpg://..."
     BUSINESS_DATABASE_URL: str = "mssql+aioodbc://..."
@@ -494,11 +494,11 @@ class PaginatedResponse[T](ListResponse[T]):
 class PaginationParams(BaseModel):
     page: int = 1
     page_size: int = 10
-    
+
     @property
     def skip(self) -> int:
         return (self.page - 1) * self.page_size
-    
+
     @property
     def limit(self) -> int:
         return self.page_size
@@ -510,7 +510,7 @@ class PaginationParams(BaseModel):
 
 ### JWT 认证流程
 
-```
+```text
 1. 用户登录 (/api/v1/auth/login)
    │
    ▼
@@ -545,7 +545,7 @@ class PaginationParams(BaseModel):
 # 普通用户 - 访问自己的资源
 async def get_current_user(...) -> User:
     """获取当前登录用户"""
-    
+
 # 超级管理员 - 访问所有资源
 async def get_current_active_superuser(current_user: User = Depends(get_current_user)) -> User:
     """检查是否为超级管理员"""
@@ -562,7 +562,7 @@ async def get_current_active_superuser(current_user: User = Depends(get_current_
 
 使用 Typer 构建命令行工具：
 
-```
+```text
 manage.py (入口)
     │
     ├── fte calculate          # FTE 计算命令
@@ -615,7 +615,7 @@ python manage.py fte --help
 
 ### 1. 代码组织
 
-```
+```text
 新增功能时的文件放置:
 ├── 领域模块     → app/modules/<domain>/
 │   ├── models.py      # 数据模型
@@ -716,15 +716,15 @@ just fmt
 
 ### 目录结构速查
 
-| 目录 | 职责 |
-|------|------|
-| `app/modules/` | 业务领域模块 |
-| `app/modules/users/` | 用户领域 (models, schemas, repository, service, router) |
-| `app/modules/roles/` | 角色权限领域 |
-| `app/modules/shared/` | 共享基础设施 (db, schemas) |
-| `app/api/` | 路由注册、依赖注入 |
-| `app/cli/` | 命令行工具 |
-| `app/core/` | 核心配置 (config, security, exceptions) |
+| 目录                  | 职责                                                    |
+| --------------------- | ------------------------------------------------------- |
+| `app/modules/`        | 业务领域模块                                            |
+| `app/modules/users/`  | 用户领域 (models, schemas, repository, service, router) |
+| `app/modules/roles/`  | 角色权限领域                                            |
+| `app/modules/shared/` | 共享基础设施 (db, schemas)                              |
+| `app/api/`            | 路由注册、依赖注入                                      |
+| `app/cli/`            | 命令行工具                                              |
+| `app/core/`           | 核心配置 (config, security, exceptions)                 |
 
 ---
 

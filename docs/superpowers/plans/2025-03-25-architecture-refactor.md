@@ -15,15 +15,18 @@
 ### Task 1: Create db/base.py
 
 **Files:**
+
 - Create: `app/db/__init__.py`
 - Create: `app/db/base.py`
 
-- [ ] **Step 1: Create db directory and __init__.py**
+- [ ] **Step 1: Create db directory and **init**.py**
+
 ```bash
 mkdir -p app/db
 ```
 
-- [ ] **Step 2: Write app/db/__init__.py**
+- [ ] **Step 2: Write app/db/**init**.py**
+
 ```python
 from app.db.base import UserBase, BusinessBase, ConfigBase
 
@@ -31,6 +34,7 @@ __all__ = ["UserBase", "BusinessBase", "ConfigBase"]
 ```
 
 - [ ] **Step 3: Write app/db/base.py**
+
 ```python
 from sqlalchemy import Column, DateTime, func
 from sqlalchemy.orm import declarative_base, declared_attr
@@ -59,12 +63,15 @@ ConfigBase = declarative_base(cls=ConfigMixin)
 ```
 
 - [ ] **Step 4: Verify import works**
+
 ```bash
 uv run python -c "from app.db.base import UserBase, BusinessBase, ConfigBase; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 5: Commit**
+
 ```bash
 git add app/db/
 git commit -m "feat(db): add db/base.py with UserBase, BusinessBase, ConfigBase"
@@ -75,10 +82,12 @@ git commit -m "feat(db): add db/base.py with UserBase, BusinessBase, ConfigBase"
 ### Task 2: Create db/session.py
 
 **Files:**
+
 - Create: `app/db/session.py`
 - Modify: `app/db/__init__.py`
 
 - [ ] **Step 1: Write app/db/session.py**
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -162,7 +171,8 @@ async def get_config_session():
             await session.close()
 ```
 
-- [ ] **Step 2: Update app/db/__init__.py**
+- [ ] **Step 2: Update app/db/**init**.py**
+
 ```python
 from app.db.base import UserBase, BusinessBase, ConfigBase
 from app.db.session import (
@@ -194,12 +204,15 @@ __all__ = [
 ```
 
 - [ ] **Step 3: Verify import works**
+
 ```bash
 uv run python -c "from app.db import UserBase, get_user_session; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add app/db/
 git commit -m "feat(db): add db/session.py with engines and session factories"
@@ -210,10 +223,12 @@ git commit -m "feat(db): add db/session.py with engines and session factories"
 ### Task 3: Create db/repository.py
 
 **Files:**
+
 - Create: `app/db/repository.py`
 - Modify: `app/db/__init__.py`
 
 - [ ] **Step 1: Write app/db/repository.py**
+
 ```python
 from collections.abc import Sequence
 from typing import Any
@@ -275,7 +290,8 @@ class BaseRepository[ModelType, CreateSchemaType: BaseModel, UpdateSchemaType: B
         return instance
 ```
 
-- [ ] **Step 2: Update app/db/__init__.py**
+- [ ] **Step 2: Update app/db/**init**.py**
+
 ```python
 from app.db.base import UserBase, BusinessBase, ConfigBase
 from app.db.repository import BaseRepository
@@ -309,12 +325,15 @@ __all__ = [
 ```
 
 - [ ] **Step 3: Verify import works**
+
 ```bash
 uv run python -c "from app.db import BaseRepository; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add app/db/
 git commit -m "feat(db): add db/repository.py with BaseRepository"
@@ -327,15 +346,18 @@ git commit -m "feat(db): add db/repository.py with BaseRepository"
 ### Task 4: Create common/schemas.py
 
 **Files:**
+
 - Create: `app/common/__init__.py`
 - Create: `app/common/schemas.py`
 
 - [ ] **Step 1: Create common directory**
+
 ```bash
 mkdir -p app/common
 ```
 
-- [ ] **Step 2: Write app/common/__init__.py**
+- [ ] **Step 2: Write app/common/**init**.py**
+
 ```python
 from app.common.schemas import DataResponse, ListResponse, ResponseBase
 from app.common.pagination import PaginatedResponse, PaginationParams
@@ -350,6 +372,7 @@ __all__ = [
 ```
 
 - [ ] **Step 3: Write app/common/schemas.py**
+
 ```python
 from typing import TypeVar
 
@@ -372,6 +395,7 @@ class ListResponse[T](ResponseBase):
 ```
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add app/common/
 git commit -m "feat(common): add common/schemas.py with response models"
@@ -382,9 +406,11 @@ git commit -m "feat(common): add common/schemas.py with response models"
 ### Task 5: Create common/pagination.py
 
 **Files:**
+
 - Create: `app/common/pagination.py`
 
 - [ ] **Step 1: Write app/common/pagination.py**
+
 ```python
 from typing import TypeVar
 
@@ -418,12 +444,15 @@ class PaginatedResponse(ListResponse[T]):
 ```
 
 - [ ] **Step 2: Verify import works**
+
 ```bash
 uv run python -c "from app.common import PaginationParams, PaginatedResponse; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add app/common/
 git commit -m "feat(common): add common/pagination.py with pagination models"
@@ -436,9 +465,11 @@ git commit -m "feat(common): add common/pagination.py with pagination models"
 ### Task 6: Create users/associations.py
 
 **Files:**
+
 - Create: `app/modules/users/associations.py`
 
 - [ ] **Step 1: Write app/modules/users/associations.py**
+
 ```python
 from sqlalchemy import Column, ForeignKey, Integer, Table
 
@@ -453,6 +484,7 @@ user_roles = Table(
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/users/associations.py
 git commit -m "feat(users): add associations.py with user_roles table"
@@ -463,9 +495,11 @@ git commit -m "feat(users): add associations.py with user_roles table"
 ### Task 7: Create roles/associations.py
 
 **Files:**
+
 - Create: `app/modules/roles/associations.py`
 
 - [ ] **Step 1: Write app/modules/roles/associations.py**
+
 ```python
 from sqlalchemy import Column, ForeignKey, Integer, Table
 
@@ -480,6 +514,7 @@ role_permissions = Table(
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/roles/associations.py
 git commit -m "feat(roles): add associations.py with role_permissions table"
@@ -490,9 +525,11 @@ git commit -m "feat(roles): add associations.py with role_permissions table"
 ### Task 8: Update users/models.py
 
 **Files:**
+
 - Modify: `app/modules/users/models.py`
 
 - [ ] **Step 1: Update app/modules/users/models.py**
+
 ```python
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -520,12 +557,15 @@ class User(UserBase):
 ```
 
 - [ ] **Step 2: Verify import works**
+
 ```bash
 uv run python -c "from app.modules.users.models import User; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add app/modules/users/models.py
 git commit -m "refactor(users): remove circular import, use string-based relationship"
@@ -536,9 +576,11 @@ git commit -m "refactor(users): remove circular import, use string-based relatio
 ### Task 9: Update roles/models.py
 
 **Files:**
+
 - Modify: `app/modules/roles/models.py`
 
 - [ ] **Step 1: Update app/modules/roles/models.py**
+
 ```python
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -584,12 +626,15 @@ class Permission(UserBase):
 ```
 
 - [ ] **Step 2: Verify import works**
+
 ```bash
 uv run python -c "from app.modules.roles.models import Role, Permission; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add app/modules/roles/models.py
 git commit -m "refactor(roles): remove circular import, remove inline table definitions"
@@ -602,9 +647,11 @@ git commit -m "refactor(roles): remove circular import, remove inline table defi
 ### Task 10: Update users/repository.py
 
 **Files:**
+
 - Modify: `app/modules/users/repository.py`
 
 - [ ] **Step 1: Update app/modules/users/repository.py**
+
 ```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -657,6 +704,7 @@ user_repo = UserRepository(User)
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/users/repository.py
 git commit -m "refactor(users): update repository to use new imports and naming"
@@ -667,9 +715,11 @@ git commit -m "refactor(users): update repository to use new imports and naming"
 ### Task 11: Update users/schemas.py
 
 **Files:**
+
 - Modify: `app/modules/users/schemas.py`
 
 - [ ] **Step 1: Update app/modules/users/schemas.py**
+
 ```python
 import re
 from datetime import datetime
@@ -755,6 +805,7 @@ class TokenPayload(BaseModel):
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/users/schemas.py
 git commit -m "refactor(users): rename schemas, remove base class"
@@ -765,9 +816,11 @@ git commit -m "refactor(users): rename schemas, remove base class"
 ### Task 12: Convert users/service.py to functions
 
 **Files:**
+
 - Modify: `app/modules/users/service.py`
 
 - [ ] **Step 1: Update app/modules/users/service.py**
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -842,6 +895,7 @@ async def login_user(session: AsyncSession, username: str, password: str) -> Tok
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/users/service.py
 git commit -m "refactor(users): convert UserService class to module functions"
@@ -852,9 +906,11 @@ git commit -m "refactor(users): convert UserService class to module functions"
 ### Task 13: Update users/router.py
 
 **Files:**
+
 - Modify: `app/modules/users/router.py`
 
 - [ ] **Step 1: Update app/modules/users/router.py**
+
 ```python
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -942,6 +998,7 @@ async def delete_user(
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/users/router.py
 git commit -m "refactor(users): update router with new imports and auth endpoints"
@@ -952,9 +1009,11 @@ git commit -m "refactor(users): update router with new imports and auth endpoint
 ### Task 14: Update roles/repository.py
 
 **Files:**
+
 - Modify: `app/modules/roles/repository.py`
 
 - [ ] **Step 1: Update app/modules/roles/repository.py**
+
 ```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1043,6 +1102,7 @@ permission_repo = PermissionRepository(Permission)
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/roles/repository.py
 git commit -m "refactor(roles): update repository with new imports and naming"
@@ -1053,9 +1113,11 @@ git commit -m "refactor(roles): update repository with new imports and naming"
 ### Task 15: Update roles/schemas.py
 
 **Files:**
+
 - Modify: `app/modules/roles/schemas.py`
 
 - [ ] **Step 1: Update app/modules/roles/schemas.py**
+
 ```python
 from __future__ import annotations
 
@@ -1117,6 +1179,7 @@ RoleWithPermissions.model_rebuild()
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/roles/schemas.py
 git commit -m "refactor(roles): rename schemas, remove base classes"
@@ -1127,9 +1190,11 @@ git commit -m "refactor(roles): rename schemas, remove base classes"
 ### Task 16: Convert roles/service.py to functions
 
 **Files:**
+
 - Modify: `app/modules/roles/service.py`
 
 - [ ] **Step 1: Update app/modules/roles/service.py**
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -1260,6 +1325,7 @@ async def get_role_permissions(session: AsyncSession, role_id: int) -> list[Perm
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/roles/service.py
 git commit -m "refactor(roles): convert RoleService/PermissionService classes to functions"
@@ -1270,9 +1336,11 @@ git commit -m "refactor(roles): convert RoleService/PermissionService classes to
 ### Task 17: Update roles/router.py
 
 **Files:**
+
 - Modify: `app/modules/roles/router.py`
 
 - [ ] **Step 1: Update app/modules/roles/router.py**
+
 ```python
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1466,6 +1534,7 @@ async def get_role_permissions(
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/modules/roles/router.py
 git commit -m "refactor(roles): update router with new imports"
@@ -1476,9 +1545,11 @@ git commit -m "refactor(roles): update router with new imports"
 ### Task 18: Update api/deps.py
 
 **Files:**
+
 - Modify: `app/api/deps.py`
 
 - [ ] **Step 1: Update app/api/deps.py**
+
 ```python
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -1518,6 +1589,7 @@ async def get_current_active_superuser(current_user: User = Depends(get_current_
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/api/deps.py
 git commit -m "refactor(api): update deps with new imports and naming"
@@ -1525,12 +1597,14 @@ git commit -m "refactor(api): update deps with new imports and naming"
 
 ---
 
-### Task 19: Update api/v1/__init__.py
+### Task 19: Update api/v1/**init**.py
 
 **Files:**
+
 - Modify: `app/api/v1/__init__.py`
 
-- [ ] **Step 1: Update app/api/v1/__init__.py**
+- [ ] **Step 1: Update app/api/v1/**init**.py**
+
 ```python
 from fastapi import APIRouter
 
@@ -1543,6 +1617,7 @@ api_router.include_router(roles_router, tags=["roles", "permissions"])
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/api/v1/__init__.py
 git commit -m "refactor(api): simplify v1 router registration"
@@ -1553,9 +1628,11 @@ git commit -m "refactor(api): simplify v1 router registration"
 ### Task 20: Update main.py
 
 **Files:**
+
 - Modify: `app/main.py`
 
 - [ ] **Step 1: Update app/main.py**
+
 ```python
 import logging
 from contextlib import asynccontextmanager
@@ -1661,6 +1738,7 @@ async def readiness_check():
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add app/main.py
 git commit -m "refactor(main): update imports from db.session"
@@ -1671,26 +1749,32 @@ git commit -m "refactor(main): update imports from db.session"
 ### Task 21: Delete shared directory and endpoints
 
 **Files:**
+
 - Delete: `app/modules/shared/`
 - Delete: `app/api/v1/endpoints/`
 
 - [ ] **Step 1: Delete shared directory**
+
 ```bash
 rm -rf app/modules/shared/
 ```
 
 - [ ] **Step 2: Delete endpoints directory**
+
 ```bash
 rm -rf app/api/v1/endpoints/
 ```
 
 - [ ] **Step 3: Verify app starts**
+
 ```bash
 uv run python -c "from app.main import app; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add -A
 git commit -m "refactor: remove shared module and api/v1/endpoints"
@@ -1701,9 +1785,11 @@ git commit -m "refactor: remove shared module and api/v1/endpoints"
 ### Task 22: Update tests conftest.py
 
 **Files:**
+
 - Modify: `tests/conftest.py`
 
 - [ ] **Step 1: Update tests/conftest.py**
+
 ```python
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -1791,6 +1877,7 @@ async def user_id(test_user):
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add tests/conftest.py
 git commit -m "refactor(tests): update conftest with new imports and naming"
@@ -1801,18 +1888,23 @@ git commit -m "refactor(tests): update conftest with new imports and naming"
 ### Task 23: Run tests and verify
 
 - [ ] **Step 1: Run lint**
+
 ```bash
 just lint
 ```
+
 Expected: All checks pass
 
 - [ ] **Step 2: Run tests**
+
 ```bash
 just test
 ```
+
 Expected: All tests pass
 
 - [ ] **Step 3: Commit any fixes**
+
 ```bash
 git add -A
 git commit -m "fix: resolve lint and test issues"
@@ -1825,6 +1917,7 @@ git commit -m "fix: resolve lint and test issues"
 ### Task 24: Create Products module
 
 **Files:**
+
 - Create: `app/modules/products/__init__.py`
 - Create: `app/modules/products/models.py`
 - Create: `app/modules/products/schemas.py`
@@ -1832,11 +1925,13 @@ git commit -m "fix: resolve lint and test issues"
 - Create: `app/modules/products/service.py`
 - Create: `app/modules/products/router.py`
 
-- [ ] **Step 1: Write app/modules/products/__init__.py**
+- [ ] **Step 1: Write app/modules/products/**init**.py**
+
 ```python
 ```
 
 - [ ] **Step 2: Write app/modules/products/models.py**
+
 ```python
 from decimal import Decimal
 
@@ -1859,6 +1954,7 @@ class Product(UserBase):
 ```
 
 - [ ] **Step 3: Write app/modules/products/schemas.py**
+
 ```python
 from decimal import Decimal
 from datetime import datetime
@@ -1897,6 +1993,7 @@ class ProductRead(BaseModel):
 ```
 
 - [ ] **Step 4: Write app/modules/products/repository.py**
+
 ```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1926,6 +2023,7 @@ product_repo = ProductRepository(Product)
 ```
 
 - [ ] **Step 5: Write app/modules/products/service.py**
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -1977,6 +2075,7 @@ async def delete_product(session: AsyncSession, product_id: int) -> Product:
 ```
 
 - [ ] **Step 6: Write app/modules/products/router.py**
+
 ```python
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2071,7 +2170,8 @@ async def delete_product(
     return None
 ```
 
-- [ ] **Step 7: Register router in api/v1/__init__.py**
+- [ ] **Step 7: Register router in api/v1/**init**.py**
+
 ```python
 from app.modules.products.router import router as products_router
 # Add to api_router:
@@ -2079,6 +2179,7 @@ api_router.include_router(products_router, prefix="/products", tags=["products"]
 ```
 
 - [ ] **Step 8: Commit**
+
 ```bash
 git add app/modules/products/ app/api/v1/__init__.py
 git commit -m "feat(products): add products module with CRUD endpoints"
@@ -2089,6 +2190,7 @@ git commit -m "feat(products): add products module with CRUD endpoints"
 ### Task 25: Create Orders module
 
 **Files:**
+
 - Create: `app/modules/orders/__init__.py`
 - Create: `app/modules/orders/models.py`
 - Create: `app/modules/orders/associations.py` (not needed)
@@ -2097,11 +2199,13 @@ git commit -m "feat(products): add products module with CRUD endpoints"
 - Create: `app/modules/orders/service.py`
 - Create: `app/modules/orders/router.py`
 
-- [ ] **Step 1: Write app/modules/orders/__init__.py**
+- [ ] **Step 1: Write app/modules/orders/**init**.py**
+
 ```python
 ```
 
 - [ ] **Step 2: Write app/modules/orders/models.py**
+
 ```python
 from decimal import Decimal
 from enum import StrEnum
@@ -2144,6 +2248,7 @@ class OrderItem(UserBase):
 ```
 
 - [ ] **Step 3: Write app/modules/orders/schemas.py**
+
 ```python
 from decimal import Decimal
 from datetime import datetime
@@ -2194,6 +2299,7 @@ class OrderWithItems(OrderRead):
 ```
 
 - [ ] **Step 4: Write app/modules/orders/repository.py**
+
 ```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2236,6 +2342,7 @@ order_repo = OrderRepository(Order)
 ```
 
 - [ ] **Step 5: Write app/modules/orders/service.py**
+
 ```python
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2313,6 +2420,7 @@ async def delete_order(session: AsyncSession, order_id: int) -> Order:
 ```
 
 - [ ] **Step 6: Write app/modules/orders/router.py**
+
 ```python
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2419,6 +2527,7 @@ async def delete_order(
 ```
 
 - [ ] **Step 7: Register router**
+
 ```python
 # In app/api/v1/__init__.py
 from app.modules.orders.router import router as orders_router
@@ -2426,6 +2535,7 @@ api_router.include_router(orders_router, prefix="/orders", tags=["orders"])
 ```
 
 - [ ] **Step 8: Commit**
+
 ```bash
 git add app/modules/orders/ app/api/v1/__init__.py
 git commit -m "feat(orders): add orders module with status workflow"
@@ -2436,6 +2546,7 @@ git commit -m "feat(orders): add orders module with status workflow"
 ### Task 26: Create Config module
 
 **Files:**
+
 - Create: `app/modules/config/__init__.py`
 - Create: `app/modules/config/models.py`
 - Create: `app/modules/config/schemas.py`
@@ -2443,11 +2554,13 @@ git commit -m "feat(orders): add orders module with status workflow"
 - Create: `app/modules/config/service.py`
 - Create: `app/modules/config/router.py`
 
-- [ ] **Step 1: Write app/modules/config/__init__.py**
+- [ ] **Step 1: Write app/modules/config/**init**.py**
+
 ```python
 ```
 
 - [ ] **Step 2: Write app/modules/config/models.py**
+
 ```python
 from sqlalchemy import Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -2466,6 +2579,7 @@ class SystemConfig(BusinessBase):
 ```
 
 - [ ] **Step 3: Write app/modules/config/schemas.py**
+
 ```python
 from datetime import datetime
 
@@ -2497,6 +2611,7 @@ class ConfigRead(BaseModel):
 ```
 
 - [ ] **Step 4: Write app/modules/config/repository.py**
+
 ```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2516,6 +2631,7 @@ config_repo = ConfigRepository(SystemConfig)
 ```
 
 - [ ] **Step 5: Write app/modules/config/service.py**
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -2563,6 +2679,7 @@ async def delete_config(session: AsyncSession, config_id: int) -> SystemConfig:
 ```
 
 - [ ] **Step 6: Write app/modules/config/router.py**
+
 ```python
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2653,6 +2770,7 @@ async def delete_config(
 ```
 
 - [ ] **Step 7: Register router**
+
 ```python
 # In app/api/v1/__init__.py
 from app.modules.config.router import router as config_router
@@ -2660,6 +2778,7 @@ api_router.include_router(config_router, prefix="/config", tags=["config"])
 ```
 
 - [ ] **Step 8: Commit**
+
 ```bash
 git add app/modules/config/ app/api/v1/__init__.py
 git commit -m "feat(config): add system config module using BusinessBase"
@@ -2670,6 +2789,7 @@ git commit -m "feat(config): add system config module using BusinessBase"
 ### Task 27: Create Audit module
 
 **Files:**
+
 - Create: `app/modules/audit/__init__.py`
 - Create: `app/modules/audit/models.py`
 - Create: `app/modules/audit/schemas.py`
@@ -2677,11 +2797,13 @@ git commit -m "feat(config): add system config module using BusinessBase"
 - Create: `app/modules/audit/service.py`
 - Create: `app/modules/audit/router.py`
 
-- [ ] **Step 1: Write app/modules/audit/__init__.py**
+- [ ] **Step 1: Write app/modules/audit/**init**.py**
+
 ```python
 ```
 
 - [ ] **Step 2: Write app/modules/audit/models.py**
+
 ```python
 from sqlalchemy import Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -2703,6 +2825,7 @@ class AuditLog(UserBase):
 ```
 
 - [ ] **Step 3: Write app/modules/audit/schemas.py**
+
 ```python
 from datetime import datetime
 
@@ -2733,6 +2856,7 @@ class AuditLogRead(BaseModel):
 ```
 
 - [ ] **Step 4: Write app/modules/audit/repository.py**
+
 ```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2768,6 +2892,7 @@ audit_repo = AuditLogRepository(AuditLog)
 ```
 
 - [ ] **Step 5: Write app/modules/audit/service.py**
+
 ```python
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -2801,6 +2926,7 @@ async def create_audit_log(session: AsyncSession, data: AuditLogCreate) -> Audit
 ```
 
 - [ ] **Step 6: Write app/modules/audit/router.py**
+
 ```python
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -2858,6 +2984,7 @@ async def get_audit_log(
 ```
 
 - [ ] **Step 7: Register router**
+
 ```python
 # In app/api/v1/__init__.py
 from app.modules.audit.router import router as audit_router
@@ -2865,6 +2992,7 @@ api_router.include_router(audit_router, prefix="/audit", tags=["audit"])
 ```
 
 - [ ] **Step 8: Commit**
+
 ```bash
 git add app/modules/audit/ app/api/v1/__init__.py
 git commit -m "feat(audit): add read-only audit log module"
@@ -2877,6 +3005,7 @@ git commit -m "feat(audit): add read-only audit log module"
 ### Task 28: Restructure test directories
 
 **Files:**
+
 - Create: `tests/modules/users/`
 - Create: `tests/modules/roles/`
 - Create: `tests/modules/products/`
@@ -2889,6 +3018,7 @@ git commit -m "feat(audit): add read-only audit log module"
 - Delete: `tests/test_services/`
 
 - [ ] **Step 1: Create directory structure**
+
 ```bash
 mkdir -p tests/modules/{users,roles,products,orders,config,audit}
 mkdir -p tests/core
@@ -2896,6 +3026,7 @@ mkdir -p tests/db
 ```
 
 - [ ] **Step 2: Delete old directories**
+
 ```bash
 rm -rf tests/test_api tests/test_services
 ```
@@ -2904,6 +3035,7 @@ rm -rf tests/test_api tests/test_services
 (Manual migration of existing tests to new structure - placeholder)
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add -A
 git commit -m "refactor(tests): restructure test directories to mirror app structure"
@@ -2916,30 +3048,39 @@ git commit -m "refactor(tests): restructure test directories to mirror app struc
 ### Task 29: Run full verification
 
 - [ ] **Step 1: Run lint**
+
 ```bash
 just lint
 ```
+
 Expected: All checks pass
 
 - [ ] **Step 2: Run tests**
+
 ```bash
 just test
 ```
+
 Expected: All tests pass
 
 - [ ] **Step 3: Verify app starts**
+
 ```bash
 uv run python -c "from app.main import app; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 4: Verify no circular imports**
+
 ```bash
 uv run python -c "from app.modules.users.models import User; from app.modules.roles.models import Role; print('OK')"
 ```
+
 Expected: `OK`
 
 - [ ] **Step 5: Final commit**
+
 ```bash
 git add -A
 git commit -m "docs: update README to reflect new architecture"

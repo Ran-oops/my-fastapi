@@ -57,7 +57,7 @@ async def list_items(
         limit=pagination.limit
     )
     total = await item_service.get_count(db)
-    
+
     return PaginatedResponse(
         data=list(items),
         total=total,
@@ -119,7 +119,7 @@ async def update_item(
     item = await item_service.get_by_id(db, item_id)
     if item.creator_id != current_user.id and not current_user.is_superuser:
         raise ForbiddenException("Not enough permissions")
-    
+
     return await item_service.update(db, item_id, item_in)
 ```
 
@@ -136,7 +136,7 @@ async def delete_item(
     item = await item_service.get_by_id(db, item_id)
     if item.creator_id != current_user.id and not current_user.is_superuser:
         raise ForbiddenException("Not enough permissions")
-    
+
     await item_service.delete(db, item_id)
     return None
 ```
@@ -157,13 +157,13 @@ async def upload_file(
     allowed_types = ["image/jpeg", "image/png", "application/pdf"]
     if file.content_type not in allowed_types:
         raise ValidationException("File type not allowed")
-    
+
     # 保存文件
     file_path = f"uploads/{file.filename}"
     async with aiofiles.open(file_path, "wb") as f:
         content = await file.read()
         await f.write(content)
-    
+
     return {"filename": file.filename, "path": file_path}
 ```
 
@@ -185,7 +185,7 @@ from app.schemas.item import ItemCreate, ItemUpdate
 
 class ItemService:
     """商品服务类."""
-    
+
     @staticmethod
     async def get_by_id(db: AsyncSession, item_id: int) -> Item:
         """获取单个商品."""
@@ -193,7 +193,7 @@ class ItemService:
         if not item:
             raise NotFoundException(f"Item {item_id} not found")
         return item
-    
+
     @staticmethod
     async def get_items(
         db: AsyncSession, 
@@ -202,12 +202,12 @@ class ItemService:
     ) -> list[Item]:
         """获取商品列表."""
         return list(await item_crud.get_multi(db, skip=skip, limit=limit))
-    
+
     @staticmethod
     async def get_count(db: AsyncSession) -> int:
         """获取商品总数."""
         return await item_crud.count(db)
-    
+
     @staticmethod
     async def create(
         db: AsyncSession, 
@@ -219,13 +219,13 @@ class ItemService:
         existing = await item_crud.get_by_sku(db, sku=obj_in.sku)
         if existing:
             raise ConflictException(f"SKU {obj_in.sku} already exists")
-        
+
         # 添加创建者信息
         obj_in_data = obj_in.model_dump()
         obj_in_data["creator_id"] = creator_id
-        
+
         return await item_crud.create_with_dict(db, obj_in_data)
-    
+
     @staticmethod
     async def update(
         db: AsyncSession, 
@@ -234,15 +234,15 @@ class ItemService:
     ) -> Item:
         """更新商品."""
         item = await ItemService.get_by_id(db, item_id)
-        
+
         # 业务逻辑：如果更新 SKU，检查唯一性
         if obj_in.sku and obj_in.sku != item.sku:
             existing = await item_crud.get_by_sku(db, sku=obj_in.sku)
             if existing:
                 raise ConflictException(f"SKU {obj_in.sku} already exists")
-        
+
         return await item_crud.update(db, db_obj=item, obj_in=obj_in)
-    
+
     @staticmethod
     async def delete(db: AsyncSession, item_id: int) -> Item:
         """删除商品."""
@@ -272,21 +272,21 @@ async def transfer_stock(
         from_item = await item_crud.get(db, id=from_item_id)
         if not from_item:
             raise NotFoundException(f"Source item {from_item_id} not found")
-        
+
         if from_item.stock < quantity:
             raise ValidationException("Insufficient stock")
-        
+
         # 获取目标商品
         to_item = await item_crud.get(db, id=to_item_id)
         if not to_item:
             raise NotFoundException(f"Target item {to_item_id} not found")
-        
+
         # 更新库存
         from_item.stock -= quantity
         to_item.stock += quantity
-        
+
         await db.flush()  # 刷新但不提交
-    
+
     return from_item, to_item
 ```
 
@@ -301,16 +301,16 @@ async def bulk_update_status(
 ) -> int:
     """批量更新状态."""
     from sqlalchemy import update
-    
+
     stmt = (
         update(Item)
         .where(Item.id.in_(item_ids))
         .values(status=status, updated_at=datetime.now(UTC))
     )
-    
+
     result = await db.execute(stmt)
     await db.commit()
-    
+
     return result.rowcount
 ```
 
@@ -334,10 +334,10 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """通用 CRUD 基类."""
-    
+
     def __init__(self, model: type[ModelType]):
         self.model = model
-    
+
     async def get(
         self, 
         db: AsyncSession, 
@@ -348,7 +348,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             select(self.model).where(self.model.id == id)
         )
         return result.scalar_one_or_none()
-    
+
     async def get_multi(
         self, 
         db: AsyncSession,
@@ -360,14 +360,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             select(self.model).offset(skip).limit(limit)
         )
         return result.scalars().all()
-    
+
     async def count(self, db: AsyncSession) -> int:
         """获取总数."""
         result = await db.execute(
             select(func.count()).select_from(self.model)
         )
         return result.scalar() or 0
-    
+
     async def create(
         self, 
         db: AsyncSession, 
@@ -380,7 +380,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    
+
     async def update(
         self,
         db: AsyncSession,
@@ -392,15 +392,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             obj_in if isinstance(obj_in, dict) 
             else obj_in.model_dump(exclude_unset=True)
         )
-        
+
         for field, value in update_data.items():
             if hasattr(db_obj, field):
                 setattr(db_obj, field, value)
-        
+
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    
+
     async def delete(
         self, 
         db: AsyncSession, 
@@ -428,7 +428,7 @@ from app.schemas.item import ItemCreate, ItemUpdate
 
 class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
     """商品 CRUD."""
-    
+
     async def get_by_sku(
         self, 
         db: AsyncSession, 
@@ -439,7 +439,7 @@ class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
             select(Item).where(Item.sku == sku)
         )
         return result.scalar_one_or_none()
-    
+
     async def get_by_category(
         self, 
         db: AsyncSession, 
@@ -455,7 +455,7 @@ class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
             .limit(limit)
         )
         return list(result.scalars().all())
-    
+
     async def search(
         self,
         db: AsyncSession,
@@ -468,27 +468,27 @@ class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
     ) -> list[Item]:
         """搜索商品."""
         query = select(Item)
-        
+
         if keyword:
             query = query.where(
                 Item.name.ilike(f"%{keyword}%") | 
                 Item.description.ilike(f"%{keyword}%")
             )
-        
+
         if category:
             query = query.where(Item.category == category)
-        
+
         if min_price is not None:
             query = query.where(Item.price >= min_price)
-        
+
         if max_price is not None:
             query = query.where(Item.price <= max_price)
-        
+
         result = await db.execute(
             query.offset(skip).limit(limit)
         )
         return list(result.scalars().all())
-    
+
     async def get_active_items(
         self, 
         db: AsyncSession
@@ -613,7 +613,7 @@ async def get_users_paginated(
         select(func.count(User.id))
     )
     total = count_result.scalar() or 0
-    
+
     # 查询数据
     offset = (page - 1) * page_size
     result = await db.execute(
@@ -623,7 +623,7 @@ async def get_users_paginated(
         .order_by(User.created_at.desc())
     )
     users = list(result.scalars().all())
-    
+
     return users, total
 ```
 
@@ -652,13 +652,13 @@ def create_access_token(
         expire = datetime.now(UTC) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    
+
     to_encode = {
         "exp": expire,
         "sub": str(subject),
         "iat": datetime.now(UTC),
     }
-    
+
     return jwt.encode(
         to_encode, 
         settings.SECRET_KEY, 
@@ -728,14 +728,14 @@ async def get_current_user(
     user_id = verify_token(token)
     if user_id is None:
         raise UnauthorizedException("Could not validate credentials")
-    
+
     user = await user_crud.get(db, id=int(user_id))
     if user is None:
         raise UnauthorizedException("User not found")
-    
+
     if not user.is_active:
         raise UnauthorizedException("Inactive user")
-    
+
     return user
 
 
@@ -976,7 +976,7 @@ async def test_register_user(client: AsyncClient):
             "password": "NewUser123"
         }
     )
-    
+
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -993,7 +993,7 @@ async def test_login_user(client: AsyncClient, test_user: User):
             "password": "Test1234"
         }
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data["data"]
@@ -1009,7 +1009,7 @@ async def test_get_current_user(
         "/api/v1/users/me",
         headers=auth_headers
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["data"]["username"] == "testuser"
@@ -1019,7 +1019,7 @@ async def test_get_current_user(
 async def test_unauthorized_access(client: AsyncClient):
     """测试未授权访问."""
     response = await client.get("/api/v1/users/me")
-    
+
     assert response.status_code == 401
 ```
 
@@ -1042,14 +1042,14 @@ async def test_create_user_success(db: AsyncMock):
         username="testuser",
         password="Test1234"
     )
-    
+
     with patch("app.services.user.user_crud") as mock_crud:
         mock_crud.get_by_email.return_value = None
         mock_crud.get_by_username.return_value = None
         mock_crud.create.return_value = User(id=1, **user_in.model_dump())
-        
+
         result = await user_service.create_user(db, user_in)
-        
+
         assert result.email == "test@example.com"
         mock_crud.create.assert_called_once()
 
@@ -1058,16 +1058,16 @@ async def test_create_user_success(db: AsyncMock):
 async def test_create_user_duplicate_email(db: AsyncMock):
     """测试创建用户 - 邮箱重复."""
     from app.core.exceptions import ConflictException
-    
+
     user_in = UserCreate(
         email="existing@example.com",
         username="newuser",
         password="Test1234"
     )
-    
+
     with patch("app.services.user.user_crud") as mock_crud:
         mock_crud.get_by_email.return_value = User(id=1)
-        
+
         with pytest.raises(ConflictException):
             await user_service.create_user(db, user_in)
 ```
@@ -1099,13 +1099,13 @@ def list_items(
 async def _list_items(category: Optional[str], limit: int):
     from app.db.session import UserSessionLocal
     from app.crud.item import item_crud
-    
+
     async with UserSessionLocal() as db:
         if category:
             items = await item_crud.get_by_category(db, category, limit=limit)
         else:
             items = await item_crud.get_multi(db, limit=limit)
-        
+
         for item in items:
             typer.echo(f"{item.id}: {item.name} - ${item.price}")
 
@@ -1124,7 +1124,7 @@ async def _create_item(name: str, sku: str, price: float):
     from app.db.session import UserSessionLocal
     from app.crud.item import item_crud
     from app.schemas.item import ItemCreate
-    
+
     async with UserSessionLocal() as db:
         item_in = ItemCreate(name=name, sku=sku, price=price)
         item = await item_crud.create(db, obj_in=item_in)
@@ -1148,21 +1148,21 @@ async def _import_items(file_path: str, dry_run: bool):
     from app.db.session import UserSessionLocal
     from app.crud.item import item_crud
     from app.schemas.item import ItemCreate
-    
+
     with open(file_path, "r") as f:
         reader = csv.DictReader(f)
         items = list(reader)
-    
+
     typer.echo(f"Found {len(items)} items to import")
-    
+
     if dry_run:
         typer.echo("Dry run - no changes made")
         return
-    
+
     async with UserSessionLocal() as db:
         created = 0
         skipped = 0
-        
+
         for item_data in items:
             try:
                 item_in = ItemCreate(**item_data)
@@ -1171,7 +1171,7 @@ async def _import_items(file_path: str, dry_run: bool):
             except Exception as e:
                 typer.echo(f"Skipping {item_data['sku']}: {e}")
                 skipped += 1
-        
+
         typer.echo(f"Created: {created}, Skipped: {skipped}")
 ```
 

@@ -17,14 +17,14 @@
 
 ### 认证接口
 
-```
+```text
 POST   /api/v1/auth/register    # 注册
 POST   /api/v1/auth/login       # 登录
 ```
 
 ### 用户接口
 
-```
+```text
 GET    /api/v1/users/me         # 获取当前用户
 GET    /api/v1/users/{id}       # 获取指定用户
 GET    /api/v1/users/           # 用户列表 (管理员)
@@ -199,14 +199,14 @@ class NewService:
     @staticmethod
     async def get_all(db: AsyncSession):
         return await new_repository.get_multi(db)
-    
+
     @staticmethod
     async def get_by_id(db: AsyncSession, item_id: int):
         item = await new_repository.get(db, id=item_id)
         if not item:
             raise NotFoundException(f"Item {item_id} not found")
         return item
-    
+
     @staticmethod
     async def create(db: AsyncSession, obj_in: NewCreate):
         return await new_repository.create(db, obj_in=obj_in)
@@ -243,7 +243,7 @@ from app.modules.shared.db import UserDBBase
 
 class NewModel(UserDBBase):
     __tablename__ = "new_table"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
 ```
@@ -343,32 +343,32 @@ LEFT JOIN roles r ON ur.role_id = r.id;
 
 ### 成功 (2xx)
 
-| 状态码 | 名称 | 使用场景 |
-|--------|------|----------|
-| 200 | OK | GET 请求成功 |
-| 201 | Created | POST 创建成功 |
-| 202 | Accepted | 请求已接受处理 |
-| 204 | No Content | DELETE 成功 |
+| 状态码 | 名称       | 使用场景       |
+| ------ | ---------- | -------------- |
+| 200    | OK         | GET 请求成功   |
+| 201    | Created    | POST 创建成功  |
+| 202    | Accepted   | 请求已接受处理 |
+| 204    | No Content | DELETE 成功    |
 
 ### 客户端错误 (4xx)
 
-| 状态码 | 名称 | 使用场景 |
-|--------|------|----------|
-| 400 | Bad Request | 请求格式错误 |
-| 401 | Unauthorized | 未认证 |
-| 403 | Forbidden | 无权限 |
-| 404 | Not Found | 资源不存在 |
-| 409 | Conflict | 资源冲突/重复 |
-| 422 | Unprocessable Entity | 验证失败 |
-| 429 | Too Many Requests | 请求过多 |
+| 状态码 | 名称                 | 使用场景      |
+| ------ | -------------------- | ------------- |
+| 400    | Bad Request          | 请求格式错误  |
+| 401    | Unauthorized         | 未认证        |
+| 403    | Forbidden            | 无权限        |
+| 404    | Not Found            | 资源不存在    |
+| 409    | Conflict             | 资源冲突/重复 |
+| 422    | Unprocessable Entity | 验证失败      |
+| 429    | Too Many Requests    | 请求过多      |
 
 ### 服务端错误 (5xx)
 
-| 状态码 | 名称 | 使用场景 |
-|--------|------|----------|
-| 500 | Internal Server Error | 服务器错误 |
-| 502 | Bad Gateway | 网关错误 |
-| 503 | Service Unavailable | 服务不可用 |
+| 状态码 | 名称                  | 使用场景   |
+| ------ | --------------------- | ---------- |
+| 500    | Internal Server Error | 服务器错误 |
+| 502    | Bad Gateway           | 网关错误   |
+| 503    | Service Unavailable   | 服务不可用 |
 
 ---
 
@@ -385,20 +385,20 @@ class UserSchema(BaseModel):
     age: int
     score: float
     is_active: bool
-    
+
     # 可选
     email: str | None = None
-    
+
     # 字符串格式
     email: EmailStr  # 自动验证邮箱格式
-    
+
     # 数值范围
     age: int = Field(ge=0, le=150)
     score: float = Field(gt=0, le=100)
-    
+
     # 字符串长度
     name: str = Field(min_length=1, max_length=100)
-    
+
     # 默认值
     status: str = "active"
     tags: list[str] = []
@@ -413,7 +413,7 @@ import re
 class UserCreate(BaseModel):
     username: str
     password: str
-    
+
     @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
@@ -422,7 +422,7 @@ class UserCreate(BaseModel):
         if not re.match(r"^[a-zA-Z0-9_]+$", v):
             raise ValueError("Invalid characters")
         return v
-    
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:

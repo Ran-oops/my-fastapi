@@ -18,13 +18,14 @@
 
 ### 错误: ModuleNotFoundError
 
-```
+```text
 ModuleNotFoundError: No module named 'app'
 ```
 
 **原因**: Python 路径问题
 
 **解决方案**:
+
 ```bash
 # 1. 确保在项目根目录
 cd /path/to/project
@@ -41,13 +42,14 @@ uv run python run.py
 
 ### 错误: ImportError: cannot import name
 
-```
+```text
 ImportError: cannot import name 'XXX' from partially initialized module
 ```
 
 **原因**: 循环导入
 
 **解决方案**:
+
 1. 检查导入顺序
 2. 使用延迟导入
 3. 将导入移到函数内部
@@ -66,13 +68,14 @@ def my_function():
 
 ### 错误: Address already in use
 
-```
+```text
 OSError: [Errno 98] Address already in use
 ```
 
 **原因**: 端口被占用
 
 **解决方案**:
+
 ```bash
 # 查找占用端口的进程
 lsof -i :8000
@@ -92,13 +95,14 @@ uvicorn app.main:app --port 8001
 
 ### 错误: Connection refused
 
-```
+```text
 sqlalchemy.exc.OperationalError: (Connection refused)
 ```
 
 **解决方案**:
 
 **PostgreSQL**:
+
 ```bash
 # 检查服务状态
 sudo systemctl status postgresql
@@ -111,6 +115,7 @@ netstat -tlnp | grep 5432
 ```
 
 **SQL Server**:
+
 ```bash
 # Docker 检查
 docker ps | grep mssql
@@ -118,6 +123,7 @@ docker logs mssql
 ```
 
 **MySQL**:
+
 ```bash
 # 检查服务
 sudo systemctl status mysql
@@ -128,11 +134,12 @@ sudo systemctl start mysql
 
 ### 错误: Authentication failed
 
-```
+```text
 sqlalchemy.exc.OperationalError: password authentication failed
 ```
 
 **解决方案**:
+
 1. 检查 `.env` 中的数据库 URL
 2. 验证用户名密码
 3. 检查数据库用户权限
@@ -149,11 +156,12 @@ psql -c "ALTER USER postgres PASSWORD 'newpassword';"
 
 ### 错误: Database does not exist
 
-```
+```text
 FATAL: database "xxx" does not exist
 ```
 
 **解决方案**:
+
 ```bash
 # 创建数据库
 psql -c "CREATE DATABASE user_db;"
@@ -166,11 +174,12 @@ psql -c "\l"
 
 ### 错误: Connection pool exhausted
 
-```
+```text
 sqlalchemy.exc.TimeoutError: QueuePool limit exceeded
 ```
 
 **解决方案**:
+
 ```python
 # 增加连接池大小
 engine = create_async_engine(
@@ -201,6 +210,7 @@ engine = create_async_engine(
 ```
 
 **解决方案**:
+
 1. 检查请求体格式
 2. 确认必填字段
 3. 验证数据类型
@@ -229,6 +239,7 @@ class UserCreate(BaseModel):
 ```
 
 **解决方案**:
+
 1. 检查 Token 是否过期
 2. 验证 Authorization 头格式
 3. 确认 SECRET_KEY 一致
@@ -251,6 +262,7 @@ Authorization: <token>         # ❌ 错误
 ```
 
 **解决方案**:
+
 1. 确认用户有正确权限
 2. 检查用户是否是 superuser
 3. 验证角色和权限配置
@@ -273,6 +285,7 @@ WHERE u.id = <user_id>;
 ```
 
 **解决方案**:
+
 1. 检查资源 ID 是否正确
 2. 确认资源存在
 3. 验证 URL 路径
@@ -286,6 +299,7 @@ WHERE u.id = <user_id>;
 ```
 
 **解决方案**:
+
 1. 使用已存在的邮箱/用户名
 2. 先查询再创建
 
@@ -305,6 +319,7 @@ if existing:
 **症状**: 登录后没有返回 token
 
 **排查**:
+
 ```python
 # 检查 SECRET_KEY
 from app.core.config import settings
@@ -321,6 +336,7 @@ print(settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 **症状**: 所有需要认证的请求返回 401
 
 **排查**:
+
 1. 检查 SECRET_KEY 是否一致
 2. 检查 Token 是否过期
 3. 验证算法配置
@@ -343,6 +359,7 @@ payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 **症状**: 正确密码登录失败
 
 **排查**:
+
 ```python
 # 检查密码哈希
 from app.core.security import verify_password, get_password_hash
@@ -362,11 +379,12 @@ print(is_valid)  # True
 
 ### 错误: pytest-asyncio 未配置
 
-```
+```text
 RuntimeError: This test is using an async function but...
 ```
 
 **解决方案**:
+
 ```python
 # conftest.py
 @pytest.fixture(scope="session")
@@ -385,11 +403,12 @@ async def test_something():
 
 ### 错误: 数据库会话问题
 
-```
+```text
 sqlalchemy.exc.InvalidRequestError: ...
 ```
 
 **解决方案**:
+
 ```python
 # 确保使用独立的测试数据库
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -407,6 +426,7 @@ async def db():
 ### 问题: 查询速度慢
 
 **排查**:
+
 ```sql
 -- 查看查询计划
 EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
@@ -425,6 +445,7 @@ CREATE INDEX ix_users_email ON users(email);
 **症状**: 单个请求产生大量数据库查询
 
 **排查**:
+
 ```python
 # ❌ N+1 查询
 users = await db.execute(select(User))
@@ -442,6 +463,7 @@ users = await db.execute(
 ### 问题: 内存泄漏
 
 **排查**:
+
 ```python
 import tracemalloc
 
@@ -463,6 +485,7 @@ for stat in top_stats[:10]:
 ### 错误: Module not found in production
 
 **解决方案**:
+
 ```dockerfile
 # 确保正确复制文件
 COPY . /app
@@ -477,6 +500,7 @@ ENV PYTHONPATH=/app
 ### 错误: 环境变量未加载
 
 **解决方案**:
+
 ```python
 # 确保 .env 文件存在
 ls -la .env
@@ -491,6 +515,7 @@ print(settings.SECRET_KEY)
 ### 错误: 数据库连接超时
 
 **解决方案**:
+
 ```python
 # 增加超时时间
 engine = create_async_engine(
@@ -567,17 +592,17 @@ uv run python -c "from app.db.session import user_engine; print('OK')"
 
 ## 常见错误速查表
 
-| 错误 | 原因 | 解决方案 |
-|------|------|----------|
-| ModuleNotFoundError | 路径问题 | 使用 uv run 或设置 PYTHONPATH |
-| Connection refused | 数据库未启动 | 启动数据库服务 |
-| 401 Unauthorized | Token 无效 | 检查 SECRET_KEY 和 Token |
-| 403 Forbidden | 权限不足 | 检查用户角色和权限 |
-| 404 Not Found | 资源不存在 | 检查 ID 和 URL |
-| 409 Conflict | 资源重复 | 先查询再创建 |
-| 422 Validation Error | 数据格式错误 | 检查请求体格式 |
-| Pool exhausted | 连接池满 | 增加池大小或优化查询 |
-| Timeout | 查询超时 | 优化查询或增加超时时间 |
+| 错误                 | 原因         | 解决方案                      |
+| -------------------- | ------------ | ----------------------------- |
+| ModuleNotFoundError  | 路径问题     | 使用 uv run 或设置 PYTHONPATH |
+| Connection refused   | 数据库未启动 | 启动数据库服务                |
+| 401 Unauthorized     | Token 无效   | 检查 SECRET_KEY 和 Token      |
+| 403 Forbidden        | 权限不足     | 检查用户角色和权限            |
+| 404 Not Found        | 资源不存在   | 检查 ID 和 URL                |
+| 409 Conflict         | 资源重复     | 先查询再创建                  |
+| 422 Validation Error | 数据格式错误 | 检查请求体格式                |
+| Pool exhausted       | 连接池满     | 增加池大小或优化查询          |
+| Timeout              | 查询超时     | 优化查询或增加超时时间        |
 
 ---
 

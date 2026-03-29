@@ -33,6 +33,7 @@ async def user_headers(user_token):
 ```
 
 Delete duplicated `superuser_headers`, `user_headers` from:
+
 - `tests/modules/orders/conftest.py`
 - `tests/modules/products/conftest.py`
 - `tests/modules/audit/conftest.py`
@@ -188,21 +189,21 @@ def make_order_data(user_id, product_id, **overrides):
 
 **Execution order matters.** Steps 1-2 must complete before 3-5.
 
-| # | File | Action |
-|---|------|--------|
-| 1 | `tests/conftest.py` | Add `superuser_headers`, `user_headers` |
-| 2 | `tests/helpers.py` | Create factory functions |
-| 3 | `tests/modules/orders/conftest.py` | Add `patch_dispatch`, `fresh_order`; remove duplicated fixtures |
-| 4 | `tests/modules/orders/test_order_service.py` | Rewrite with fixture usage, parametrize |
-| 5 | `tests/modules/orders/test_order_api.py` | Rewrite with `patch_dispatch` fixture |
-| 6 | `tests/modules/products/conftest.py` | Remove duplicated fixtures |
-| 7 | `tests/modules/products/test_product_service.py` | Fix imports, use helpers |
-| 8 | `tests/modules/products/test_product_api.py` | Fix status code assertions |
-| 9 | `tests/modules/audit/conftest.py` | Remove duplicated fixtures |
-| 10 | `tests/modules/audit/test_audit_service.py` | Add type hints |
-| 11 | `tests/modules/audit/test_audit_api.py` | Fix status code assertions |
-| 12 | `tests/modules/roles/test_role_service.py` | Move `import uuid` to top |
-| 13 | `tests/modules/roles/test_permission_service.py` | Move `import uuid` to top |
+| #   | File                                             | Action                                                          |
+| --- | ------------------------------------------------ | --------------------------------------------------------------- |
+| 1   | `tests/conftest.py`                              | Add `superuser_headers`, `user_headers`                         |
+| 2   | `tests/helpers.py`                               | Create factory functions                                        |
+| 3   | `tests/modules/orders/conftest.py`               | Add `patch_dispatch`, `fresh_order`; remove duplicated fixtures |
+| 4   | `tests/modules/orders/test_order_service.py`     | Rewrite with fixture usage, parametrize                         |
+| 5   | `tests/modules/orders/test_order_api.py`         | Rewrite with `patch_dispatch` fixture                           |
+| 6   | `tests/modules/products/conftest.py`             | Remove duplicated fixtures                                      |
+| 7   | `tests/modules/products/test_product_service.py` | Fix imports, use helpers                                        |
+| 8   | `tests/modules/products/test_product_api.py`     | Fix status code assertions                                      |
+| 9   | `tests/modules/audit/conftest.py`                | Remove duplicated fixtures                                      |
+| 10  | `tests/modules/audit/test_audit_service.py`      | Add type hints                                                  |
+| 11  | `tests/modules/audit/test_audit_api.py`          | Fix status code assertions                                      |
+| 12  | `tests/modules/roles/test_role_service.py`       | Move `import uuid` to top                                       |
+| 13  | `tests/modules/roles/test_permission_service.py` | Move `import uuid` to top                                       |
 
 **Helper usage policy:** Use `tests/helpers.py` factories only where repetition exists (>2 times). Simple one-off tests use raw schemas directly. The goal is to eliminate boilerplate, not to abstract for abstraction's sake.
 
