@@ -13,3 +13,5 @@ class TimestampMixin:
 
 
 Base = declarative_base(cls=TimestampMixin)
+
+UserBase = Base  # Compatibility alias for existing models
