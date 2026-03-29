@@ -8,12 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_user_session
 from app.common.pagination import PaginationParams
-from app.modules.users.models import User
-from app.modules.search.service import SearchService
 from app.modules.search.schemas import (
     SearchResponse,
     SearchSuggestionResponse,
 )
+from app.modules.search.service import SearchService
+from app.modules.users.models import User
 
 
 router = APIRouter()
@@ -88,7 +88,7 @@ async def search(
                 ),
                 timeout=3.0,  # 3秒超时
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="搜索请求超时，请稍后重试")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

@@ -1,6 +1,7 @@
+import uuid
+
 import pytest
 from fastapi import status
-import uuid
 
 
 @pytest.mark.asyncio

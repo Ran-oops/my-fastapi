@@ -1,10 +1,10 @@
-import pytest
-from unittest.mock import AsyncMock, patch
 
-from app.modules.notifications.handlers import NotificationHandler
-from app.modules.notifications.models import NotificationTemplate, Notification
+import pytest
+
 from app.core.eventbus import Event
 from app.core.events import ORDER_CONFIRMED
+from app.modules.notifications.handlers import NotificationHandler
+from app.modules.notifications.models import NotificationTemplate
 
 
 @pytest.mark.asyncio

@@ -1,11 +1,10 @@
 import csv
 import json
 import tempfile
-from datetime import datetime
 
+from app.modules.audit.models import AuditLog
 from app.modules.orders.models import Order
 from app.modules.products.models import Product
-from app.modules.audit.models import AuditLog
 from app.tasks.celery_app import celery_app
 from app.tasks.db import get_sync_session
 

@@ -1,6 +1,6 @@
 import pytest
 
-from app.core.eventbus import EventBus, Event
+from app.core.eventbus import Event, EventBus
 from app.core.events import ORDER_CONFIRMED, ORDER_SHIPPED
 
 

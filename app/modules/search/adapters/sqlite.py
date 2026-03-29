@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import asc, desc, func, select, cast, String
+from sqlalchemy import String, asc, cast, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.orders.models import Order

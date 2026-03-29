@@ -1,9 +1,12 @@
 import logging
+
 from fastapi import Request, status
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
 from app.core.exceptions import BaseAPIException
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +30,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
     """Handler for database integrity errors."""
-    logger.warning(f"Integrity error on {request.url}: {str(exc)}")
+    logger.warning(f"Integrity error on {request.url}: {exc!s}")
 
     error_msg = str(exc.orig) if hasattr(exc, "orig") else str(exc)
 
@@ -50,7 +53,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSON
 
 async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
     """Handler for general SQLAlchemy errors."""
-    logger.error(f"Database error on {request.url}: {str(exc)}")
+    logger.error(f"Database error on {request.url}: {exc!s}")
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -60,7 +63,7 @@ async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError) -> JS
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handler for unexpected exceptions."""
-    logger.exception(f"Unexpected error on {request.url}: {str(exc)}")
+    logger.exception(f"Unexpected error on {request.url}: {exc!s}")
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -95,7 +98,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
     """Handler for database integrity errors."""
-    logger.warning(f"Integrity error on {request.url}: {str(exc)}")
+    logger.warning(f"Integrity error on {request.url}: {exc!s}")
 
     error_msg = str(exc.orig) if hasattr(exc, "orig") else str(exc)
 
@@ -136,7 +139,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSON
 
 async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
     """Handler for general SQLAlchemy errors."""
-    logger.error(f"Database error on {request.url}: {str(exc)}")
+    logger.error(f"Database error on {request.url}: {exc!s}")
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -152,7 +155,7 @@ async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError) -> JS
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handler for unexpected exceptions."""
-    logger.exception(f"Unexpected error on {request.url}: {str(exc)}")
+    logger.exception(f"Unexpected error on {request.url}: {exc!s}")
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

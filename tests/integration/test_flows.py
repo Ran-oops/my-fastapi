@@ -1,6 +1,7 @@
-import pytest
 import uuid
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import status
 
 
@@ -52,9 +53,10 @@ class TestIntegrationBasics:
             assert response.status_code == status.HTTP_202_ACCEPTED
 
     async def test_full_crud_flow(self, client, superuser_headers, session):
-        from app.modules.products.schemas import ProductCreate
-        from app.modules.products import service as product_service
         from decimal import Decimal
+
+        from app.modules.products import service as product_service
+        from app.modules.products.schemas import ProductCreate
 
         product_data = ProductCreate(
             name="Integration Test Product",
@@ -79,7 +81,7 @@ class TestIntegrationBasics:
 @pytest.mark.asyncio
 class TestOrderNotificationIntegration:
     async def test_eventbus_publishes_order_events(self, session):
-        from app.core.eventbus import EventBus, Event
+        from app.core.eventbus import Event, EventBus
         from app.core.events import ORDER_CONFIRMED
 
         bus = EventBus()

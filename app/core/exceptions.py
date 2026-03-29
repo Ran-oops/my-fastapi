@@ -1,5 +1,6 @@
-from fastapi import HTTPException, status
 from typing import Any
+
+from fastapi import HTTPException, status
 
 
 class BaseAPIException(HTTPException):

@@ -1,5 +1,6 @@
 import os
 
+
 # Set test SECRET_KEY before importing app modules to avoid warning
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only-32chars")
 

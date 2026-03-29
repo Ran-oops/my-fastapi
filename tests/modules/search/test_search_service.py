@@ -1,10 +1,9 @@
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from app.common.pagination import PaginationParams
-from app.modules.search.service import SearchService
-from app.modules.search.repository import SearchRepository
 from app.modules.search.schemas import SearchResponse, SearchSuggestionResponse
+from app.modules.search.service import SearchService
 
 
 @pytest.mark.asyncio

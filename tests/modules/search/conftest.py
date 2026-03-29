@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest_asyncio
 
-from app.modules.orders.schemas import OrderCreate, OrderItemCreate
-from app.modules.orders import service as order_service
-from app.modules.products.schemas import ProductCreate
-from app.modules.products import service as product_service
-from app.modules.users.models import User
 from app.core.security import get_password_hash
+from app.modules.orders import service as order_service
+from app.modules.orders.schemas import OrderCreate, OrderItemCreate
+from app.modules.products import service as product_service
+from app.modules.products.schemas import ProductCreate
+from app.modules.users.models import User
 
 
 @pytest_asyncio.fixture

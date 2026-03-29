@@ -1,15 +1,15 @@
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_current_active_superuser
-from app.db.session import get_user_session as get_session
+from app.api.deps import get_current_active_superuser, get_current_user
 from app.common.schemas import DataResponse
+from app.db.session import get_user_session as get_session
+from app.modules.exports.tasks import export_audit_logs, export_order_data, export_product_data
 from app.modules.users.models import User
-from app.tasks.dispatcher import dispatch
 from app.tasks.celery_app import celery_app
-from app.modules.exports.tasks import export_order_data, export_product_data, export_audit_logs
+from app.tasks.dispatcher import dispatch
+
 
 router = APIRouter()
 
@@ -38,10 +38,10 @@ async def get_task_status(
 @router.post("/orders/", response_model=DataResponse[dict], status_code=status.HTTP_202_ACCEPTED)
 async def export_orders(
     format: str = "csv",
-    order_status: Optional[str] = None,
-    user_id: Optional[int] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
+    order_status: str | None = None,
+    user_id: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
     limit: int = 1000,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -68,8 +68,8 @@ async def export_orders(
 @router.post("/products/", response_model=DataResponse[dict], status_code=status.HTTP_202_ACCEPTED)
 async def export_products(
     format: str = "csv",
-    category: Optional[str] = None,
-    is_active: Optional[bool] = None,
+    category: str | None = None,
+    is_active: bool | None = None,
     limit: int = 1000,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -94,11 +94,11 @@ async def export_products(
 @router.post("/audit/", response_model=DataResponse[dict], status_code=status.HTTP_202_ACCEPTED)
 async def export_audit(
     format: str = "csv",
-    user_id: Optional[int] = None,
-    action: Optional[str] = None,
-    resource_type: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
+    user_id: int | None = None,
+    action: str | None = None,
+    resource_type: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
     limit: int = 1000,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_superuser),

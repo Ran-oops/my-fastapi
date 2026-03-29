@@ -7,9 +7,9 @@ from app.modules.notifications.router import router as notifications_router
 from app.modules.orders.router import router as orders_router
 from app.modules.products.router import router as products_router
 from app.modules.roles.router import router as roles_router
+from app.modules.search.router import router as search_router
 from app.modules.users.auth_router import router as auth_router
 from app.modules.users.user_router import router as users_router
-from app.modules.search.router import router as search_router
 from app.tasks.router import router as tasks_router
 
 

@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.pagination import PaginationParams
 from app.modules.search.repository import SearchRepository
 from app.modules.search.schemas import (
-    SearchResponse,
+    SearchHistoryRead,
     SearchMeta,
+    SearchResponse,
     SearchResultItem,
     SearchSuggestion,
     SearchSuggestionResponse,
-    SearchHistoryRead,
 )
 
 

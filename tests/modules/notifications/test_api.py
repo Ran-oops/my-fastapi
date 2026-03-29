@@ -1,6 +1,8 @@
-import pytest
 import uuid
+
+import pytest
 from fastapi import status
+
 from app.modules.notifications.models import Notification, NotificationTemplate
 
 
