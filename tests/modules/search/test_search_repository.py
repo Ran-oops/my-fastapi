@@ -1,6 +1,7 @@
 import pytest
 
 from app.modules.search.repository import SearchRepository
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -57,7 +58,7 @@ class TestSearchRepositoryDeleteHistory:
 
     async def test_delete_search_history_not_found(self, session, test_user):
         repo = SearchRepository(session)
-        result = await repo.delete_search_history(test_user.id, 99999)
+        result = await repo.delete_search_history(test_user.id, NONEXISTENT_ID)
         assert result is False
 
 

@@ -5,9 +5,9 @@ from app.modules.audit.schemas import AuditLogCreate
 
 
 @pytest_asyncio.fixture
-async def test_audit_log(session):
+async def test_audit_log(session, test_user):
     audit_in = AuditLogCreate(
-        user_id=1,
+        user_id=test_user.id,
         action="create",
         resource_type="product",
         resource_id=1,
@@ -19,12 +19,12 @@ async def test_audit_log(session):
 
 
 @pytest_asyncio.fixture
-async def multiple_audit_logs(session):
+async def multiple_audit_logs(session, test_user):
     logs = []
     actions = ["create", "update", "delete", "create", "update"]
     for i in range(5):
         audit_in = AuditLogCreate(
-            user_id=i + 1,
+            user_id=test_user.id,
             action=actions[i],
             resource_type="product" if i % 2 == 0 else "order",
             resource_id=i + 1,

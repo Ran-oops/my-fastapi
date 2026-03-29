@@ -25,7 +25,7 @@ class TestIntegrationBasics:
         assert "docs" in data
 
     async def test_auth_flow(self, client):
-        unique_id = str(uuid.uuid4())[:8]
+        unique_id = uuid.uuid4().hex[:8]
         register_data = {
             "email": f"test_{unique_id}@example.com",
             "username": f"testuser_{unique_id}",
@@ -101,7 +101,7 @@ class TestOrderNotificationIntegration:
 @pytest.mark.asyncio
 class TestEndToEndFlows:
     async def test_user_registration_and_login_flow(self, client):
-        unique_id = str(uuid.uuid4())[:8]
+        unique_id = uuid.uuid4().hex[:8]
         register_data = {
             "email": f"e2e_{unique_id}@example.com",
             "username": f"e2euser_{unique_id}",
@@ -126,7 +126,7 @@ class TestEndToEndFlows:
         assert me_response.json()["data"]["username"] == f"e2euser_{unique_id}"
 
     async def test_product_crud_with_auth(self, client, superuser_headers):
-        unique_id = str(uuid.uuid4())[:8]
+        unique_id = uuid.uuid4().hex[:8]
         create_data = {
             "name": f"E2E Product {unique_id}",
             "sku": f"E2E-{unique_id}",

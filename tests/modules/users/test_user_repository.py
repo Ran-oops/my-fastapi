@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.users.repository import user_repo
 from app.modules.users.schemas import UserCreate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -33,7 +34,7 @@ class TestUserRepositoryGet:
         assert result.id == test_user.id
 
     async def test_get_not_found(self, session: AsyncSession):
-        result = await user_repo.get(session, id=99999)
+        result = await user_repo.get(session, id=NONEXISTENT_ID)
         assert result is None
 
 

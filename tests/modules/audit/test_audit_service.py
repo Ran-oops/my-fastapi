@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.audit import service as audit_service
 from app.modules.audit.schemas import AuditLogCreate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -58,7 +59,7 @@ class TestAuditServiceGet:
         assert result.id == test_audit_log.id
 
     async def test_get_audit_log_by_id_not_found(self, session: AsyncSession):
-        assert await audit_service.get_audit_log_by_id(session, 99999) is None
+        assert await audit_service.get_audit_log_by_id(session, NONEXISTENT_ID) is None
 
 
 @pytest.mark.asyncio

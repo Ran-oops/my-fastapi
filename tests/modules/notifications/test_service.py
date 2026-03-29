@@ -3,6 +3,7 @@ import uuid
 import pytest
 
 from app.modules.notifications import service as notification_service
+from app.modules.notifications.models import Notification
 from app.modules.notifications.schemas import NotificationTemplateCreate
 
 
@@ -26,11 +27,9 @@ class TestNotificationService:
         assert len(templates) >= 1
         assert any(t.name.startswith("test.event") for t in templates)
 
-    async def test_create_and_get_notification(self, session, test_template):
-        from app.modules.notifications.models import Notification
-
+    async def test_create_and_get_notification(self, session, test_user, test_template):
         notification = Notification(
-            user_id=1,
+            user_id=test_user.id,
             template_name=test_template.name,
             channel="in_app",
             status="sent",
@@ -41,6 +40,6 @@ class TestNotificationService:
         await session.commit()
         await session.refresh(notification)
 
-        notifications = await notification_service.get_notifications(session, user_id=1)
+        notifications = await notification_service.get_notifications(session, user_id=test_user.id)
         assert len(notifications) >= 1
         assert notifications[0].template_name == test_template.name

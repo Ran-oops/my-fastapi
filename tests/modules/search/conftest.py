@@ -10,6 +10,8 @@ from app.modules.orders.schemas import OrderCreate, OrderItemCreate
 from app.modules.products import service as product_service
 from app.modules.products.schemas import ProductCreate
 from app.modules.users.models import User
+from tests.helpers import unique_id
+from tests.conftest import TEST_PASSWORD
 
 
 @pytest_asyncio.fixture
@@ -18,7 +20,7 @@ async def sample_products(session):
     for i in range(5):
         product_in = ProductCreate(
             name=f"Search Product {i}",
-            sku=f"SEARCH-{uuid.uuid4().hex[:8]}-{i}",
+            sku=f"SEARCH-{unique_id()}-{i}",
             description=f"Test product for search {i}",
             price=Decimal(f"{(i + 1) * 20}.00"),
             category="electronics" if i % 2 == 0 else "clothing",
@@ -31,11 +33,11 @@ async def sample_products(session):
 async def sample_users(session):
     users = []
     for i in range(3):
-        unique_id = str(uuid.uuid4())[:8]
+        uid = unique_id()
         user = User(
-            email=f"searchuser_{unique_id}_{i}@example.com",
-            username=f"searchuser_{unique_id}_{i}",
-            hashed_password=get_password_hash("testpassword123"),
+            email=f"searchuser_{uid}_{i}@example.com",
+            username=f"searchuser_{uid}_{i}",
+            hashed_password=get_password_hash(TEST_PASSWORD),
             full_name=f"Search User {i}",
             is_active=True,
         )

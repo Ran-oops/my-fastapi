@@ -1,21 +1,21 @@
-
 import pytest
 
 from app.common.pagination import PaginationParams
 from app.modules.search.schemas import SearchResponse, SearchSuggestionResponse
 from app.modules.search.service import SearchService
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
 class TestSearchService:
-    async def test_search_products_success(self, session, sample_products):
+    async def test_search_products_success(self, session, test_user, sample_products):
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
 
         response = await service.search(
             query="Product",
             search_type="products",
-            user_id=1,
+            user_id=test_user.id,
             pagination=pagination,
         )
 
@@ -25,14 +25,14 @@ class TestSearchService:
         assert response.meta.query == "Product"
         assert response.meta.search_type == "products"
 
-    async def test_search_all_types(self, session, sample_products, sample_users, sample_order):
+    async def test_search_all_types(self, session, test_user, sample_products, sample_users, sample_order):
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
 
         response = await service.search(
             query="search",
             search_type="all",
-            user_id=1,
+            user_id=test_user.id,
             pagination=pagination,
         )
 
@@ -42,7 +42,7 @@ class TestSearchService:
         assert "orders" in response.data
         assert response.meta.total >= 1
 
-    async def test_search_with_filters(self, session, sample_products):
+    async def test_search_with_filters(self, session, test_user, sample_products):
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
         filters = {"category": "electronics"}
@@ -50,7 +50,7 @@ class TestSearchService:
         response = await service.search(
             query="Product",
             search_type="products",
-            user_id=1,
+            user_id=test_user.id,
             pagination=pagination,
             filters=filters,
         )
@@ -59,7 +59,7 @@ class TestSearchService:
         for item in response.data["products"]:
             assert item.data.get("category") == "electronics"
 
-    async def test_search_invalid_type(self, session):
+    async def test_search_invalid_type(self, session, test_user):
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
 
@@ -67,11 +67,11 @@ class TestSearchService:
             await service.search(
                 query="test",
                 search_type="invalid",
-                user_id=1,
+                user_id=test_user.id,
                 pagination=pagination,
             )
 
-    async def test_search_empty_query(self, session):
+    async def test_search_empty_query(self, session, test_user):
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
 
@@ -79,11 +79,11 @@ class TestSearchService:
             await service.search(
                 query="",
                 search_type="products",
-                user_id=1,
+                user_id=test_user.id,
                 pagination=pagination,
             )
 
-    async def test_search_whitespace_query(self, session):
+    async def test_search_whitespace_query(self, session, test_user):
         service = SearchService(session)
         pagination = PaginationParams(page=1, page_size=10)
 
@@ -91,7 +91,7 @@ class TestSearchService:
             await service.search(
                 query="   ",
                 search_type="products",
-                user_id=1,
+                user_id=test_user.id,
                 pagination=pagination,
             )
 
@@ -220,7 +220,7 @@ class TestSearchServiceHistory:
     async def test_delete_history_not_found(self, session, test_user):
         service = SearchService(session)
 
-        deleted = await service.delete_history(test_user.id, 99999)
+        deleted = await service.delete_history(test_user.id, NONEXISTENT_ID)
         assert deleted is False
 
     async def test_clear_history(self, session, test_user, sample_products):

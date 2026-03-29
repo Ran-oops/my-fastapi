@@ -5,6 +5,7 @@ import pytest
 from app.modules.orders.models import OrderStatus
 from app.modules.orders.repository import order_repo
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -26,7 +27,7 @@ class TestOrderRepositoryGetByUser:
         assert all(o.user_id == test_user.id for o in orders)
 
     async def test_get_by_user_empty_for_other_user(self, session):
-        orders = await order_repo.get_by_user(session, user_id=99999)
+        orders = await order_repo.get_by_user(session, user_id=NONEXISTENT_ID)
         assert len(orders) == 0
 
 
@@ -69,7 +70,7 @@ class TestOrderRepositoryGet:
         assert order.id == fresh_order.id
 
     async def test_get_not_found(self, session):
-        order = await order_repo.get(session, id=99999)
+        order = await order_repo.get(session, id=NONEXISTENT_ID)
         assert order is None
 
 

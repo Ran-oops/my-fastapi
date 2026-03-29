@@ -5,6 +5,7 @@ import pytest
 
 from app.modules.products.repository import product_repo
 from app.modules.products.schemas import ProductCreate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -39,7 +40,7 @@ class TestProductRepositoryGet:
         assert result.id == test_product.id
 
     async def test_get_not_found(self, session):
-        result = await product_repo.get(session, id=99999)
+        result = await product_repo.get(session, id=NONEXISTENT_ID)
         assert result is None
 
 

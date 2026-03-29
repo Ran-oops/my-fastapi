@@ -3,20 +3,23 @@ import uuid
 import pytest
 from fastapi import status
 
+from tests.conftest import NONEXISTENT_ID, TEST_PASSWORD
+from tests.helpers import register_and_login
+
 
 @pytest.mark.asyncio
 class TestUserRegistration:
     async def test_register_success(self, client):
-        unique_id = str(uuid.uuid4())[:8]
-        email = f"test_{unique_id}@example.com"
-        username = f"testuser_{unique_id}"
+        uid = uuid.uuid4().hex[:8]
+        email = f"test_{uid}@example.com"
+        username = f"testuser_{uid}"
         response = await client.post(
             "/api/v1/auth/register",
             json={
                 "email": email,
                 "username": username,
                 "full_name": "Test User",
-                "password": "testpassword123",
+                "password": TEST_PASSWORD,
                 "is_active": True,
             },
         )
@@ -32,7 +35,7 @@ class TestUserRegistration:
             json={
                 "email": "duplicate@example.com",
                 "username": "user1",
-                "password": "testpassword123",
+                "password": TEST_PASSWORD,
             },
         )
         response = await client.post(
@@ -40,7 +43,7 @@ class TestUserRegistration:
             json={
                 "email": "duplicate@example.com",
                 "username": "user2",
-                "password": "testpassword123",
+                "password": TEST_PASSWORD,
             },
         )
         assert response.status_code == status.HTTP_409_CONFLICT
@@ -53,7 +56,7 @@ class TestUserRegistration:
             json={
                 "email": "user1@example.com",
                 "username": "duplicateuser",
-                "password": "testpassword123",
+                "password": TEST_PASSWORD,
             },
         )
         response = await client.post(
@@ -61,7 +64,7 @@ class TestUserRegistration:
             json={
                 "email": "user2@example.com",
                 "username": "duplicateuser",
-                "password": "testpassword123",
+                "password": TEST_PASSWORD,
             },
         )
         assert response.status_code == status.HTTP_409_CONFLICT
@@ -110,7 +113,7 @@ class TestPasswordValidation:
             json={
                 "email": "not-an-email",
                 "username": "invalidemail",
-                "password": "testpassword123",
+                "password": TEST_PASSWORD,
             },
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -119,17 +122,18 @@ class TestPasswordValidation:
 @pytest.mark.asyncio
 class TestUserLogin:
     async def test_login_success(self, client):
+        uid = uuid.uuid4().hex[:8]
         await client.post(
             "/api/v1/auth/register",
             json={
-                "email": "login@example.com",
-                "username": "logintest",
-                "password": "testpassword123",
+                "email": f"login_{uid}@example.com",
+                "username": f"logintest_{uid}",
+                "password": TEST_PASSWORD,
             },
         )
         response = await client.post(
             "/api/v1/auth/login",
-            json={"username": "logintest", "password": "testpassword123"},
+            json={"username": f"logintest_{uid}", "password": TEST_PASSWORD},
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -137,17 +141,18 @@ class TestUserLogin:
         assert "access_token" in data["data"]
 
     async def test_login_wrong_password(self, client):
+        uid = uuid.uuid4().hex[:8]
         await client.post(
             "/api/v1/auth/register",
             json={
-                "email": "wrongpass@example.com",
-                "username": "wrongpassuser",
+                "email": f"wrongpass_{uid}@example.com",
+                "username": f"wrongpassuser_{uid}",
                 "password": "correctpassword123",
             },
         )
         response = await client.post(
             "/api/v1/auth/login",
-            json={"username": "wrongpassuser", "password": "wrongpassword"},
+            json={"username": f"wrongpassuser_{uid}", "password": "wrongpassword"},
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         data = response.json()
@@ -164,19 +169,13 @@ class TestUserLogin:
 @pytest.mark.asyncio
 class TestTokenValidation:
     async def test_token_format(self, client):
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "token@example.com",
-                "username": "tokentest",
-                "password": "testpassword123",
-            },
-        )
-        response = await client.post(
+        user_data, _, _ = await register_and_login(client)
+
+        login_resp = await client.post(
             "/api/v1/auth/login",
-            json={"username": "tokentest", "password": "testpassword123"},
+            json={"username": user_data["username"], "password": TEST_PASSWORD},
         )
-        data = response.json()
+        data = login_resp.json()
         token = data["data"]["access_token"]
         token_type = data["data"]["token_type"]
 
@@ -187,19 +186,7 @@ class TestTokenValidation:
         import base64
         import json
 
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "payload@example.com",
-                "username": "payloadtest",
-                "password": "testpassword123",
-            },
-        )
-        response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "payloadtest", "password": "testpassword123"},
-        )
-        token = response.json()["data"]["access_token"]
+        _, token, _ = await register_and_login(client)
 
         payload_b64 = token.split(".")[1]
         payload_json = base64.urlsafe_b64decode(payload_b64 + "==")
@@ -215,26 +202,14 @@ class TestTokenValidation:
 @pytest.mark.asyncio
 class TestGetCurrentUser:
     async def test_get_me_success(self, client):
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "me@example.com",
-                "username": "meuser",
-                "password": "testpassword123",
-            },
-        )
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "meuser", "password": "testpassword123"},
-        )
-        token = login_response.json()["data"]["access_token"]
+        user_data, _, headers = await register_and_login(client)
 
-        response = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+        response = await client.get("/api/v1/users/me", headers=headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["success"] is True
-        assert data["data"]["username"] == "meuser"
-        assert data["data"]["email"] == "me@example.com"
+        assert data["data"]["username"] == user_data["username"]
+        assert data["data"]["email"] == user_data["email"]
 
     async def test_get_me_without_token(self, client):
         response = await client.get("/api/v1/users/me")
@@ -248,48 +223,25 @@ class TestGetCurrentUser:
 @pytest.mark.asyncio
 class TestGetUserById:
     async def test_get_user_by_id_success(self, client):
-        register_response = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "getbyid@example.com",
-                "username": "getbyiduser",
-                "password": "testpassword123",
-            },
-        )
-        user_id = register_response.json()["data"]["id"]
+        _, _, headers = await register_and_login(client)
 
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "getbyiduser", "password": "testpassword123"},
-        )
-        token = login_response.json()["data"]["access_token"]
+        me_response = await client.get("/api/v1/users/me", headers=headers)
+        user_id = me_response.json()["data"]["id"]
 
         response = await client.get(
             f"/api/v1/users/{user_id}",
-            headers={"Authorization": f"Bearer {token}"},
+            headers=headers,
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["id"] == user_id
 
     async def test_get_user_by_id_not_found(self, client):
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "notfound@example.com",
-                "username": "notfounduser",
-                "password": "testpassword123",
-            },
-        )
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "notfounduser", "password": "testpassword123"},
-        )
-        token = login_response.json()["data"]["access_token"]
+        _, _, headers = await register_and_login(client)
 
         response = await client.get(
-            "/api/v1/users/99999",
-            headers={"Authorization": f"Bearer {token}"},
+            f"/api/v1/users/{NONEXISTENT_ID}",
+            headers=headers,
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
@@ -299,94 +251,64 @@ class TestGetUserById:
 @pytest.mark.asyncio
 class TestUpdateUser:
     async def test_update_own_user_success(self, client):
-        register_response = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "update@example.com",
-                "username": "updateuser",
-                "password": "testpassword123",
-            },
-        )
-        user_id = register_response.json()["data"]["id"]
+        user_data, _, headers = await register_and_login(client)
 
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "updateuser", "password": "testpassword123"},
-        )
-        token = login_response.json()["data"]["access_token"]
+        # Get current user to get the ID
+        me_response = await client.get("/api/v1/users/me", headers=headers)
+        user_id = me_response.json()["data"]["id"]
 
         response = await client.put(
             f"/api/v1/users/{user_id}",
             json={"full_name": "Updated Name"},
-            headers={"Authorization": f"Bearer {token}"},
+            headers=headers,
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["full_name"] == "Updated Name"
 
     async def test_update_user_forbidden(self, client):
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "forbidden1@example.com",
-                "username": "forbidden1",
-                "password": "testpassword123",
-            },
-        )
-        register_response = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "forbidden2@example.com",
-                "username": "forbidden2",
-                "password": "testpassword123",
-            },
-        )
-        other_user_id = register_response.json()["data"]["id"]
+        _, _, headers1 = await register_and_login(client)
+        user_data2, _, _ = await register_and_login(client)
 
-        login_response = await client.post(
+        # Get user2's ID
+        login_resp = await client.post(
             "/api/v1/auth/login",
-            json={"username": "forbidden1", "password": "testpassword123"},
+            json={"username": user_data2["username"], "password": TEST_PASSWORD},
         )
-        token = login_response.json()["data"]["access_token"]
+        token2 = login_resp.json()["data"]["access_token"]
+        headers2 = {"Authorization": f"Bearer {token2}"}
+        me_resp = await client.get("/api/v1/users/me", headers=headers2)
+        other_user_id = me_resp.json()["data"]["id"]
 
         response = await client.put(
             f"/api/v1/users/{other_user_id}",
             json={"full_name": "Hacked Name"},
-            headers={"Authorization": f"Bearer {token}"},
+            headers=headers1,
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         data = response.json()
         assert "permissions" in data["detail"].lower()
 
     async def test_update_duplicate_email(self, client):
+        uid = uuid.uuid4().hex[:8]
+        # Register first user
         await client.post(
             "/api/v1/auth/register",
             json={
-                "email": "existing@example.com",
-                "username": "existing",
-                "password": "testpassword123",
+                "email": f"existing_{uid}@example.com",
+                "username": f"existing_{uid}",
+                "password": TEST_PASSWORD,
             },
         )
-        register_response = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "updateuser@example.com",
-                "username": "updateuser2",
-                "password": "testpassword123",
-            },
-        )
-        user_id = register_response.json()["data"]["id"]
-
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "updateuser2", "password": "testpassword123"},
-        )
-        token = login_response.json()["data"]["access_token"]
+        # Register second user
+        user_data2, _, headers2 = await register_and_login(client)
+        me_resp = await client.get("/api/v1/users/me", headers=headers2)
+        user_id = me_resp.json()["data"]["id"]
 
         response = await client.put(
             f"/api/v1/users/{user_id}",
-            json={"email": "existing@example.com"},
-            headers={"Authorization": f"Bearer {token}"},
+            json={"email": f"existing_{uid}@example.com"},
+            headers=headers2,
         )
         assert response.status_code == status.HTTP_409_CONFLICT
 
@@ -394,33 +316,22 @@ class TestUpdateUser:
 @pytest.mark.asyncio
 class TestDeleteUser:
     async def test_delete_user_forbidden(self, client):
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "delete1@example.com",
-                "username": "delete1",
-                "password": "testpassword123",
-            },
-        )
-        register_response = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "delete2@example.com",
-                "username": "delete2",
-                "password": "testpassword123",
-            },
-        )
-        other_user_id = register_response.json()["data"]["id"]
+        _, _, headers1 = await register_and_login(client)
+        user_data2, _, _ = await register_and_login(client)
 
-        login_response = await client.post(
+        # Get user2's ID
+        login_resp = await client.post(
             "/api/v1/auth/login",
-            json={"username": "delete1", "password": "testpassword123"},
+            json={"username": user_data2["username"], "password": TEST_PASSWORD},
         )
-        token = login_response.json()["data"]["access_token"]
+        token2 = login_resp.json()["data"]["access_token"]
+        headers2 = {"Authorization": f"Bearer {token2}"}
+        me_resp = await client.get("/api/v1/users/me", headers=headers2)
+        other_user_id = me_resp.json()["data"]["id"]
 
         response = await client.delete(
             f"/api/v1/users/{other_user_id}",
-            headers={"Authorization": f"Bearer {token}"},
+            headers=headers1,
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -434,23 +345,11 @@ class TestErrorResponse:
         assert "detail" in data
 
     async def test_not_found_response_format(self, client):
-        await client.post(
-            "/api/v1/auth/register",
-            json={
-                "email": "nf@example.com",
-                "username": "nfuser",
-                "password": "testpassword123",
-            },
-        )
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={"username": "nfuser", "password": "testpassword123"},
-        )
-        token = login_response.json()["data"]["access_token"]
+        _, _, headers = await register_and_login(client)
 
         response = await client.get(
-            "/api/v1/users/99999",
-            headers={"Authorization": f"Bearer {token}"},
+            f"/api/v1/users/{NONEXISTENT_ID}",
+            headers=headers,
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()

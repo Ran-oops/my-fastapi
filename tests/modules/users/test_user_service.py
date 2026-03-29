@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ConflictException, NotFoundException, UnauthorizedException
 from app.modules.users import service as user_service
 from app.modules.users.schemas import UserCreate, UserUpdate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -16,7 +17,7 @@ class TestUserServiceGet:
         assert result.id == test_user.id
 
     async def test_get_user_by_id_not_found(self, session: AsyncSession):
-        result = await user_service.get_user_by_id(session, 99999)
+        result = await user_service.get_user_by_id(session, NONEXISTENT_ID)
         assert result is None
 
     async def test_get_user_by_email_found(self, session: AsyncSession, test_user):
@@ -126,7 +127,7 @@ class TestUserServiceUpdate:
     async def test_update_user_not_found(self, session: AsyncSession):
         update_in = UserUpdate(full_name="New Name")
         with pytest.raises(NotFoundException) as exc_info:
-            await user_service.update_user(session, 99999, update_in)
+            await user_service.update_user(session, NONEXISTENT_ID, update_in)
         assert "not found" in str(exc_info.value)
 
     async def test_update_user_duplicate_email(self, session: AsyncSession, test_user):
@@ -162,7 +163,7 @@ class TestUserServiceDelete:
 
     async def test_delete_user_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundException) as exc_info:
-            await user_service.delete_user(session, 99999)
+            await user_service.delete_user(session, NONEXISTENT_ID)
         assert "not found" in str(exc_info.value)
 
 

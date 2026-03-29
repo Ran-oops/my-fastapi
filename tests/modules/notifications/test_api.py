@@ -28,7 +28,7 @@ class TestNotificationAPI:
         assert response.status_code == status.HTTP_200_OK
 
     async def test_create_template_admin(self, client, superuser_headers):
-        unique_id = str(uuid.uuid4())[:8]
+        unique_id = uuid.uuid4().hex[:8]
         response = await client.post(
             "/api/v1/notifications/templates/",
             headers=superuser_headers,

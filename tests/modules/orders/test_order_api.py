@@ -5,6 +5,7 @@ from fastapi import status
 
 from app.modules.orders import service as order_service
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -120,7 +121,9 @@ class TestOrderAPIGetById:
         assert response.json()["data"]["id"] == test_order.id
 
     async def test_get_order_by_id_not_found(self, client, user_headers):
-        assert (await client.get("/api/v1/orders/99999", headers=user_headers)).status_code == status.HTTP_404_NOT_FOUND
+        assert (
+            await client.get(f"/api/v1/orders/{NONEXISTENT_ID}", headers=user_headers)
+        ).status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_order_by_id_unauthorized(self, client, test_order):
         assert (await client.get(f"/api/v1/orders/{test_order.id}")).status_code == status.HTTP_401_UNAUTHORIZED

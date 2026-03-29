@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ConflictException, NotFoundException
 from app.modules.config import service as config_service
 from app.modules.config.schemas import ConfigCreate, ConfigUpdate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -54,7 +55,7 @@ class TestConfigServiceGet:
         assert result.key == test_config.key
 
     async def test_get_config_by_id_not_found(self, session: AsyncSession):
-        result = await config_service.get_config_by_id(session, 99999)
+        result = await config_service.get_config_by_id(session, NONEXISTENT_ID)
         assert result is None
 
     async def test_get_config_by_key_found(self, session: AsyncSession, test_config):
@@ -107,7 +108,7 @@ class TestConfigServiceUpdate:
     async def test_update_config_not_found(self, session: AsyncSession):
         update_in = ConfigUpdate(value="new_value")
         with pytest.raises(NotFoundException) as exc_info:
-            await config_service.update_config(session, 99999, update_in)
+            await config_service.update_config(session, NONEXISTENT_ID, update_in)
         assert "not found" in str(exc_info.value)
 
 
@@ -126,5 +127,5 @@ class TestConfigServiceDelete:
 
     async def test_delete_config_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundException) as exc_info:
-            await config_service.delete_config(session, 99999)
+            await config_service.delete_config(session, NONEXISTENT_ID)
         assert "not found" in str(exc_info.value)

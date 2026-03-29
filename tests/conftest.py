@@ -1,4 +1,5 @@
 import os
+import uuid
 
 
 # Set test SECRET_KEY before importing app modules to avoid warning
@@ -13,6 +14,10 @@ from app.db.base import BusinessBase, UserBase
 from app.db.session import get_business_session, get_user_session
 from app.main import app
 from app.modules.users.models import User
+
+# Shared test constants
+TEST_PASSWORD = "testpassword123"
+NONEXISTENT_ID = 99999
 
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -63,13 +68,11 @@ async def client(session):
 
 @pytest_asyncio.fixture(scope="function")
 async def test_user(session):
-    import uuid
-
-    unique_id = str(uuid.uuid4())[:8]
+    uid = uuid.uuid4().hex[:8]
     user = User(
-        email=f"testuser_{unique_id}@example.com",
-        username=f"testuser_{unique_id}",
-        hashed_password=get_password_hash("testpassword123"),
+        email=f"testuser_{uid}@example.com",
+        username=f"testuser_{uid}",
+        hashed_password=get_password_hash(TEST_PASSWORD),
         full_name="Test User",
         is_active=True,
         is_superuser=False,
@@ -82,13 +85,11 @@ async def test_user(session):
 
 @pytest_asyncio.fixture(scope="function")
 async def test_superuser(session):
-    import uuid
-
-    unique_id = str(uuid.uuid4())[:8]
+    uid = uuid.uuid4().hex[:8]
     user = User(
-        email=f"superuser_{unique_id}@example.com",
-        username=f"superuser_{unique_id}",
-        hashed_password=get_password_hash("testpassword123"),
+        email=f"superuser_{uid}@example.com",
+        username=f"superuser_{uid}",
+        hashed_password=get_password_hash(TEST_PASSWORD),
         full_name="Test Superuser",
         is_active=True,
         is_superuser=True,

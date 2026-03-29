@@ -3,6 +3,8 @@ import uuid
 import pytest
 from fastapi import status
 
+from tests.conftest import NONEXISTENT_ID
+
 
 @pytest.mark.asyncio
 class TestRoleAPIList:
@@ -38,7 +40,7 @@ class TestRoleAPIGetById:
         assert response.json()["data"]["id"] == role_id
 
     async def test_get_role_by_id_not_found(self, client, superuser_headers):
-        response = await client.get("/api/v1/roles/99999", headers=superuser_headers)
+        response = await client.get(f"/api/v1/roles/{NONEXISTENT_ID}", headers=superuser_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_role_by_id_unauthorized(self, client):
@@ -107,7 +109,7 @@ class TestRoleAPIUpdate:
 
     async def test_update_role_not_found(self, client, superuser_headers):
         response = await client.put(
-            "/api/v1/roles/99999",
+            f"/api/v1/roles/{NONEXISTENT_ID}",
             json={"description": "Updated"},
             headers=superuser_headers,
         )
@@ -137,7 +139,7 @@ class TestRoleAPIDelete:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_delete_role_not_found(self, client, superuser_headers):
-        response = await client.delete("/api/v1/roles/99999", headers=superuser_headers)
+        response = await client.delete(f"/api/v1/roles/{NONEXISTENT_ID}", headers=superuser_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_delete_role_forbidden(self, client, user_headers):
@@ -256,7 +258,7 @@ class TestPermissionAPIGetById:
         assert response.status_code == status.HTTP_200_OK
 
     async def test_get_permission_by_id_not_found(self, client, superuser_headers):
-        response = await client.get("/api/v1/permissions/99999", headers=superuser_headers)
+        response = await client.get(f"/api/v1/permissions/{NONEXISTENT_ID}", headers=superuser_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 

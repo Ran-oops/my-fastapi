@@ -1,5 +1,8 @@
 import pytest
+from fastapi import status
 from httpx import AsyncClient
+
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -10,7 +13,7 @@ class TestSearchAPI:
             params={"q": "Product", "type": "products"},
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
         assert "meta" in data
@@ -23,7 +26,7 @@ class TestSearchAPI:
             params={"q": "search", "type": "all"},
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "products" in data["data"]
         assert "users" in data["data"]
@@ -35,7 +38,7 @@ class TestSearchAPI:
             params={"q": "Product", "type": "products", "page": 1, "page_size": 2},
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["meta"]["page"] == 1
         assert data["meta"]["page_size"] == 2
@@ -50,7 +53,7 @@ class TestSearchAPI:
             },
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         for item in data["data"]["products"]:
             assert item["data"]["category"] == "electronics"
@@ -61,7 +64,7 @@ class TestSearchAPI:
             params={"type": "products"},
             headers=user_headers,
         )
-        assert response.status_code == 422
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_search_invalid_type(self, client: AsyncClient, user_headers):
         response = await client.get(
@@ -69,14 +72,14 @@ class TestSearchAPI:
             params={"q": "test", "type": "invalid"},
             headers=user_headers,
         )
-        assert response.status_code == 400
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_search_unauthorized(self, client: AsyncClient):
         response = await client.get(
             "/api/v1/search/",
             params={"q": "test"},
         )
-        assert response.status_code == 401
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.asyncio
@@ -87,7 +90,7 @@ class TestSuggestAPI:
             params={"q": "Prod", "type": "products"},
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
         assert isinstance(data["data"], list)
@@ -98,7 +101,7 @@ class TestSuggestAPI:
             params={"q": "P", "type": "products"},
             headers=user_headers,
         )
-        assert response.status_code == 422
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_suggest_limit(self, client: AsyncClient, user_headers, sample_products):
         response = await client.get(
@@ -106,7 +109,7 @@ class TestSuggestAPI:
             params={"q": "Product", "type": "products", "limit": 2},
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data["data"]) <= 2
 
@@ -118,7 +121,7 @@ class TestHistoryAPI:
             "/api/v1/search/history",
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "data" in data
         assert "total" in data
@@ -134,7 +137,7 @@ class TestHistoryAPI:
             "/api/v1/search/history",
             headers=user_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["total"] >= 1
 
@@ -157,14 +160,14 @@ class TestHistoryAPI:
                 f"/api/v1/search/history/{history_id}",
                 headers=user_headers,
             )
-            assert response.status_code == 204
+            assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_delete_history_not_found(self, client: AsyncClient, user_headers):
         response = await client.delete(
-            "/api/v1/search/history/99999",
+            f"/api/v1/search/history/{NONEXISTENT_ID}",
             headers=user_headers,
         )
-        assert response.status_code == 404
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_clear_history(self, client: AsyncClient, user_headers, sample_products):
         await client.get(
@@ -177,7 +180,7 @@ class TestHistoryAPI:
             "/api/v1/search/history",
             headers=user_headers,
         )
-        assert response.status_code == 204
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         history_response = await client.get(
             "/api/v1/search/history",
@@ -188,4 +191,4 @@ class TestHistoryAPI:
 
     async def test_history_unauthorized(self, client: AsyncClient):
         response = await client.get("/api/v1/search/history")
-        assert response.status_code == 401
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED

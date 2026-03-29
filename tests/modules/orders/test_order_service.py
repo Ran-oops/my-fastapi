@@ -9,6 +9,7 @@ from app.core.exceptions import NotFoundException, ValidationException
 from app.modules.orders import service as order_service
 from app.modules.orders.models import Order, OrderStatus
 from app.modules.orders.schemas import OrderCreate, OrderItemCreate, OrderUpdate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -77,7 +78,7 @@ class TestOrderServiceGet:
         assert order.user_id == test_order.user_id
 
     async def test_get_order_by_id_not_found(self, session: AsyncSession):
-        assert await order_service.get_order_by_id(session, 99999) is None
+        assert await order_service.get_order_by_id(session, NONEXISTENT_ID) is None
 
     async def test_get_order_with_items_found(self, session: AsyncSession, test_order):
         order = await order_service.get_order_with_items(session, test_order.id)
@@ -85,7 +86,7 @@ class TestOrderServiceGet:
         assert len(order.items) > 0
 
     async def test_get_order_with_items_not_found(self, session: AsyncSession):
-        assert await order_service.get_order_with_items(session, 99999) is None
+        assert await order_service.get_order_with_items(session, NONEXISTENT_ID) is None
 
 
 @pytest.mark.asyncio
@@ -185,7 +186,7 @@ class TestOrderServiceInvalidTransitions:
 class TestOrderServiceUpdateNotFound:
     async def test_update_order_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundException):
-            await order_service.update_order_status(session, 99999, OrderUpdate(status=OrderStatus.CONFIRMED))
+            await order_service.update_order_status(session, NONEXISTENT_ID, OrderUpdate(status=OrderStatus.CONFIRMED))
 
 
 @pytest.mark.asyncio
@@ -197,4 +198,4 @@ class TestOrderServiceDelete:
 
     async def test_delete_order_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundException):
-            await order_service.delete_order(session, 99999)
+            await order_service.delete_order(session, NONEXISTENT_ID)

@@ -2,17 +2,18 @@ import pytest
 
 from app.modules.audit.repository import audit_log_repo
 from app.modules.audit.schemas import AuditLogCreate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
 class TestAuditLogRepositoryGetByUser:
-    async def test_get_by_user_returns_matching_logs(self, session, multiple_audit_logs):
-        logs = await audit_log_repo.get_by_user(session, user_id=1)
+    async def test_get_by_user_returns_matching_logs(self, session, test_user, multiple_audit_logs):
+        logs = await audit_log_repo.get_by_user(session, user_id=test_user.id)
         assert len(logs) >= 1
-        assert all(log.user_id == 1 for log in logs)
+        assert all(log.user_id == test_user.id for log in logs)
 
     async def test_get_by_user_empty(self, session, multiple_audit_logs):
-        logs = await audit_log_repo.get_by_user(session, user_id=99999)
+        logs = await audit_log_repo.get_by_user(session, user_id=NONEXISTENT_ID)
         assert len(logs) == 0
 
 
@@ -24,7 +25,7 @@ class TestAuditLogRepositoryGetByResource:
         assert all(log.resource_type == "product" and log.resource_id == 1 for log in logs)
 
     async def test_get_by_resource_empty(self, session, multiple_audit_logs):
-        logs = await audit_log_repo.get_by_resource(session, resource_type="nonexistent", resource_id=99999)
+        logs = await audit_log_repo.get_by_resource(session, resource_type="nonexistent", resource_id=NONEXISTENT_ID)
         assert len(logs) == 0
 
 
@@ -36,7 +37,7 @@ class TestAuditLogRepositoryGet:
         assert log.id == test_audit_log.id
 
     async def test_get_not_found(self, session):
-        log = await audit_log_repo.get(session, id=99999)
+        log = await audit_log_repo.get(session, id=NONEXISTENT_ID)
         assert log is None
 
 

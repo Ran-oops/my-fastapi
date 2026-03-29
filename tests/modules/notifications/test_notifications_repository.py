@@ -1,22 +1,25 @@
 import pytest
 
+from app.modules.notifications import service as notification_service
+from app.modules.notifications.models import Notification
 from app.modules.notifications.repository import notification_repo
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
 class TestNotificationRepositoryGetByUser:
-    async def test_get_by_user_returns_notifications(self, session, multiple_notifications):
-        notifications = await notification_repo.get_by_user(session, user_id=1)
+    async def test_get_by_user_returns_notifications(self, session, test_user, multiple_notifications):
+        notifications = await notification_repo.get_by_user(session, user_id=test_user.id)
         assert len(notifications) >= 5
-        assert all(n.user_id == 1 for n in notifications)
+        assert all(n.user_id == test_user.id for n in notifications)
 
     async def test_get_by_user_empty(self, session, multiple_notifications):
-        notifications = await notification_repo.get_by_user(session, user_id=99999)
+        notifications = await notification_repo.get_by_user(session, user_id=NONEXISTENT_ID)
         assert len(notifications) == 0
 
-    async def test_get_by_user_filter_by_read(self, session, multiple_notifications):
-        read = await notification_repo.get_by_user(session, user_id=1, is_read=True)
-        unread = await notification_repo.get_by_user(session, user_id=1, is_read=False)
+    async def test_get_by_user_filter_by_read(self, session, test_user, multiple_notifications):
+        read = await notification_repo.get_by_user(session, user_id=test_user.id, is_read=True)
+        unread = await notification_repo.get_by_user(session, user_id=test_user.id, is_read=False)
         assert len(read) >= 2
         assert len(unread) >= 3
         assert all(n.is_read for n in read)
@@ -25,12 +28,12 @@ class TestNotificationRepositoryGetByUser:
 
 @pytest.mark.asyncio
 class TestNotificationRepositoryCountByUser:
-    async def test_count_by_user(self, session, multiple_notifications):
-        count = await notification_repo.count_by_user(session, user_id=1)
+    async def test_count_by_user(self, session, test_user, multiple_notifications):
+        count = await notification_repo.count_by_user(session, user_id=test_user.id)
         assert count >= 5
 
     async def test_count_by_user_empty(self, session, multiple_notifications):
-        count = await notification_repo.count_by_user(session, user_id=99999)
+        count = await notification_repo.count_by_user(session, user_id=NONEXISTENT_ID)
         assert count == 0
 
 
@@ -42,17 +45,17 @@ class TestNotificationRepositoryMarkRead:
         assert result is not None
         assert result.is_read is True
 
-    async def test_mark_read_not_found(self, session):
-        result = await notification_repo.mark_read(session, 99999, 1)
+    async def test_mark_read_not_found(self, session, test_user):
+        result = await notification_repo.mark_read(session, NONEXISTENT_ID, test_user.id)
         assert result is None
 
 
 @pytest.mark.asyncio
 class TestNotificationRepositoryMarkAllRead:
-    async def test_mark_all_read(self, session, multiple_notifications):
-        updated = await notification_repo.mark_all_read(session, user_id=1)
+    async def test_mark_all_read(self, session, test_user, multiple_notifications):
+        updated = await notification_repo.mark_all_read(session, user_id=test_user.id)
         assert updated >= 3
-        unread = await notification_repo.get_by_user(session, user_id=1, is_read=False)
+        unread = await notification_repo.get_by_user(session, user_id=test_user.id, is_read=False)
         assert len(unread) == 0
 
 
@@ -64,5 +67,5 @@ class TestNotificationRepositoryGet:
         assert result.id == test_notification.id
 
     async def test_get_not_found(self, session):
-        result = await notification_repo.get(session, id=99999)
+        result = await notification_repo.get(session, id=NONEXISTENT_ID)
         assert result is None

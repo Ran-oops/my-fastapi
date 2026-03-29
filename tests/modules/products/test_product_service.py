@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ConflictException, NotFoundException
 from app.modules.products import service as product_service
 from app.modules.products.schemas import ProductCreate, ProductUpdate
+from tests.conftest import NONEXISTENT_ID
 
 
 @pytest.mark.asyncio
@@ -57,7 +58,7 @@ class TestProductServiceGet:
         assert product.sku == test_product.sku
 
     async def test_get_product_by_id_not_found(self, session: AsyncSession):
-        assert await product_service.get_product_by_id(session, 99999) is None
+        assert await product_service.get_product_by_id(session, NONEXISTENT_ID) is None
 
     async def test_get_product_by_sku_found(self, session: AsyncSession, test_product):
         product = await product_service.get_product_by_sku(session, test_product.sku)
@@ -102,7 +103,7 @@ class TestProductServiceUpdate:
 
     async def test_update_product_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundException):
-            await product_service.update_product(session, 99999, ProductUpdate(name="X"))
+            await product_service.update_product(session, NONEXISTENT_ID, ProductUpdate(name="X"))
 
 
 @pytest.mark.asyncio
@@ -120,4 +121,4 @@ class TestProductServiceDelete:
 
     async def test_delete_product_not_found(self, session: AsyncSession):
         with pytest.raises(NotFoundException):
-            await product_service.delete_product(session, 99999)
+            await product_service.delete_product(session, NONEXISTENT_ID)

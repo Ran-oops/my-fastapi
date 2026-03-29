@@ -3,6 +3,8 @@ import uuid
 import pytest
 from fastapi import status
 
+from tests.conftest import NONEXISTENT_ID
+
 
 @pytest.mark.asyncio
 class TestProductAPICreate:
@@ -70,7 +72,7 @@ class TestProductAPIGetById:
 
     async def test_get_product_by_id_not_found(self, client, user_headers):
         assert (
-            await client.get("/api/v1/products/99999", headers=user_headers)
+            await client.get(f"/api/v1/products/{NONEXISTENT_ID}", headers=user_headers)
         ).status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_product_by_sku_found(self, client, user_headers, test_product):

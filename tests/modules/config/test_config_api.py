@@ -3,6 +3,8 @@ import uuid
 import pytest
 from fastapi import status
 
+from tests.conftest import NONEXISTENT_ID
+
 
 @pytest.mark.asyncio
 class TestConfigAPIList:
@@ -49,7 +51,7 @@ class TestConfigAPIGetById:
         assert data["data"]["id"] == test_config.id
 
     async def test_get_config_by_id_not_found(self, client, superuser_headers):
-        response = await client.get("/api/v1/config/99999", headers=superuser_headers)
+        response = await client.get(f"/api/v1/config/{NONEXISTENT_ID}", headers=superuser_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_config_by_id_unauthorized(self, client):
@@ -114,7 +116,7 @@ class TestConfigAPIUpdate:
 
     async def test_update_config_not_found(self, client, superuser_headers):
         response = await client.put(
-            "/api/v1/config/99999",
+            f"/api/v1/config/{NONEXISTENT_ID}",
             json={"value": "updated"},
             headers=superuser_headers,
         )
@@ -151,7 +153,7 @@ class TestConfigAPIDelete:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_delete_config_not_found(self, client, superuser_headers):
-        response = await client.delete("/api/v1/config/99999", headers=superuser_headers)
+        response = await client.delete(f"/api/v1/config/{NONEXISTENT_ID}", headers=superuser_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_delete_config_unauthorized(self, client, test_config):
