@@ -6,7 +6,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_user_session
+from app.api.deps import get_current_user, get_session
 from app.common.pagination import PaginationParams
 from app.modules.search.schemas import (
     SearchResponse,
@@ -35,7 +35,7 @@ async def search(
     date_to: str | None = Query(None, description="结束日期 (YYYY-MM-DD)"),
     sort_by: str = Query("relevance", description="排序方式: relevance/price/created_at"),
     sort_order: str = Query("desc", description="排序顺序: asc/desc"),
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """统一搜索端点"""
@@ -99,7 +99,7 @@ async def suggest(
     q: str = Query(..., min_length=2, description="搜索关键词(至少2字符)"),
     type: str = Query("all", description="搜索模块"),
     limit: int = Query(5, ge=1, le=20, description="返回建议数量"),
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """获取搜索建议"""
@@ -111,7 +111,7 @@ async def suggest(
 async def get_history(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(10, ge=1, le=100, description="每页数量"),
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """获取搜索历史"""
@@ -123,7 +123,7 @@ async def get_history(
 @router.delete("/history/{history_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_history(
     history_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """删除搜索历史"""
@@ -136,7 +136,7 @@ async def delete_history(
 
 @router.delete("/history", status_code=status.HTTP_204_NO_CONTENT)
 async def clear_history(
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """清空搜索历史"""

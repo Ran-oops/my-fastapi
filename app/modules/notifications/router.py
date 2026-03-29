@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user
 from app.common.schemas import DataResponse
-from app.db.session import get_user_session as get_session
+from app.db.session import get_session
 from app.modules.notifications import service as notification_service
 from app.modules.notifications.schemas import (
     NotificationListResponse,

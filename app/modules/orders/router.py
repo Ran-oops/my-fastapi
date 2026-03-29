@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_active_superuser, get_current_user, get_user_session
+from app.api.deps import get_current_active_superuser, get_current_user, get_session
 from app.common.pagination import PaginatedResponse, PaginationParams
 from app.common.schemas import DataResponse
 from app.core.exceptions import NotFoundException
@@ -17,7 +17,7 @@ router = APIRouter()
 @router.post("/", response_model=DataResponse[OrderRead], status_code=status.HTTP_201_CREATED)
 async def create_order(
     data: OrderCreate,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
     order = await order_service.create_order(session, data)
@@ -29,7 +29,7 @@ async def get_orders(
     pagination: PaginationParams = Depends(),
     user_id: int | None = None,
     status: OrderStatus | None = None,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     if user_id:
@@ -56,7 +56,7 @@ async def get_orders(
 @router.get("/my", response_model=PaginatedResponse[OrderRead])
 async def get_my_orders(
     pagination: PaginationParams = Depends(),
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     orders = await order_service.get_orders_by_user(
@@ -77,7 +77,7 @@ async def get_my_orders(
 @router.get("/{order_id}", response_model=DataResponse[OrderWithItems])
 async def get_order(
     order_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
     order = await order_service.get_order_with_items(session, order_id)
@@ -90,7 +90,7 @@ async def get_order(
 async def update_order(
     order_id: int,
     data: OrderUpdate,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     order = await order_service.update_order_status(session, order_id, data)
@@ -100,7 +100,7 @@ async def update_order(
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(
     order_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     await order_service.delete_order(session, order_id)

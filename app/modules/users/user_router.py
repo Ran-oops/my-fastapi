@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_active_superuser, get_current_user, get_user_session
+from app.api.deps import get_current_active_superuser, get_current_user, get_session
 from app.common.pagination import PaginatedResponse, PaginationParams
 from app.common.schemas import DataResponse
 from app.core.exceptions import ForbiddenException, NotFoundException
@@ -21,7 +21,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @router.get("/{user_id}", response_model=DataResponse[UserRead])
 async def get_user(
     user_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
     user = await user_service.get_user_by_id(session, user_id)
@@ -33,7 +33,7 @@ async def get_user(
 @router.get("/", response_model=PaginatedResponse[UserRead])
 async def get_users(
     pagination: PaginationParams = Depends(),
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     users = await user_service.get_users(session, skip=pagination.skip, limit=pagination.limit)
@@ -53,7 +53,7 @@ async def get_users(
 async def update_user(
     user_id: int,
     data: UserUpdate,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     if not current_user.is_superuser and current_user.id != user_id:
@@ -65,7 +65,7 @@ async def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     await user_service.delete_user(session, user_id)

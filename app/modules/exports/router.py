@@ -1,10 +1,9 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user
 from app.common.schemas import DataResponse
-from app.db.session import get_user_session as get_session
+from app.db.session import get_session
 from app.modules.exports.tasks import export_audit_logs, export_order_data, export_product_data
 from app.modules.users.models import User
 from app.tasks.celery_app import celery_app

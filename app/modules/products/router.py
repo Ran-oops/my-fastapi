@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_active_superuser, get_current_user, get_user_session
+from app.api.deps import get_current_active_superuser, get_current_user, get_session
 from app.common.pagination import PaginatedResponse, PaginationParams
 from app.common.schemas import DataResponse
 from app.core.exceptions import NotFoundException
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/", response_model=DataResponse[ProductRead], status_code=status.HTTP_201_CREATED)
 async def create_product(
     data: ProductCreate,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     product = await product_service.create_product(session, data)
@@ -27,7 +27,7 @@ async def create_product(
 async def get_products(
     pagination: PaginationParams = Depends(),
     category: str | None = None,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
     if category:
@@ -53,7 +53,7 @@ async def get_products(
 @router.get("/sku/{sku}", response_model=DataResponse[ProductRead])
 async def get_product_by_sku(
     sku: str,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
     product = await product_service.get_product_by_sku(session, sku)
@@ -65,7 +65,7 @@ async def get_product_by_sku(
 @router.get("/{product_id}", response_model=DataResponse[ProductRead])
 async def get_product(
     product_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
     product = await product_service.get_product_by_id(session, product_id)
@@ -78,7 +78,7 @@ async def get_product(
 async def update_product(
     product_id: int,
     data: ProductUpdate,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     product = await product_service.update_product(session, product_id, data)
@@ -88,7 +88,7 @@ async def update_product(
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     await product_service.delete_product(session, product_id)

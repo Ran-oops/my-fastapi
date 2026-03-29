@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_active_superuser, get_user_session
+from app.api.deps import get_current_active_superuser, get_session
 from app.common.pagination import PaginatedResponse, PaginationParams
 from app.common.schemas import DataResponse
 from app.core.exceptions import NotFoundException
@@ -19,7 +19,7 @@ async def get_audit_logs(
     user_id: int | None = None,
     resource_type: str | None = None,
     resource_id: int | None = None,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     if user_id is not None:
@@ -50,7 +50,7 @@ async def get_audit_logs(
 @router.get("/{log_id}", response_model=DataResponse[AuditLogRead])
 async def get_audit_log(
     log_id: int,
-    session: AsyncSession = Depends(get_user_session),
+    session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_active_superuser),
 ):
     log = await audit_service.get_audit_log_by_id(session, log_id)
