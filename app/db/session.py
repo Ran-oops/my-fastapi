@@ -2,52 +2,26 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.core.config import settings
 
+connect_args = {}
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "pool_pre_ping": True,
+}
 
-user_engine: AsyncEngine = create_async_engine(
-    settings.USER_DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+else:
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 10
+
+engine: AsyncEngine = create_async_engine(
+    settings.DATABASE_URL,
+    connect_args=connect_args,
+    **engine_kwargs,
 )
 
-business_engine: AsyncEngine = create_async_engine(
-    settings.BUSINESS_DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-)
-
-config_engine: AsyncEngine = create_async_engine(
-    settings.CONFIG_DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-)
-
-UserSessionFactory = async_sessionmaker(
-    user_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False,
-    autocommit=False,
-)
-
-BusinessSessionFactory = async_sessionmaker(
-    business_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False,
-    autocommit=False,
-)
-
-ConfigSessionFactory = async_sessionmaker(
-    config_engine,
+SessionFactory = async_sessionmaker(
+    engine,
     class_=AsyncSession,
     expire_on_commit=False,
     autoflush=False,
@@ -55,27 +29,10 @@ ConfigSessionFactory = async_sessionmaker(
 )
 
 
-async def get_user_session():
-    async with UserSessionFactory() as session:
+async def get_session():
+    async with SessionFactory() as session:
         try:
             yield session
         except Exception:
             await session.rollback()
             raise
-
-
-async def get_business_session():
-    async with BusinessSessionFactory() as session:
-        try:
-            yield session
-        except Exception:
-            await session.rollback()
-            raise
-
-
-async def get_config_session():
-    async with ConfigSessionFactory() as session:
-        try:
-            yield session
-        finally:
-            await session.close()

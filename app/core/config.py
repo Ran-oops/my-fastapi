@@ -22,13 +22,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
-    USER_DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/user_db"
-
-    BUSINESS_DATABASE_URL: str = (
-        "mssql+aioodbc://sa:password@localhost:1433/business_db?driver=ODBC+Driver+17+for+SQL+Server"
-    )
-
-    CONFIG_DATABASE_URL: str = "mysql+aiomysql://root:password@localhost:3306/config_db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./app.db"
 
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
