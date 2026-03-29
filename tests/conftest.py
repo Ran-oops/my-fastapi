@@ -3,8 +3,8 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.security import create_access_token, get_password_hash
-from app.db.base import UserBase
-from app.db.session import get_user_session
+from app.db.base import BusinessBase, UserBase
+from app.db.session import get_business_session, get_user_session
 from app.main import app
 from app.modules.users.models import User
 
@@ -24,8 +24,10 @@ TestingSessionFactory = async_sessionmaker(
 async def setup_test_db():
     async with test_engine.begin() as conn:
         await conn.run_sync(UserBase.metadata.create_all)
+        await conn.run_sync(BusinessBase.metadata.create_all)
     yield
     async with test_engine.begin() as conn:
+        await conn.run_sync(BusinessBase.metadata.drop_all)
         await conn.run_sync(UserBase.metadata.drop_all)
     await test_engine.dispose()
 
@@ -42,7 +44,11 @@ async def client(session):
     async def override_get_session():
         yield session
 
+    async def override_get_business_session():
+        yield session
+
     app.dependency_overrides[get_user_session] = override_get_session
+    app.dependency_overrides[get_business_session] = override_get_business_session
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
