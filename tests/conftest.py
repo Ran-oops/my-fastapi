@@ -1,3 +1,8 @@
+import os
+
+# Set test SECRET_KEY before importing app modules to avoid warning
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only-32chars")
+
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine

@@ -79,7 +79,7 @@ class TestPasswordValidation:
                 "password": "short",
             },
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_register_password_no_letter(self, client):
         response = await client.post(
@@ -90,7 +90,7 @@ class TestPasswordValidation:
                 "password": "12345678",
             },
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_register_password_no_digit(self, client):
         response = await client.post(
@@ -101,7 +101,7 @@ class TestPasswordValidation:
                 "password": "onlyletters",
             },
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_register_invalid_email(self, client):
         response = await client.post(
@@ -112,7 +112,7 @@ class TestPasswordValidation:
                 "password": "testpassword123",
             },
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 @pytest.mark.asyncio

@@ -1,9 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import mapped_column
 
 from app.db.base import UserBase
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class NotificationTemplate(UserBase):
@@ -18,8 +22,8 @@ class NotificationTemplate(UserBase):
     subject = mapped_column(String(200), nullable=True)
     body = mapped_column(Text, nullable=False)
     is_active = mapped_column(Boolean, default=True, index=True)
-    created_at = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = mapped_column(DateTime, default=utcnow)
+    updated_at = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class Notification(UserBase):
@@ -42,7 +46,7 @@ class Notification(UserBase):
     is_read = mapped_column(Boolean, default=False, index=True)
     error_message = mapped_column(Text, nullable=True)
     sent_at = mapped_column(DateTime, nullable=True)
-    created_at = mapped_column(DateTime, default=datetime.utcnow)
+    created_at = mapped_column(DateTime, default=utcnow)
 
 
 class NotificationPreference(UserBase):
@@ -55,5 +59,5 @@ class NotificationPreference(UserBase):
     email_enabled = mapped_column(Boolean, default=True)
     sms_enabled = mapped_column(Boolean, default=False)
     in_app_enabled = mapped_column(Boolean, default=True)
-    created_at = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = mapped_column(DateTime, default=utcnow)
+    updated_at = mapped_column(DateTime, default=utcnow, onupdate=utcnow)

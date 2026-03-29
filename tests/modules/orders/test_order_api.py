@@ -42,7 +42,7 @@ class TestOrderAPICreate:
             },
             headers=user_headers,
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_create_order_invalid_price(self, client, user_headers, test_product_for_order):
         response = await client.post(
@@ -53,7 +53,7 @@ class TestOrderAPICreate:
             },
             headers=user_headers,
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 @pytest.mark.asyncio
@@ -143,7 +143,7 @@ class TestOrderAPIUpdate:
             json={"status": "SHIPPED"},
             headers=superuser_headers,
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     async def test_update_order_forbidden(self, client, user_headers, test_order):
         assert (

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class NotificationTemplateCreate(BaseModel):
@@ -26,6 +26,8 @@ class NotificationTemplateUpdate(BaseModel):
 class NotificationTemplateResponse(BaseModel):
     """通知模板响应"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     channel: str
@@ -35,12 +37,11 @@ class NotificationTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: datetime | None
 
-    class Config:
-        from_attributes = True
-
 
 class NotificationResponse(BaseModel):
     """通知响应"""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     user_id: int
@@ -52,9 +53,6 @@ class NotificationResponse(BaseModel):
     is_read: bool
     sent_at: datetime | None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class NotificationListResponse(BaseModel):

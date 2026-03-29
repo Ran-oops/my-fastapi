@@ -72,7 +72,7 @@ class ValidationException(BaseAPIException):
         details: dict[str, Any] | None = None,
     ):
         super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=detail,
             error_code=error_code,
             details=details,
