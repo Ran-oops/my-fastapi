@@ -31,14 +31,14 @@ def test_db_session():
     engine = create_engine("sqlite:///:memory:")
     TestSession = sessionmaker(bind=engine)
 
-    from app.db.base import UserBase
+    from app.db.base import Base
 
-    UserBase.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
 
     session = TestSession()
     yield session
     session.close()
-    UserBase.metadata.drop_all(engine)
+    Base.metadata.drop_all(engine)
 
 
 @pytest.fixture

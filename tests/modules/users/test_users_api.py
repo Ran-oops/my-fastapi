@@ -374,9 +374,7 @@ class TestHealthCheck:
         data = response.json()
         assert data["status"] in ["ready", "degraded"]
         assert "databases" in data
-        assert "user_db" in data["databases"]
-        assert "business_db" in data["databases"]
-        assert "config_db" in data["databases"]
+        assert "database" in data["databases"]
 
     async def test_root_endpoint(self, client):
         response = await client.get("/")

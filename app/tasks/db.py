@@ -5,7 +5,7 @@ from app.core.config import settings
 
 
 # Convert async URL to sync URL
-sync_url = settings.USER_DATABASE_URL.replace("+asyncpg", "").replace("+aiomysql", "").replace("+aioodbc", "")
+sync_url = settings.DATABASE_URL.replace("+asyncpg", "").replace("+aiomysql", "").replace("+aioodbc", "")
 
 sync_engine = create_engine(sync_url, pool_pre_ping=True)
 
