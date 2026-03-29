@@ -45,36 +45,36 @@ def remove_role(
 
 
 async def _list_roles():
-    from app.modules.roles.service import role_service
-    from app.modules.shared.db import UserSessionLocal
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
 
-    async with UserSessionLocal() as db:
+    async with UserSessionFactory() as db:
         roles = await role_service.get_roles(db)
         return [{"id": r.id, "name": r.name, "description": r.description} for r in roles]
 
 
 async def _create_role(name: str, description: str | None):
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
     from app.modules.roles.schemas import RoleCreate
-    from app.modules.roles.service import role_service
-    from app.modules.shared.db import UserSessionLocal
 
-    async with UserSessionLocal() as db:
+    async with UserSessionFactory() as db:
         role_in = RoleCreate(name=name, description=description)
         role = await role_service.create_role(db, role_in)
         return {"id": role.id, "name": role.name, "description": role.description}
 
 
 async def _assign_role(user_id: int, role_id: int):
-    from app.modules.roles.service import role_service
-    from app.modules.shared.db import UserSessionLocal
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
 
-    async with UserSessionLocal() as db:
+    async with UserSessionFactory() as db:
         await role_service.assign_role_to_user(db, user_id, role_id)
 
 
 async def _remove_role(user_id: int, role_id: int):
-    from app.modules.roles.service import role_service
-    from app.modules.shared.db import UserSessionLocal
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
 
-    async with UserSessionLocal() as db:
+    async with UserSessionFactory() as db:
         await role_service.remove_role_from_user(db, user_id, role_id)

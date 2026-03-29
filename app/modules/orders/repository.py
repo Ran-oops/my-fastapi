@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -25,6 +25,14 @@ class OrderRepository(BaseRepository[Order, OrderCreate, OrderUpdate]):
             select(Order).where(Order.status == status.value).order_by(Order.id.desc()).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
+
+    async def count_by_user(self, session: AsyncSession, user_id: int) -> int:
+        result = await session.execute(select(func.count()).select_from(Order).where(Order.user_id == user_id))
+        return result.scalar() or 0
+
+    async def count_by_status(self, session: AsyncSession, status: OrderStatus) -> int:
+        result = await session.execute(select(func.count()).select_from(Order).where(Order.status == status.value))
+        return result.scalar() or 0
 
 
 order_repo = OrderRepository(Order)

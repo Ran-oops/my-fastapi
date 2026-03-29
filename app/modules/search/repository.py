@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.search.adapters import BaseSearchAdapter, create_search_adapter
@@ -48,17 +48,16 @@ class SearchRepository:
         total = await self.session.scalar(count_stmt)
 
         if total and total > 100:
-            # 删除最旧的记录，保留100条
-            delete_stmt = (
-                select(SearchHistory)
+            # 批量删除最旧的记录，保留100条
+            subquery = (
+                select(SearchHistory.id)
                 .where(SearchHistory.user_id == user_id)
                 .order_by(SearchHistory.created_at.asc())
                 .limit(total - 100)
+                .scalar_subquery()
             )
-            result = await self.session.execute(delete_stmt)
-            old_records = result.scalars().all()
-            for record in old_records:
-                await self.session.delete(record)
+            bulk_delete = delete(SearchHistory).where(SearchHistory.id.in_(subquery))
+            await self.session.execute(bulk_delete)
 
         await self.session.commit()
         await self.session.refresh(history)
@@ -96,8 +95,6 @@ class SearchRepository:
 
     async def clear_search_history(self, user_id: int) -> int:
         """清空用户搜索历史"""
-        from sqlalchemy import delete
-
         # 先获取数量
         count_stmt = select(func.count()).select_from(SearchHistory).where(SearchHistory.user_id == user_id)
         count = await self.session.scalar(count_stmt) or 0

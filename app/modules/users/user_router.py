@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user, get_user_session
 from app.common.pagination import PaginatedResponse, PaginationParams
 from app.common.schemas import DataResponse
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import ForbiddenException, NotFoundException
 from app.modules.users import service as user_service
 from app.modules.users.models import User
 from app.modules.users.schemas import UserRead, UserUpdate
@@ -57,7 +57,7 @@ async def update_user(
     current_user: User = Depends(get_current_user),
 ):
     if not current_user.is_superuser and current_user.id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+        raise ForbiddenException("Not enough permissions")
     user = await user_service.update_user(session, user_id, data)
     return DataResponse(data=user, message="User updated successfully")
 

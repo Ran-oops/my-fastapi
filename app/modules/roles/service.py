@@ -43,6 +43,10 @@ async def get_roles(session: AsyncSession, skip: int = 0, limit: int = 100) -> l
     return await role_repo.get_multi_with_permissions(session, skip=skip, limit=limit)
 
 
+async def get_roles_count(session: AsyncSession) -> int:
+    return await role_repo.count(session)
+
+
 async def assign_role_to_user(session: AsyncSession, user_id: int, role_id: int):
     user = await user_repo.get_with_roles(session, user_id=user_id)
     if not user:
@@ -120,6 +124,10 @@ async def get_permission_by_id(session: AsyncSession, permission_id: int) -> Per
 
 async def get_permissions(session: AsyncSession, skip: int = 0, limit: int = 100) -> list[Permission]:
     return await permission_repo.get_multi(session, skip=skip, limit=limit)
+
+
+async def get_permissions_count(session: AsyncSession) -> int:
+    return await permission_repo.count(session)
 
 
 async def get_role_permissions(session: AsyncSession, role_id: int) -> list[Permission]:

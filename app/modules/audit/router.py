@@ -26,12 +26,12 @@ async def get_audit_logs(
         logs = await audit_service.get_audit_logs_by_user(
             session, user_id, skip=pagination.skip, limit=pagination.limit
         )
-        total = len(logs)
+        total = await audit_service.get_audit_logs_count_by_user(session, user_id)
     elif resource_type is not None and resource_id is not None:
         logs = await audit_service.get_audit_logs_by_resource(
             session, resource_type, resource_id, skip=pagination.skip, limit=pagination.limit
         )
-        total = len(logs)
+        total = await audit_service.get_audit_logs_count_by_resource(session, resource_type, resource_id)
     else:
         logs = await audit_service.get_audit_logs(session, skip=pagination.skip, limit=pagination.limit)
         total = await audit_service.get_audit_logs_count(session)

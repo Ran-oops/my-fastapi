@@ -40,6 +40,14 @@ async def get_orders_count(session: AsyncSession) -> int:
     return await order_repo.count(session)
 
 
+async def get_orders_count_by_user(session: AsyncSession, user_id: int) -> int:
+    return await order_repo.count_by_user(session, user_id)
+
+
+async def get_orders_count_by_status(session: AsyncSession, status: OrderStatus) -> int:
+    return await order_repo.count_by_status(session, status)
+
+
 async def create_order(session: AsyncSession, data: OrderCreate) -> Order:
     total_amount = Decimal("0.00")
     order = Order(user_id=data.user_id, total_amount=total_amount)

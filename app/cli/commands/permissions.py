@@ -39,28 +39,28 @@ def check_permission(
 
 
 async def _list_permissions():
-    from app.modules.roles.service import permission_service
-    from app.modules.shared.db import UserSessionLocal
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
 
-    async with UserSessionLocal() as db:
-        permissions = await permission_service.get_permissions(db)
+    async with UserSessionFactory() as db:
+        permissions = await role_service.get_permissions(db)
         return [{"id": p.id, "name": p.name, "code": p.code} for p in permissions]
 
 
 async def _create_permission(name: str, code: str, description: str | None):
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
     from app.modules.roles.schemas import PermissionCreate
-    from app.modules.roles.service import permission_service
-    from app.modules.shared.db import UserSessionLocal
 
-    async with UserSessionLocal() as db:
+    async with UserSessionFactory() as db:
         permission_in = PermissionCreate(name=name, code=code, description=description)
-        permission = await permission_service.create_permission(db, permission_in)
+        permission = await role_service.create_permission(db, permission_in)
         return {"id": permission.id, "name": permission.name, "code": permission.code}
 
 
 async def _check_permission(user_id: int, code: str):
-    from app.modules.roles.service import role_service
-    from app.modules.shared.db import UserSessionLocal
+    from app.db.session import UserSessionFactory
+    from app.modules.roles import service as role_service
 
-    async with UserSessionLocal() as db:
+    async with UserSessionFactory() as db:
         return await role_service.check_user_permission(db, user_id, code)

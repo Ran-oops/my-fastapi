@@ -34,7 +34,7 @@ async def get_products(
         products = await product_service.get_products_by_category(
             session, category, skip=pagination.skip, limit=pagination.limit
         )
-        total = len(products)
+        total = await product_service.get_products_count_by_category(session, category)
     else:
         products = await product_service.get_products(session, skip=pagination.skip, limit=pagination.limit)
         total = await product_service.get_products_count(session)

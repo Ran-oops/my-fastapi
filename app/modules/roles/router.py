@@ -39,7 +39,7 @@ async def get_roles(
     _current_user: User = Depends(get_current_user),
 ):
     roles = await role_service.get_roles(session, skip=pagination.skip, limit=pagination.limit)
-    total = len(roles)
+    total = await role_service.get_roles_count(session)
     total_pages = (total + pagination.page_size - 1) // pagination.page_size
     return PaginatedResponse(
         data=roles,
@@ -135,7 +135,7 @@ async def get_permissions(
     _current_user: User = Depends(get_current_user),
 ):
     permissions = await role_service.get_permissions(session, skip=pagination.skip, limit=pagination.limit)
-    total = len(permissions)
+    total = await role_service.get_permissions_count(session)
     total_pages = (total + pagination.page_size - 1) // pagination.page_size
     return PaginatedResponse(
         data=permissions,

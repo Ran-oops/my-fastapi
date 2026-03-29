@@ -1,7 +1,5 @@
 import pytest
 
-from app.modules.notifications import service as notification_service
-from app.modules.notifications.models import Notification
 from app.modules.notifications.repository import notification_repo
 from tests.conftest import NONEXISTENT_ID
 

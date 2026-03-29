@@ -1,4 +1,3 @@
-import uuid
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -10,8 +9,8 @@ from app.modules.orders.schemas import OrderCreate, OrderItemCreate
 from app.modules.products import service as product_service
 from app.modules.products.schemas import ProductCreate
 from app.modules.users.models import User
-from tests.helpers import unique_id
 from tests.conftest import TEST_PASSWORD
+from tests.helpers import unique_id
 
 
 @pytest_asyncio.fixture

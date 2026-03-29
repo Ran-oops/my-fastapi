@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.repository import BaseRepository
@@ -18,6 +18,10 @@ class ProductRepository(BaseRepository[Product, ProductCreate, ProductUpdate]):
             select(Product).where(Product.category == category).order_by(Product.id.desc()).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
+
+    async def count_by_category(self, session: AsyncSession, category: str) -> int:
+        result = await session.execute(select(func.count()).select_from(Product).where(Product.category == category))
+        return result.scalar() or 0
 
 
 product_repo = ProductRepository(Product)

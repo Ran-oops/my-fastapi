@@ -29,6 +29,10 @@ async def get_products_count(session: AsyncSession) -> int:
     return await product_repo.count(session)
 
 
+async def get_products_count_by_category(session: AsyncSession, category: str) -> int:
+    return await product_repo.count_by_category(session, category)
+
+
 async def create_product(session: AsyncSession, data: ProductCreate) -> Product:
     existing = await product_repo.get_by_sku(session, sku=data.sku)
     if existing:

@@ -48,7 +48,7 @@ class TestUserRegistration:
         )
         assert response.status_code == status.HTTP_409_CONFLICT
         data = response.json()
-        assert "already registered" in data["detail"]
+        assert "already registered" in data["error"]["message"]
 
     async def test_register_duplicate_username(self, client):
         await client.post(
@@ -69,7 +69,7 @@ class TestUserRegistration:
         )
         assert response.status_code == status.HTTP_409_CONFLICT
         data = response.json()
-        assert "already taken" in data["detail"]
+        assert "already taken" in data["error"]["message"]
 
 
 @pytest.mark.asyncio
@@ -156,7 +156,7 @@ class TestUserLogin:
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         data = response.json()
-        assert "Invalid credentials" in data["detail"]
+        assert "Invalid credentials" in data["error"]["message"]
 
     async def test_login_nonexistent_user(self, client):
         response = await client.post(
@@ -245,7 +245,7 @@ class TestGetUserById:
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
-        assert "not found" in data["detail"].lower()
+        assert "not found" in data["error"]["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -287,7 +287,7 @@ class TestUpdateUser:
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         data = response.json()
-        assert "permissions" in data["detail"].lower()
+        assert "permissions" in data["error"]["message"].lower()
 
     async def test_update_duplicate_email(self, client):
         uid = uuid.uuid4().hex[:8]
@@ -342,6 +342,7 @@ class TestErrorResponse:
         response = await client.get("/api/v1/users/me")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         data = response.json()
+        # FastAPI's OAuth2PasswordBearer returns {"detail": "Not authenticated"} when no token
         assert "detail" in data
 
     async def test_not_found_response_format(self, client):
@@ -353,7 +354,8 @@ class TestErrorResponse:
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
-        assert "detail" in data
+        assert "error" in data
+        assert "message" in data["error"]
 
 
 @pytest.mark.asyncio

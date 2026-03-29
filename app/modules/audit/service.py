@@ -29,5 +29,13 @@ async def get_audit_logs_count(session: AsyncSession) -> int:
     return await audit_log_repo.count(session)
 
 
+async def get_audit_logs_count_by_user(session: AsyncSession, user_id: int) -> int:
+    return await audit_log_repo.count_by_user(session, user_id)
+
+
+async def get_audit_logs_count_by_resource(session: AsyncSession, resource_type: str, resource_id: int) -> int:
+    return await audit_log_repo.count_by_resource(session, resource_type, resource_id)
+
+
 async def create_audit_log(session: AsyncSession, data: AuditLogCreate) -> AuditLog:
     return await audit_log_repo.create(session, data=data)

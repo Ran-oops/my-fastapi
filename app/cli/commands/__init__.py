@@ -1,6 +1,5 @@
-from app.cli.commands.data_import import app as data_import
-from app.cli.commands.fte import app as fte
-from app.cli.commands.qc_report import app as qc_report
+from app.cli.commands.permissions import app as permissions
+from app.cli.commands.roles import app as roles
 
 
-__all__ = ["data_import", "fte", "qc_report"]
+__all__ = ["permissions", "roles"]

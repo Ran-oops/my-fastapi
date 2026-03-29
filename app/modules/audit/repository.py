@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.repository import BaseRepository
@@ -24,6 +24,18 @@ class AuditLogRepository(BaseRepository[AuditLog, AuditLogCreate, AuditLogCreate
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    async def count_by_user(self, session: AsyncSession, user_id: int) -> int:
+        result = await session.execute(select(func.count()).select_from(AuditLog).where(AuditLog.user_id == user_id))
+        return result.scalar() or 0
+
+    async def count_by_resource(self, session: AsyncSession, resource_type: str, resource_id: int) -> int:
+        result = await session.execute(
+            select(func.count())
+            .select_from(AuditLog)
+            .where(AuditLog.resource_type == resource_type, AuditLog.resource_id == resource_id)
+        )
+        return result.scalar() or 0
 
 
 audit_log_repo = AuditLogRepository(AuditLog)

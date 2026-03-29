@@ -34,10 +34,10 @@ async def get_orders(
 ):
     if user_id:
         orders = await order_service.get_orders_by_user(session, user_id, skip=pagination.skip, limit=pagination.limit)
-        total = len(orders)
+        total = await order_service.get_orders_count_by_user(session, user_id)
     elif status:
         orders = await order_service.get_orders_by_status(session, status, skip=pagination.skip, limit=pagination.limit)
-        total = len(orders)
+        total = await order_service.get_orders_count_by_status(session, status)
     else:
         orders = await order_service.get_orders(session, skip=pagination.skip, limit=pagination.limit)
         total = await order_service.get_orders_count(session)
@@ -62,7 +62,7 @@ async def get_my_orders(
     orders = await order_service.get_orders_by_user(
         session, current_user.id, skip=pagination.skip, limit=pagination.limit
     )
-    total = len(orders)
+    total = await order_service.get_orders_count_by_user(session, current_user.id)
     total_pages = (total + pagination.page_size - 1) // pagination.page_size
     return PaginatedResponse(
         data=orders,

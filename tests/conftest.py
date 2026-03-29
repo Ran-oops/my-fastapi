@@ -15,6 +15,7 @@ from app.db.session import get_business_session, get_user_session
 from app.main import app
 from app.modules.users.models import User
 
+
 # Shared test constants
 TEST_PASSWORD = "testpassword123"
 NONEXISTENT_ID = 99999
