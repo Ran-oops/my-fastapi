@@ -3,7 +3,7 @@ import uuid
 import pytest_asyncio
 
 from app.core.eventbus import eventbus
-from app.modules.notifications.models import NotificationTemplate
+from app.modules.notifications.models import Notification, NotificationTemplate
 
 
 @pytest_asyncio.fixture
@@ -46,3 +46,43 @@ def clear_eventbus():
     eventbus.clear()
     yield
     eventbus.clear()
+
+
+@pytest_asyncio.fixture
+async def test_notification(session):
+    """Create a test notification."""
+    notification = Notification(
+        user_id=1,
+        template_name=f"test.notify.{uuid.uuid4().hex[:8]}",
+        channel="in_app",
+        status="sent",
+        subject="Test Subject",
+        body="Test notification body",
+        is_read=False,
+    )
+    session.add(notification)
+    await session.commit()
+    await session.refresh(notification)
+    return notification
+
+
+@pytest_asyncio.fixture
+async def multiple_notifications(session):
+    """Create multiple test notifications for user 1."""
+    notifications = []
+    for i in range(5):
+        notification = Notification(
+            user_id=1,
+            template_name=f"test.notify.{uuid.uuid4().hex[:8]}",
+            channel="in_app" if i % 2 == 0 else "email",
+            status="sent",
+            subject=f"Subject {i}",
+            body=f"Body {i}",
+            is_read=i < 2,
+        )
+        session.add(notification)
+        notifications.append(notification)
+    await session.commit()
+    for n in notifications:
+        await session.refresh(n)
+    return notifications
