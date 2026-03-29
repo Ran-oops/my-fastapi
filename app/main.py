@@ -28,7 +28,7 @@ from app.core.exception_handlers import (
     validation_exception_handler,
 )
 from app.core.exceptions import BaseAPIException
-from app.db.session import UserSessionFactory, business_engine, config_engine, user_engine
+from app.db.session import SessionFactory, engine
 from app.modules.notifications.handlers import notification_handler
 
 
@@ -40,7 +40,7 @@ async def lifespan(_app: FastAPI):
     logger.info("Application starting up...")
 
     async def handle_notification_event(event):
-        async with UserSessionFactory() as session:
+        async with SessionFactory() as session:
             await notification_handler.handle_event(session, event)
 
     for event_type in [
@@ -56,9 +56,7 @@ async def lifespan(_app: FastAPI):
 
     yield
     logger.info("Application shutting down...")
-    await user_engine.dispose()
-    await business_engine.dispose()
-    await config_engine.dispose()
+    await engine.dispose()
 
 
 app = FastAPI(
@@ -110,23 +108,21 @@ async def readiness_check():
     db_status = {}
     overall_status = "ready"
 
-    async def check_db(name: str, engine) -> bool:
+    async def check_db(name: str, db_engine) -> bool:
         try:
-            async with engine.connect() as conn:
+            async with db_engine.connect() as conn:
                 from sqlalchemy import text
 
                 await conn.execute(text("SELECT 1"))
-            db_status[name] = "connected"
-            return True
+                db_status[name] = "connected"
+                return True
         except Exception as e:
             db_status[name] = f"error: {e!s}"
             return False
 
-    user_ok = await check_db("user_db", user_engine)
-    business_ok = await check_db("business_db", business_engine)
-    config_ok = await check_db("config_db", config_engine)
+    db_ok = await check_db("database", engine)
 
-    if not all([user_ok, business_ok, config_ok]):
+    if not db_ok:
         overall_status = "degraded"
 
     return {
