@@ -1,15 +1,15 @@
 """initial: single database schema
 
-Revision ID: 52bebc1bdc7d
+Revision ID: b6a16a2467f7
 Revises: 
-Create Date: 2026-03-29 20:34:13.259301
+Create Date: 2026-03-30 09:41:07.660594
 
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
-revision = '52bebc1bdc7d'
+
+revision = 'b6a16a2467f7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -135,7 +135,7 @@ def upgrade() -> None:
     sa.Column('task_name', sa.String(length=100), nullable=False),
     sa.Column('celery_task_id', sa.String(length=100), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=False),
-    sa.Column('params', postgresql.JSON(astext_type=Text()), nullable=True),
+    sa.Column('params', sa.JSON(), nullable=True),
     sa.Column('error', sa.Text(), nullable=True),
     sa.Column('retry_count', sa.Integer(), nullable=False),
     sa.Column('scheduled_at', sa.DateTime(), nullable=True),

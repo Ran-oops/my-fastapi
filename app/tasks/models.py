@@ -4,10 +4,10 @@ from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import DateTime, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy import JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import UserBase
+from app.db.base import Base
 
 
 class TaskStatus(StrEnum):
@@ -19,7 +19,7 @@ class TaskStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
-class TaskRecord(UserBase):
+class TaskRecord(Base):
     __tablename__ = "task_records"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
