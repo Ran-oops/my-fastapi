@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import cache, invalidate_cache
 from app.core.exceptions import ConflictException, NotFoundException, UnauthorizedException
 from app.core.security import create_access_token, create_refresh_token, verify_refresh_token
 from app.modules.search.utils import update_user_search_vector
@@ -8,24 +9,53 @@ from app.modules.users.repository import user_repo
 from app.modules.users.schemas import Token, UserCreate, UserUpdate
 
 
+@cache(ttl=300, key_builder=lambda session, user_id: f"users:id:{user_id}")
 async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
+    """Get user by ID with caching.
+
+    Cache key: users:id:{user_id}
+    TTL: 5 minutes
+    """
     return await user_repo.get(session, id=user_id)
 
 
+@cache(ttl=300, key_builder=lambda session, email: f"users:email:{email}")
 async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
+    """Get user by email with caching.
+
+    Cache key: users:email:{email}
+    TTL: 5 minutes
+    """
     return await user_repo.get_by_email(session, email=email)
 
 
+@cache(ttl=60, key_builder=lambda session, skip=0, limit=100: f"users:list:skip:{skip}:limit:{limit}")
 async def get_users(session: AsyncSession, skip: int = 0, limit: int = 100) -> list[User]:
+    """Get users list with caching (short TTL due to frequent changes).
+
+    Cache key: users:list:skip:{skip}:limit:{limit}
+    TTL: 1 minute
+    """
     users = await user_repo.get_multi(session, skip=skip, limit=limit)
     return list(users)
 
 
+@cache(ttl=60, prefix="users")
 async def get_users_count(session: AsyncSession) -> int:
+    """Get total users count with caching (short TTL).
+
+    Cache key: users:{module}.{function}
+    TTL: 1 minute
+    """
     return await user_repo.count(session)
 
 
+@invalidate_cache(pattern="users:*")
 async def create_user(session: AsyncSession, data: UserCreate) -> User:
+    """Create a new user and invalidate all users cache.
+
+    Invalidates: All cache keys matching 'users:*'
+    """
     existing = await user_repo.get_by_email(session, email=data.email)
     if existing:
         raise ConflictException(f"Email {data.email} already registered")
@@ -37,7 +67,12 @@ async def create_user(session: AsyncSession, data: UserCreate) -> User:
     return user
 
 
+@invalidate_cache(pattern="users:*")
 async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> User:
+    """Update user and invalidate users cache.
+
+    Invalidates: All cache keys matching 'users:*' (including specific user caches)
+    """
     user = await user_repo.get(session, id=user_id)
     if not user:
         raise NotFoundException(f"User with id {user_id} not found")
@@ -54,7 +89,12 @@ async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> 
     return user
 
 
+@invalidate_cache(pattern="users:*")
 async def delete_user(session: AsyncSession, user_id: int) -> User:
+    """Delete user and invalidate users cache.
+
+    Invalidates: All cache keys matching 'users:*'
+    """
     user = await user_repo.get(session, id=user_id)
     if not user:
         raise NotFoundException(f"User with id {user_id} not found")

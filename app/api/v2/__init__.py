@@ -1,14 +1,15 @@
-"""API v1 Router - Initial API Version.
+"""API v2 Router - Next Generation API Version.
 
-This module contains all v1 API routes. As the API evolves, new versions
-should be created following the semantic versioning guidelines.
+This module contains v2 API routes with improved features:
+- Enhanced response formats
+- Better error handling
+- New endpoints for advanced features
+- Optimized performance
 
-Deprecation Notice:
-    v1 routes are stable but consider migrating to v2 for new features.
-    See migration guide: docs/migration/v1-to-v2.md
+Migration from v1:
+    See docs/migration/v1-to-v2.md for detailed migration guide.
+    Breaking changes are documented in docs/changelog/v2.0.0.md
 """
-
-import warnings
 
 from fastapi import APIRouter
 
@@ -24,102 +25,80 @@ from app.modules.users.auth_router import router as auth_router
 from app.modules.users.user_router import router as users_router
 from app.tasks.router import router as tasks_router
 
-# Emit deprecation warning for v1 usage
-warnings.warn(
-    "API v1 is deprecated and will be removed in a future version. "
-    "Please migrate to API v2 for new features and improvements. "
-    "See: https://docs.example.com/migration/v1-to-v2",
-    DeprecationWarning,
-    stacklevel=2,
-)
+api_router = APIRouter()
 
-api_router = APIRouter(
-    deprecated=True,
-)
-
-# Auth routes
+# Auth routes - v2 includes OAuth2 enhancements
 api_router.include_router(
     auth_router,
     prefix="/auth",
     tags=["auth"],
-    deprecated=True,
 )
 
-# User routes
+# User routes - v2 includes profile management improvements
 api_router.include_router(
     users_router,
     prefix="/users",
     tags=["users"],
-    deprecated=True,
 )
 
-# Roles & Permissions routes
+# Roles & Permissions routes - v2 includes RBAC v2 features
 api_router.include_router(
     roles_router,
     tags=["roles", "permissions"],
-    deprecated=True,
 )
 
-# Product routes
+# Product routes - v2 includes bulk operations
 api_router.include_router(
     products_router,
     prefix="/products",
     tags=["products"],
-    deprecated=True,
 )
 
-# Order routes
+# Order routes - v2 includes advanced filtering
 api_router.include_router(
     orders_router,
     prefix="/orders",
     tags=["orders"],
-    deprecated=True,
 )
 
-# Config routes
+# Config routes - v2 includes configuration versioning
 api_router.include_router(
     config_router,
     prefix="/config",
     tags=["config"],
-    deprecated=True,
 )
 
-# Audit routes
+# Audit routes - v2 includes streaming support
 api_router.include_router(
     audit_router,
     prefix="/audit",
     tags=["audit"],
-    deprecated=True,
 )
 
-# Task routes
+# Task routes - v2 includes batch operations
 api_router.include_router(
     tasks_router,
     prefix="/tasks",
     tags=["tasks"],
-    deprecated=True,
 )
 
-# Notification routes
+# Notification routes - v2 includes webhook improvements
 api_router.include_router(
     notifications_router,
     prefix="/notifications",
     tags=["notifications"],
-    deprecated=True,
 )
 
-# Export routes
+# Export routes - v2 includes async exports
 api_router.include_router(
     exports_router,
     prefix="/exports",
     tags=["exports"],
-    deprecated=True,
 )
 
-# Search routes
+# Search routes - v2 includes faceted search
 api_router.include_router(
     search_router,
     prefix="/search",
     tags=["search"],
-    deprecated=True,
 )

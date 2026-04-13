@@ -17,7 +17,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = ""
     BACKEND_CORS_ORIGINS: list[str] = ["*"]
     LOG_LEVEL: str = "INFO"
-    API_V1_STR: str = "/api/v1"
+    LOG_FORMAT: str = "json"  # Options: json, console
+    LOG_TIMESTAMP_FORMAT: str = "iso"  # Options: iso, epoch
+    API_V1_STR: str = "/api/v1"  # Kept for backward compatibility
+    API_LATEST_STR: str = "/api/latest"
     PROJECT_NAME: str = "Enterprise FastAPI Project"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
@@ -27,6 +30,29 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
     ORDER_CANCEL_TIMEOUT: int = 1800
+
+    # Redis Cache Configuration
+    REDIS_CACHE_URL: str = "redis://localhost:6379/1"
+    REDIS_PASSWORD: str | None = None
+    REDIS_POOL_MAX_CONNECTIONS: int = 100
+    REDIS_SOCKET_TIMEOUT: float = 5.0
+    REDIS_SOCKET_CONNECT_TIMEOUT: float = 5.0
+
+    # Redis Sentinel Configuration
+    REDIS_USE_SENTINEL: bool = False
+    REDIS_SENTINEL_HOSTS: list[str] = ["localhost:26379"]
+    REDIS_SENTINEL_MASTER_NAME: str = "mymaster"
+
+    # Cache Configuration
+    CACHE_DEFAULT_TTL: int = 300  # 5 minutes
+    CACHE_SERIALIZER: str = "json"  # "json" or "pickle"
+
+    @field_validator("REDIS_SENTINEL_HOSTS", mode="before")
+    @classmethod
+    def parse_sentinel_hosts(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            return [h.strip() for h in v.split(",")]
+        return v
 
     @field_validator("SECRET_KEY")
     @classmethod
