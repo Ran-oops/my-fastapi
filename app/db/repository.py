@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -51,3 +51,28 @@ class BaseRepository[ModelType, CreateSchemaType: BaseModel, UpdateSchemaType: B
             await session.delete(instance)
             await session.commit()
         return instance
+
+    async def create_multi(
+        self,
+        session: AsyncSession,
+        data_list: list[CreateSchemaType],
+    ) -> Sequence[ModelType]:
+        """批量创建记录。"""
+        if not data_list:
+            return []
+
+        data_dicts = [data.model_dump() for data in data_list]
+        stmt = insert(self.model).values(data_dicts).returning(self.model)
+        result = await session.execute(stmt)
+        await session.commit()
+        return result.scalars().all()
+
+    async def delete_multi(self, session: AsyncSession, ids: list[int]) -> int:
+        """批量删除记录，返回删除数量。"""
+        if not ids:
+            return 0
+
+        stmt = delete(self.model).where(self.model.id.in_(ids))
+        result = await session.execute(stmt)
+        await session.commit()
+        return result.rowcount if result.rowcount else 0

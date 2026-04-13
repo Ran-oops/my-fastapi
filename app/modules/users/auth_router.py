@@ -20,3 +20,10 @@ async def register(data: UserCreate, session: AsyncSession = Depends(get_session
 async def login(credentials: UserLogin, session: AsyncSession = Depends(get_session)):
     token = await user_service.login_user(session, username=credentials.username, password=credentials.password)
     return DataResponse(data=token, message="Login successful")
+
+
+@router.post("/refresh", response_model=DataResponse[Token])
+async def refresh(token_data: Token):
+    """使用refresh_token获取新的access_token和refresh_token."""
+    new_token = await user_service.refresh_access_token(token_data.access_token)
+    return DataResponse(data=new_token, message="Token refreshed successfully")

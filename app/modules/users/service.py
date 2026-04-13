@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictException, NotFoundException, UnauthorizedException
-from app.core.security import create_access_token
+from app.core.security import create_access_token, create_refresh_token, verify_refresh_token
 from app.modules.search.utils import update_user_search_vector
 from app.modules.users.models import User
 from app.modules.users.repository import user_repo
@@ -72,4 +72,14 @@ async def login_user(session: AsyncSession, username: str, password: str) -> Tok
     if not user.is_active:
         raise UnauthorizedException("Inactive user")
     access_token = create_access_token(subject=str(user.id))
-    return Token(access_token=access_token)
+    refresh_token = create_refresh_token(subject=str(user.id))
+    return Token(access_token=access_token, refresh_token=refresh_token)
+
+
+async def refresh_access_token(refresh_token: str) -> Token:
+    user_id = verify_refresh_token(refresh_token)
+    if not user_id:
+        raise UnauthorizedException("Invalid refresh token")
+    new_access_token = create_access_token(subject=user_id)
+    new_refresh_token = create_refresh_token(subject=user_id)
+    return Token(access_token=new_access_token, refresh_token=new_refresh_token)

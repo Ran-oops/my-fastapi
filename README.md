@@ -61,15 +61,25 @@ app/
 - **pytest-asyncio**: 异步测试支持
 - **pytest-cov**: 测试覆盖率
 
-## 多数据库架构
+## 数据库架构
 
-项目支持三个独立数据库：
+项目采用**单数据库架构**（SQLite/PostgreSQL），简化部署和维护：
 
-| 数据库     | 类型       | 用途                 | 访问模式 |
-| ---------- | ---------- | -------------------- | -------- |
-| 用户数据库 | PostgreSQL | 用户认证、角色、权限 | 读写     |
-| 业务数据库 | SQL Server | 订单、产品、业务数据 | 读写     |
-| 配置数据库 | MySQL      | 系统配置、字典数据   | 只读     |
+| 数据库 | 类型 | 用途 |
+| ------ | ---- | ---- |
+| 主数据库 | SQLite/PostgreSQL | 所有业务数据（用户、订单、配置等） |
+
+### 数据库切换
+
+项目默认使用 **SQLite**（适合开发和测试），可无缝切换至 **PostgreSQL**（生产环境）：
+
+```bash
+# SQLite（默认）
+DATABASE_URL=sqlite+aiosqlite:///app.db
+
+# PostgreSQL（生产环境）
+DATABASE_URL=postgresql+asyncpg://user:password@localhost/dbname
+```
 
 ## 快速开始
 
@@ -104,14 +114,11 @@ cp .env.example .env
 编辑 `.env` 配置数据库连接：
 
 ```bash
-# 用户数据库 - PostgreSQL
-USER_DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/user_db
+# SQLite（开发环境）
+DATABASE_URL=sqlite+aiosqlite:///app.db
 
-# 业务数据库 - SQL Server
-BUSINESS_DATABASE_URL=mssql+aioodbc://sa:password@localhost:1433/business_db?driver=ODBC+Driver+17+for+SQL+Server
-
-# 配置数据库 - MySQL (只读)
-CONFIG_DATABASE_URL=mysql+aiomysql://root:password@localhost:3306/config_db
+# PostgreSQL（生产环境）
+# DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/app_db
 ```
 
 ### 3. 运行数据库迁移

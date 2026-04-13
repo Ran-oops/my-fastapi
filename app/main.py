@@ -3,9 +3,11 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.api.v1 import api_router
@@ -28,6 +30,7 @@ from app.core.exception_handlers import (
     validation_exception_handler,
 )
 from app.core.exceptions import BaseAPIException
+from app.core.rate_limit import limiter
 from app.db.session import SessionFactory, engine
 from app.modules.notifications.handlers import notification_handler
 
@@ -66,6 +69,7 @@ app = FastAPI(
     redoc_url=f"{settings.API_V1_STR}/redoc",
     lifespan=lifespan,
 )
+app.state.limiter = limiter
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -82,6 +86,7 @@ app.add_exception_handler(BaseAPIException, api_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(IntegrityError, integrity_error_handler)
 app.add_exception_handler(SQLAlchemyError, sqlalchemy_error_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 

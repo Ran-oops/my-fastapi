@@ -33,12 +33,28 @@ def create_refresh_token(subject: str | int) -> str:
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_token(token: str) -> str | None:
+def verify_token(token: str, token_type: str | None = None) -> str | None:
+    """验证JWT token，可选验证token类型。
+
+    Args:
+        token: JWT token字符串
+        token_type: 可选的token类型验证("access"或"refresh")
+
+    Returns:
+        subject (user_id) 或 None (验证失败)
+    """
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        if token_type and payload.get("type") != token_type:
+            return None
         return payload.get("sub")
     except JWTError:
         return None
+
+
+def verify_refresh_token(token: str) -> str | None:
+    """验证refresh token。"""
+    return verify_token(token, token_type="refresh")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
